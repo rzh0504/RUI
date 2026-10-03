@@ -15,6 +15,7 @@ compose-unstyled          behavior, state, keyboard, a11y (zero visuals)
 │  │              spacing / motion  (RuiTheme)       │
 │  ├─ foundation  Surface · Text · Icon · state      │
 │  │              layer · FrostedSurface · BlurBackdrop│
+│  │              utils: bounce overscroll · haptics │
 │  └─ components  Scaffold · TopAppBar · NavBar ·    │
 │                 Button · TextField · Switch ·      │
 │                 Checkbox · Dialog · Tabs · List    │
@@ -52,7 +53,7 @@ Targets today: `android`, `iosArm64`, `iosSimulatorArm64`. Desktop (`jvm`) and W
 # or verify remotely: see .github/workflows/ios-ci.yml
 ```
 
-The catalog is a structured showcase: a large-title app bar and a frosted-glass bottom navigation bar (real backdrop blur) over an iOS-style grouped index; one page per component, each organized into labeled demo groups. Light/dark and glass toggles live on the home page.
+The catalog is a structured showcase: a large-title app bar and a frosted-glass bottom navigation bar (real backdrop blur) over an iOS-style grouped index; one page per component, each organized into labeled demo groups. Lists use bounce overscroll and boundary haptics. Light/dark and frosted toggles live on the home page.
 
 ### Use Rui in an app
 

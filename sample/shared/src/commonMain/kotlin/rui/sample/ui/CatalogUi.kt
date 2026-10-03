@@ -15,6 +15,8 @@ import androidx.compose.foundation.layout.calculateStartPadding
 import androidx.compose.foundation.layout.calculateEndPadding
 import androidx.compose.ui.unit.dp
 import rui.foundation.RuiText
+import rui.foundation.utils.overScrollVertical
+import rui.foundation.utils.scrollEndHaptic
 import rui.theme.RuiTheme
 
 /** Uppercase-feeling section label above a grouped card. */
@@ -45,6 +47,8 @@ public fun ContentColumn(
     Column(
         modifier = modifier
             .fillMaxWidth()
+            .overScrollVertical()
+            .scrollEndHaptic()
             .verticalScroll(rememberScrollState())
             .padding(
                 top = contentPadding.calculateTopPadding(),

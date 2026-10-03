@@ -69,6 +69,14 @@ The backdrop mechanism follows miuix's blur module (Apache-2.0, see NOTICE): one
 
 The catalog wires it end to end: `RuiScaffold(backdrop = …)` captures the content area; `RuiTopAppBar` and `RuiNavigationBar` sample it as frosted bars, and the frosted dialog samples it through the portal. Frosted surfaces are marked `@ExperimentalRuiApi`.
 
+## Utilities
+
+`rui.foundation.utils` carries the platform-feel utilities, mostly adapted from miuix (Apache-2.0, see NOTICE):
+
+- `overScrollVertical()` / `overScrollHorizontal()` — iOS-style bounce overscroll (touch/trackpad only; wheel and keyboard pass through). The catalog's `ContentColumn` uses it everywhere.
+- `scrollEndHaptic()` — a haptic tick when a fling hits a scroll boundary.
+- `pressScale(interactionSource)` — sink-while-pressed scale for large tiles that pair with (or replace) the state layer.
+
 ## Component conventions
 
 Visual signatures worth keeping consistent:

@@ -11,6 +11,15 @@ License, Version 2.0.
     - Modified: re-exposed as a Compose Shape (SmoothCornerShape) integrated
       with Rui's theme tokens instead of miuix's modifier API.
 
+  rui-ui/src/commonMain/kotlin/rui/foundation/utils/RuiOverscroll.kt
+  rui-ui/src/commonMain/kotlin/rui/foundation/utils/RuiScrollEndHaptic.kt
+  rui-ui/src/commonMain/kotlin/rui/foundation/utils/SpringUtils.kt
+    - Bounce-overscroll, scroll-end haptics and the damping/spring settle
+      math adapted from miuix's Overscroll.kt / ScrollEndHaptic.kt /
+      SpringUtils.kt.
+    - Modified: removed pull-to-refresh coordination and the theme-level
+      overscroll factory; renamed to Rui's modifier convention.
+
   rui-ui/src/commonMain/kotlin/rui/foundation/BlurBackdrop.kt
     - Backdrop-capture mechanism (GraphicsLayer recording + coordinates
       translation) adapted from miuix's miuix-blur module
