@@ -2,6 +2,7 @@ package rui.sample.screens
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -27,12 +28,12 @@ import rui.theme.RuiTheme
 
 @OptIn(ExperimentalRuiApi::class)
 @Composable
-public fun TokensScreen(modifier: Modifier = Modifier) {
+public fun TokensScreen(contentPadding: PaddingValues = PaddingValues(0.dp)) {
     val colors = RuiTheme.colors
     val typography = RuiTheme.typography
     val spacing = RuiTheme.spacing
 
-    ContentColumn(modifier = modifier) {
+    ContentColumn(contentPadding = contentPadding) {
         SectionLabel("Type scale")
         RuiListGroup {
             TypeRow("titleLg", typography.titleLg)

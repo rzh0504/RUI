@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -23,8 +24,8 @@ import rui.sample.ui.SectionLabel
 import rui.theme.RuiTheme
 
 @Composable
-public fun ButtonsScreen(modifier: Modifier = Modifier) {
-    ContentColumn(modifier = modifier) {
+public fun ButtonsScreen(contentPadding: PaddingValues = PaddingValues(0.dp)) {
+    ContentColumn(contentPadding = contentPadding) {
         SectionLabel("Variants")
         RuiListGroup {
             RuiListItem(

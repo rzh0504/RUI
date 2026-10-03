@@ -1,6 +1,8 @@
 package rui.sample.screens
 
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.unit.dp
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -16,13 +18,13 @@ import rui.sample.ui.SectionLabel
 import rui.theme.RuiTheme
 
 @Composable
-public fun TogglesScreen(modifier: Modifier = Modifier) {
+public fun TogglesScreen(contentPadding: PaddingValues = PaddingValues(0.dp)) {
     var wifi by remember { mutableStateOf(true) }
     var bluetooth by remember { mutableStateOf(false) }
     var sync by remember { mutableStateOf(true) }
     var stats by remember { mutableStateOf(false) }
 
-    ContentColumn(modifier = modifier) {
+    ContentColumn(contentPadding = contentPadding) {
         SectionLabel("Switch")
         RuiListGroup {
             RuiListItem(

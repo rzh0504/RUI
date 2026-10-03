@@ -1,7 +1,9 @@
 package rui.sample
 
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.Modifier
 import rui.components.RuiListGroup
 import rui.components.RuiListItem
@@ -19,9 +21,9 @@ public fun ComponentsScreen(
     frostedEnabled: Boolean,
     onFrostedEnabledChange: (Boolean) -> Unit,
     onOpen: (Destination) -> Unit,
-    modifier: Modifier = Modifier,
+    contentPadding: PaddingValues = PaddingValues(0.dp),
 ) {
-    ContentColumn(modifier = modifier) {
+    ContentColumn(contentPadding = contentPadding) {
         SectionLabel("Appearance")
         RuiListGroup {
             RuiListItem(

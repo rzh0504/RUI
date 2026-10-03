@@ -2,7 +2,9 @@ package rui.sample.screens
 
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.input.rememberTextFieldState
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.Modifier
 import rui.components.RuiListGroup
 import rui.components.RuiTextField
@@ -14,8 +16,8 @@ import rui.sample.ui.SectionLabel
 import rui.theme.RuiTheme
 
 @Composable
-public fun TextFieldScreen(modifier: Modifier = Modifier) {
-    ContentColumn(modifier = modifier) {
+public fun TextFieldScreen(contentPadding: PaddingValues = PaddingValues(0.dp)) {
+    ContentColumn(contentPadding = contentPadding) {
         RuiText(
             text = "Filled, borderless input built on Unstyled's TextFieldState. " +
                 "A hairline border appears only to mark errors.",

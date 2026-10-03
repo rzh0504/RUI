@@ -2,7 +2,9 @@ package rui.sample.screens
 
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.unit.dp
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -19,14 +21,14 @@ private enum class MediaTab { Listen, Watch, Read }
 private enum class PairTab { Day, Night }
 
 @Composable
-public fun TabsScreen(modifier: Modifier = Modifier) {
+public fun TabsScreen(contentPadding: PaddingValues = PaddingValues(0.dp)) {
     val typography = RuiTheme.typography
     val colors = RuiTheme.colors
 
     var media by remember { mutableStateOf(MediaTab.Listen) }
     var pair by remember { mutableStateOf(PairTab.Day) }
 
-    ContentColumn(modifier = modifier) {
+    ContentColumn(contentPadding = contentPadding) {
         RuiText(
             text = "Unstyled's roving-focus tab behavior in a segmented skin: " +
                 "arrow keys move the selection, Tab joins and leaves the group.",

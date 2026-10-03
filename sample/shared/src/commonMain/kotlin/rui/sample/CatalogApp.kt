@@ -121,8 +121,7 @@ private fun CatalogBody(
                 )
             }
         },
-    ) {
-        val topPadding = if (current == null) 88.dp else 64.dp
+    ) { padding ->
         when (current) {
             null -> when (tab) {
                 0 -> ComponentsScreen(
@@ -131,18 +130,18 @@ private fun CatalogBody(
                     frostedEnabled = frostedEnabled,
                     onFrostedEnabledChange = onFrostedEnabledChange,
                     onOpen = { backStack.add(it) },
-                    modifier = Modifier.fillMaxSize().padding(top = topPadding),
+                    contentPadding = padding,
                 )
-                else -> TokensScreen(modifier = Modifier.fillMaxSize().padding(top = topPadding))
+                else -> TokensScreen(contentPadding = padding)
             }
-            Destination.Buttons -> ButtonsScreen(Modifier.fillMaxSize().padding(top = topPadding))
-            Destination.TextField -> TextFieldScreen(Modifier.fillMaxSize().padding(top = topPadding))
-            Destination.Toggles -> TogglesScreen(Modifier.fillMaxSize().padding(top = topPadding))
-            Destination.Tabs -> TabsScreen(Modifier.fillMaxSize().padding(top = topPadding))
+            Destination.Buttons -> ButtonsScreen(contentPadding = padding)
+            Destination.TextField -> TextFieldScreen(contentPadding = padding)
+            Destination.Toggles -> TogglesScreen(contentPadding = padding)
+            Destination.Tabs -> TabsScreen(contentPadding = padding)
             Destination.Dialog -> DialogScreen(
                 frostedEnabled = frostedEnabled,
                 backdrop = backdrop,
-                modifier = Modifier.fillMaxSize().padding(top = topPadding),
+                contentPadding = padding,
             )
         }
     }

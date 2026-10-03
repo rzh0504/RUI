@@ -1,6 +1,8 @@
 package rui.sample.screens
 
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.unit.dp
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -24,12 +26,12 @@ import rui.theme.RuiTheme
 public fun DialogScreen(
     frostedEnabled: Boolean,
     backdrop: BlurBackdrop,
-    modifier: Modifier = Modifier,
+    contentPadding: PaddingValues = PaddingValues(0.dp),
 ) {
     var standardDialog by remember { mutableStateOf(false) }
     var glassDialog by remember { mutableStateOf(false) }
 
-    ContentColumn(modifier = modifier) {
+    ContentColumn(contentPadding = contentPadding) {
         RuiText(
             text = "Portaled through DialogHost at the app root. Esc and back " +
                 "dismiss, the scrim fades, the panel scales in on a spring.",
