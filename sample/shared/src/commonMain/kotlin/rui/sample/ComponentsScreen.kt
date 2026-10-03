@@ -55,7 +55,7 @@ public fun ComponentsScreen(
             RuiDivider(inset = RuiTheme.spacing.lg)
             RuiListItem(
                 title = "Selection controls",
-                subtitle = "Switch and checkbox",
+                subtitle = "Switch, checkbox, slider",
                 showChevron = true,
                 onClick = { onOpen(CatalogPage.Toggles) },
             )

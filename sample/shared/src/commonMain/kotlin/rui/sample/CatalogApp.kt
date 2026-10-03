@@ -47,7 +47,7 @@ private fun CatalogPage.title(): String = when (this) {
     CatalogPage.Root -> "Rui"
     CatalogPage.Buttons -> "Buttons"
     CatalogPage.TextField -> "Text field"
-    CatalogPage.Toggles -> "Switch & checkbox"
+    CatalogPage.Toggles -> "Selection controls"
     CatalogPage.Tabs -> "Segmented tabs"
     CatalogPage.Dialog -> "Dialog"
 }

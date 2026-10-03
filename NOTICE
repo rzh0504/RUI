@@ -36,6 +36,13 @@ License, Version 2.0.
       interplay; integrated with Rui's frosted bar background, typography
       and spacing tokens.
 
+  rui-ui/src/commonMain/kotlin/rui/components/RuiSlider.kt
+    - Drag mechanics, progress/thumb springs and step haptics adapted from
+      miuix's basic/Slider.kt.
+    - Modified: no vertical or range variants, no key-point magnets or tick
+      marks; iOS UISlider visuals (jump to touch, white thumb with shadow)
+      on Rui's token system.
+
 A copy of the Apache License, Version 2.0 for that portion of the code is
 available at https://www.apache.org/licenses/LICENSE-2.0 and must be
 distributed alongside this product.
