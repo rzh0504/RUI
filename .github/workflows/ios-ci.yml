@@ -1,0 +1,53 @@
+name: ios-ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  build:
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - uses: gradle/actions/setup-gradle@v4
+
+      - name: Compile Kotlin for iOS
+        run: |
+          chmod +x gradlew
+          ./gradlew :rui-ui:compileKotlinIosSimulatorArm64 :sample:shared:compileKotlinIosSimulatorArm64
+
+      - name: Build iOS app (includes framework link + embed)
+        run: |
+          xcodebuild \
+            -project sample/iosApp/iosApp.xcodeproj \
+            -target iosApp \
+            -sdk iphonesimulator \
+            -configuration Debug \
+            -derivedDataPath sample/iosApp/build/DerivedData \
+            build \
+            CODE_SIGNING_ALLOWED=NO
+
+      - name: Launch in simulator and capture screenshot
+        run: |
+          DEVICE=$(xcrun simctl list devices available | grep -m1 -o '[A-F0-9-]\{36\}')
+          echo "Booting simulator $DEVICE"
+          xcrun simctl boot "$DEVICE" || true
+          APP="sample/iosApp/build/DerivedData/Build/Products/Debug-iphonesimulator/iosApp.app"
+          xcrun simctl install "$DEVICE" "$APP"
+          xcrun simctl launch "$DEVICE" rui.sample.ios
+          sleep 8
+          xcrun simctl io "$DEVICE" screenshot rui-ios-catalog.png || true
+
+      - name: Upload screenshot
+        uses: actions/upload-artifact@v4
+        with:
+          name: ios-screenshot
+          path: rui-ios-catalog.png
+          if-no-files-found: ignore

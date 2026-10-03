@@ -1,0 +1,18 @@
+[versions]
+kotlin = "2.4.20"
+agp = "9.4.1"
+composeMultiplatform = "1.12.1"
+composeunstyled = "2.10.0"
+activityCompose = "1.12.4"
+
+[libraries]
+composeunstyled = { module = "com.composables:composeunstyled", version.ref = "composeunstyled" }
+composeunstyled-colored-indication = { module = "com.composables:composeunstyled-colored-indication", version.ref = "composeunstyled" }
+androidx-activity-compose = { module = "androidx.activity:activity-compose", version.ref = "activityCompose" }
+
+[plugins]
+kotlinMultiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref = "kotlin" }
+composeMultiplatform = { id = "org.jetbrains.compose", version.ref = "composeMultiplatform" }
+composeCompiler = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
+androidKotlinMultiplatformLibrary = { id = "com.android.kotlin.multiplatform.library", version.ref = "agp" }
+androidApplication = { id = "com.android.application", version.ref = "agp" }

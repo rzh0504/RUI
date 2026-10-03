@@ -1,0 +1,194 @@
+package rui.components
+
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
+import androidx.compose.animation.core.spring
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.RowScope
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.widthIn
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
+import com.composeunstyled.DialogPanel
+import com.composeunstyled.Scrim
+import com.composeunstyled.UnstyledDialog
+import rui.foundation.ExperimentalRuiApi
+import rui.foundation.GlassSurface
+import rui.foundation.RuiText
+import rui.foundation.RuiSurface
+import rui.theme.RuiTheme
+
+/**
+ * The Rui dialog: Unstyled's modal behavior (portal host, Esc/back dismiss,
+ * pane title semantics, scrim) with a token-styled panel.
+ *
+ * The app root should compose [com.composeunstyled.DialogHost] so dialog
+ * panels portal above everything; without one, Unstyled falls back to a
+ * platform modal.
+ */
+@Composable
+public fun RuiDialog(
+    visible: Boolean,
+    onDismissRequest: () -> Unit,
+    modifier: Modifier = Modifier,
+    title: String? = null,
+    supportingText: String? = null,
+    actions: @Composable RowScope.() -> Unit = {},
+    content: @Composable ColumnScope.() -> Unit = {},
+) {
+    RuiDialogPanel(
+        visible = visible,
+        onDismissRequest = onDismissRequest,
+        modifier = modifier,
+        glass = false,
+        title = title,
+        supportingText = supportingText,
+        actions = actions,
+        content = content,
+    )
+}
+
+/** Glass-skinned variant of [RuiDialog]; experimental until backdrop blur lands. */
+@ExperimentalRuiApi
+@Composable
+public fun RuiDialog(
+    visible: Boolean,
+    onDismissRequest: () -> Unit,
+    glass: Boolean,
+    modifier: Modifier = Modifier,
+    title: String? = null,
+    supportingText: String? = null,
+    actions: @Composable RowScope.() -> Unit = {},
+    content: @Composable ColumnScope.() -> Unit = {},
+) {
+    RuiDialogPanel(
+        visible = visible,
+        onDismissRequest = onDismissRequest,
+        modifier = modifier,
+        glass = glass,
+        title = title,
+        supportingText = supportingText,
+        actions = actions,
+        content = content,
+    )
+}
+
+@OptIn(ExperimentalRuiApi::class)
+@Composable
+private fun RuiDialogPanel(
+    visible: Boolean,
+    onDismissRequest: () -> Unit,
+    modifier: Modifier,
+    glass: Boolean,
+    title: String?,
+    supportingText: String?,
+    actions: @Composable RowScope.() -> Unit,
+    content: @Composable ColumnScope.() -> Unit,
+) {
+    val colors = RuiTheme.colors
+    val typography = RuiTheme.typography
+    val spacing = RuiTheme.spacing
+    val motion = RuiTheme.motion
+    val dimens = RuiTheme.dimens
+
+    UnstyledDialog(
+        visible = visible,
+        onDismissRequest = onDismissRequest,
+        overlay = {
+            Scrim(
+                scrimColor = colors.scrim,
+                enter = fadeIn(motion.normal),
+                exit = fadeOut(motion.fast),
+            )
+        },
+    ) {
+        Box(
+            modifier = modifier
+                .fillMaxSize()
+                .padding(horizontal = spacing.xl),
+            contentAlignment = Alignment.Center,
+        ) {
+            DialogPanel(
+                modifier = Modifier
+                    .widthIn(max = 400.dp)
+                    .fillMaxWidth(),
+                paneTitle = title,
+                enter = fadeIn(motion.normal) + scaleIn(
+                    initialScale = 0.94f,
+                    animationSpec = spring(dampingRatio = 0.85f, stiffness = 400f),
+                ),
+                exit = fadeOut(motion.fast) + scaleOut(targetScale = 0.96f),
+            ) {
+                if (glass) {
+                    GlassSurface(
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RuiTheme.shapes.xl,
+                    ) {
+                        DialogBody(title, supportingText, actions, content)
+                    }
+                } else {
+                    RuiSurface(
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RuiTheme.shapes.xl,
+                        color = colors.surfaceElevated,
+                        border = BorderStroke(dimens.borderWidth, colors.outline),
+                    ) {
+                        DialogBody(title, supportingText, actions, content)
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun DialogBody(
+    title: String?,
+    supportingText: String?,
+    actions: @Composable RowScope.() -> Unit,
+    content: @Composable ColumnScope.() -> Unit,
+) {
+    val colors = RuiTheme.colors
+    val typography = RuiTheme.typography
+    val spacing = RuiTheme.spacing
+
+    Column(modifier = Modifier.padding(spacing.xl)) {
+        if (title != null) {
+            RuiText(
+                text = title,
+                style = typography.titleMd,
+                modifier = Modifier.padding(bottom = spacing.sm),
+            )
+        }
+        if (supportingText != null) {
+            RuiText(
+                text = supportingText,
+                style = typography.bodyMd,
+                color = colors.contentMuted,
+                modifier = Modifier.padding(bottom = spacing.sm),
+            )
+        }
+        content()
+
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(top = spacing.lg),
+            horizontalArrangement = Arrangement.End,
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            actions()
+        }
+    }
+}
