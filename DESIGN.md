@@ -63,9 +63,11 @@ State layers: 90ms in / 180ms out. Short transitions 120ms, medium 200ms. Compon
 
 ## Glass material
 
-`GlassSurface` is Liquid Glass's translucency without its platform lock-in: a tinted, hairline-bordered surface that lets content show through. Where backdrop blur is unsupported (`isBlurSupported` — Android below API 31 today) the tint becomes near-opaque so legibility never suffers. The same flag is the seam where real backdrop blur (e.g. Haze) will plug in.
+`GlassSurface` is Liquid Glass's translucency without its platform lock-in. With a `BlurBackdrop` it renders the captured content blurred behind a 72% tint; without one (or where unsupported — Android below API 31) the tint becomes near-opaque so legibility never depends on platform capability.
 
-Marked `@ExperimentalRuiApi` until blur lands.
+The backdrop mechanism follows miuix's blur module (Apache-2.0, see NOTICE): one composable captures itself via `Modifier.blurBackdrop(backdrop)` (`rememberBlurBackdrop()` + opaque background first), and any surface applies `Modifier.blurSurface(...)` — a GraphicsLayer record drawn with the cross-platform `BlurEffect`, translated into local coordinates. No pixels are read back.
+
+The catalog wires it end to end: `RuiScaffold(backdrop = …)` captures the content area; `RuiTopAppBar` and `RuiNavigationBar` sample it as frosted bars, and the glass dialog samples it through the portal. Blur surfaces are marked `@ExperimentalRuiApi`.
 
 ## Component conventions
 
@@ -75,7 +77,8 @@ Visual signatures worth keeping consistent:
 - **Filled button hierarchy** — `Primary` (accent fill) > `Tonal` (muted fill) > `Plain` (no fill) > `Danger`; no outlined buttons.
 - **Filled text field** with label above; error is red label + hairline, never a filled red box.
 - **Segmented control** for tabs: muted track, raised surface pill marks selection.
-- **Inset grouped lists** for any index of items (see the catalog app for the canonical pattern).
+- **Inset grouped lists** for any index of items (`RuiListGroup` + `RuiListItem` + `RuiDivider(inset = …)`).
+- **App chrome is glass-capable**: `RuiScaffold` overlays `RuiTopAppBar` / `RuiNavigationBar` on the content; with a backdrop they render frosted, without it they are plain surfaces.
 
 Every component in `rui.components`:
 

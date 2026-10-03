@@ -11,81 +11,100 @@ import androidx.compose.ui.unit.dp
 import rui.components.RuiButton
 import rui.components.RuiButtonSize
 import rui.components.RuiButtonVariant
+import rui.components.RuiDivider
 import rui.components.RuiIconButton
+import rui.components.RuiListGroup
+import rui.components.RuiListItem
 import rui.foundation.RuiIcon
 import rui.foundation.RuiIcons
 import rui.foundation.RuiText
-import rui.sample.ui.DetailScaffold
-import rui.sample.ui.GroupedCard
-import rui.sample.ui.RowSeparator
+import rui.sample.ui.ContentColumn
 import rui.sample.ui.SectionLabel
 import rui.theme.RuiTheme
 
 @Composable
-public fun ButtonsScreen(onBack: () -> Unit) {
-    DetailScaffold(title = "Buttons", onBack = onBack) {
+public fun ButtonsScreen(modifier: Modifier = Modifier) {
+    ContentColumn(modifier = modifier) {
         SectionLabel("Variants")
-        GroupedCard {
-            ButtonRow("Primary", "The one main action") {
-                RuiButton(onClick = {}) { RuiText("Continue") }
-            }
-            RowSeparator()
-            ButtonRow("Tonal", "Secondary actions") {
-                RuiButton(onClick = {}, variant = RuiButtonVariant.Tonal) { RuiText("Options") }
-            }
-            RowSeparator()
-            ButtonRow("Plain", "Inline, low emphasis") {
-                RuiButton(onClick = {}, variant = RuiButtonVariant.Plain) { RuiText("Learn more") }
-            }
-            RowSeparator()
-            ButtonRow("Danger", "Destructive actions") {
-                RuiButton(onClick = {}, variant = RuiButtonVariant.Danger) { RuiText("Delete") }
-            }
-            RowSeparator()
-            ButtonRow("Disabled") {
-                RuiButton(onClick = {}, enabled = false) { RuiText("Continue") }
-            }
+        RuiListGroup {
+            RuiListItem(
+                title = "Primary",
+                subtitle = "The one main action",
+                trailing = { RuiButton(onClick = {}) { RuiText("Continue") } },
+            )
+            RuiDivider(inset = RuiTheme.spacing.lg)
+            RuiListItem(
+                title = "Tonal",
+                subtitle = "Secondary actions",
+                trailing = { RuiButton(onClick = {}, variant = RuiButtonVariant.Tonal) { RuiText("Options") } },
+            )
+            RuiDivider(inset = RuiTheme.spacing.lg)
+            RuiListItem(
+                title = "Plain",
+                subtitle = "Inline, low emphasis",
+                trailing = { RuiButton(onClick = {}, variant = RuiButtonVariant.Plain) { RuiText("Learn more") } },
+            )
+            RuiDivider(inset = RuiTheme.spacing.lg)
+            RuiListItem(
+                title = "Danger",
+                subtitle = "Destructive actions",
+                trailing = { RuiButton(onClick = {}, variant = RuiButtonVariant.Danger) { RuiText("Delete") } },
+            )
+            RuiDivider(inset = RuiTheme.spacing.lg)
+            RuiListItem(
+                title = "Disabled",
+                trailing = { RuiButton(onClick = {}, enabled = false) { RuiText("Continue") } },
+            )
         }
 
         SectionLabel("Sizes")
-        GroupedCard {
-            ButtonRow("Small") {
-                RuiButton(onClick = {}, size = RuiButtonSize.Sm) { RuiText("Small") }
-            }
-            RowSeparator()
-            ButtonRow("Medium") {
-                RuiButton(onClick = {}, size = RuiButtonSize.Md) { RuiText("Medium") }
-            }
-            RowSeparator()
-            ButtonRow("Large") {
-                RuiButton(onClick = {}, size = RuiButtonSize.Lg) { RuiText("Large") }
-            }
+        RuiListGroup {
+            RuiListItem(
+                title = "Small",
+                trailing = { RuiButton(onClick = {}, size = RuiButtonSize.Sm) { RuiText("Small") } },
+            )
+            RuiDivider(inset = RuiTheme.spacing.lg)
+            RuiListItem(
+                title = "Medium",
+                trailing = { RuiButton(onClick = {}, size = RuiButtonSize.Md) { RuiText("Medium") } },
+            )
+            RuiDivider(inset = RuiTheme.spacing.lg)
+            RuiListItem(
+                title = "Large",
+                trailing = { RuiButton(onClick = {}, size = RuiButtonSize.Lg) { RuiText("Large") } },
+            )
         }
 
         SectionLabel("With icons")
-        GroupedCard {
-            ButtonRow("Leading icon") {
-                RuiButton(
-                    onClick = {},
-                    leading = { RuiIcon(imageVector = RuiIcons.Check, contentDescription = null) },
-                ) {
-                    RuiText("Confirm")
-                }
-            }
-            RowSeparator()
-            ButtonRow("Trailing icon") {
-                RuiButton(
-                    onClick = {},
-                    variant = RuiButtonVariant.Tonal,
-                    trailing = { RuiIcon(imageVector = RuiIcons.ChevronRight, contentDescription = null) },
-                ) {
-                    RuiText("Next")
-                }
-            }
+        RuiListGroup {
+            RuiListItem(
+                title = "Leading icon",
+                trailing = {
+                    RuiButton(
+                        onClick = {},
+                        leading = { RuiIcon(imageVector = RuiIcons.Check, contentDescription = null) },
+                    ) {
+                        RuiText("Confirm")
+                    }
+                },
+            )
+            RuiDivider(inset = RuiTheme.spacing.lg)
+            RuiListItem(
+                title = "Trailing icon",
+                trailing = {
+                    RuiButton(
+                        onClick = {},
+                        variant = RuiButtonVariant.Tonal,
+                        trailing = { RuiIcon(imageVector = RuiIcons.ChevronRight, contentDescription = null) },
+                    ) {
+                        RuiText("Next")
+                    }
+                },
+            )
         }
 
         SectionLabel("Icon buttons")
-        GroupedCard {
+        RuiListGroup {
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -108,13 +127,4 @@ public fun ButtonsScreen(onBack: () -> Unit) {
             }
         }
     }
-}
-
-@Composable
-private fun ButtonRow(
-    title: String,
-    subtitle: String? = null,
-    button: @Composable () -> Unit,
-) {
-    rui.sample.ui.ListRow(title = title, subtitle = subtitle, trailing = { button() })
 }

@@ -9,6 +9,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.dp
 import com.composeunstyled.LocalContentColor
 import rui.foundation.platform.isBlurSupported
 import rui.theme.RuiTheme
@@ -22,13 +24,12 @@ import rui.theme.RuiTheme
 public annotation class ExperimentalRuiApi
 
 /**
- * A translucent material inspired by Liquid Glass: content shows through with a
- * tint, a hairline border and the ambient content color scoped to descendants.
+ * A frosted-glass material: the [backdrop] (when provided and supported)
+ * renders blurred behind a translucent tint; without a backdrop the tint
+ * becomes near-opaque so legibility never depends on platform capability.
  *
- * On platforms without backdrop-blur support ([isBlurSupported]) the tint
- * becomes near-opaque so overlays never compromise legibility. When backdrop
- * blur lands in the design system, the same flag will gate it — the degradation
- * path is already wired.
+ * Pass a [BlurBackdrop] from [rememberBlurBackdrop] + [blurBackdrop] to get
+ * real backdrop blur; see the catalog app for the wiring.
  */
 @ExperimentalRuiApi
 @Composable
@@ -37,20 +38,30 @@ public fun GlassSurface(
     shape: Shape = RuiTheme.shapes.md,
     tint: Color = RuiTheme.colors.surfaceElevated,
     contentColor: Color = RuiTheme.colors.content,
+    backdrop: BlurBackdrop? = null,
+    blurRadius: Dp = 24.dp,
     content: @Composable () -> Unit,
 ) {
-    val effectiveTint = if (isBlurSupported) {
-        tint.copy(alpha = 0.78f)
-    } else {
-        tint.copy(alpha = 0.97f)
-    }
+    val colors = RuiTheme.colors
+    val useBlur = backdrop != null && isBlurSupported
+    val effectiveTint = if (useBlur) tint.copy(alpha = 0.72f) else tint.copy(alpha = 0.97f)
 
     CompositionLocalProvider(LocalContentColor provides contentColor) {
         Box(
             modifier = modifier
-                .clip(shape)
-                .background(effectiveTint, shape)
-                .border(RuiTheme.dimens.borderWidth, RuiTheme.colors.outlineSubtle, shape),
+                .then(
+                    if (useBlur) {
+                        Modifier.blurSurface(
+                            backdrop = backdrop!!,
+                            radius = blurRadius,
+                            tint = effectiveTint,
+                            shape = shape,
+                        )
+                    } else {
+                        Modifier.background(effectiveTint, shape)
+                    },
+                )
+                .border(RuiTheme.dimens.borderWidth, colors.outlineSubtle, shape),
         ) {
             content()
         }

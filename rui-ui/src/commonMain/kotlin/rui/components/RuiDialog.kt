@@ -23,6 +23,7 @@ import androidx.compose.ui.unit.dp
 import com.composeunstyled.DialogPanel
 import com.composeunstyled.Scrim
 import com.composeunstyled.UnstyledDialog
+import rui.foundation.BlurBackdrop
 import rui.foundation.ExperimentalRuiApi
 import rui.foundation.GlassSurface
 import rui.foundation.RuiText
@@ -52,6 +53,7 @@ public fun RuiDialog(
         onDismissRequest = onDismissRequest,
         modifier = modifier,
         glass = false,
+        backdrop = null,
         title = title,
         supportingText = supportingText,
         actions = actions,
@@ -67,6 +69,7 @@ public fun RuiDialog(
     onDismissRequest: () -> Unit,
     glass: Boolean,
     modifier: Modifier = Modifier,
+    backdrop: BlurBackdrop? = null,
     title: String? = null,
     supportingText: String? = null,
     actions: @Composable RowScope.() -> Unit = {},
@@ -77,6 +80,7 @@ public fun RuiDialog(
         onDismissRequest = onDismissRequest,
         modifier = modifier,
         glass = glass,
+        backdrop = backdrop,
         title = title,
         supportingText = supportingText,
         actions = actions,
@@ -91,6 +95,7 @@ private fun RuiDialogPanel(
     onDismissRequest: () -> Unit,
     modifier: Modifier,
     glass: Boolean,
+    backdrop: BlurBackdrop?,
     title: String?,
     supportingText: String?,
     actions: @Composable RowScope.() -> Unit,
@@ -134,6 +139,7 @@ private fun RuiDialogPanel(
                     GlassSurface(
                         modifier = Modifier.fillMaxWidth(),
                         shape = RuiTheme.shapes.xl,
+                        backdrop = backdrop,
                     ) {
                         DialogBody(title, supportingText, actions, content)
                     }

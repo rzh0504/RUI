@@ -47,6 +47,39 @@ public object RuiIcons {
         }
     }
 
+    public val Grid: ImageVector by lazy {
+        strokedIcon("RuiGrid") {
+            moveTo(4.5f, 4.5f)
+            lineTo(10f, 4.5f)
+            lineTo(10f, 10f)
+            lineTo(4.5f, 10f)
+            close()
+            moveTo(14f, 4.5f)
+            lineTo(19.5f, 4.5f)
+            lineTo(19.5f, 10f)
+            lineTo(14f, 10f)
+            close()
+            moveTo(4.5f, 14f)
+            lineTo(10f, 14f)
+            lineTo(10f, 19.5f)
+            lineTo(4.5f, 19.5f)
+            close()
+            moveTo(14f, 14f)
+            lineTo(19.5f, 14f)
+            lineTo(19.5f, 19.5f)
+            lineTo(14f, 19.5f)
+            close()
+        }
+    }
+
+    public val Swatch: ImageVector by lazy {
+        strokedIcon("RuiSwatch") {
+            moveTo(20f, 12f)
+            arcTo(8f, 8f, 0f, true, true, 4f, 12f)
+            arcTo(8f, 8f, 0f, true, true, 20f, 12f)
+        }
+    }
+
     private fun strokedIcon(name: String, path: PathBuilder.() -> Unit): ImageVector =
         ImageVector.Builder(
             name = name,

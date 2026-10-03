@@ -1,0 +1,85 @@
+package rui.sample
+
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
+import rui.components.RuiListGroup
+import rui.components.RuiListItem
+import rui.components.RuiSwitch
+import rui.components.RuiDivider
+import rui.foundation.RuiText
+import rui.sample.ui.ContentColumn
+import rui.sample.ui.SectionLabel
+import rui.theme.RuiTheme
+
+@Composable
+public fun ComponentsScreen(
+    darkTheme: Boolean,
+    onDarkThemeChange: (Boolean) -> Unit,
+    glassEnabled: Boolean,
+    onGlassEnabledChange: (Boolean) -> Unit,
+    onOpen: (Destination) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    ContentColumn(modifier = modifier) {
+        SectionLabel("Appearance")
+        RuiListGroup {
+            RuiListItem(
+                title = "Dark appearance",
+                trailing = { RuiSwitch(checked = darkTheme, onCheckedChange = onDarkThemeChange) },
+            )
+            RuiDivider(inset = RuiTheme.spacing.lg)
+            RuiListItem(
+                title = "Glass material",
+                trailing = { RuiSwitch(checked = glassEnabled, onCheckedChange = onGlassEnabledChange) },
+            )
+        }
+
+        SectionLabel("Controls")
+        RuiListGroup {
+            RuiListItem(
+                title = "Buttons",
+                subtitle = "Variants, sizes, icons",
+                showChevron = true,
+                onClick = { onOpen(Destination.Buttons) },
+            )
+            RuiDivider(inset = RuiTheme.spacing.lg)
+            RuiListItem(
+                title = "Text field",
+                subtitle = "Filled input with error and disabled states",
+                showChevron = true,
+                onClick = { onOpen(Destination.TextField) },
+            )
+            RuiDivider(inset = RuiTheme.spacing.lg)
+            RuiListItem(
+                title = "Selection controls",
+                subtitle = "Switch and checkbox",
+                showChevron = true,
+                onClick = { onOpen(Destination.Toggles) },
+            )
+            RuiDivider(inset = RuiTheme.spacing.lg)
+            RuiListItem(
+                title = "Segmented tabs",
+                subtitle = "Roving focus, keyboard navigation",
+                showChevron = true,
+                onClick = { onOpen(Destination.Tabs) },
+            )
+        }
+
+        SectionLabel("Overlays")
+        RuiListGroup {
+            RuiListItem(
+                title = "Dialog",
+                subtitle = "Scrim, actions, portal hosting",
+                showChevron = true,
+                onClick = { onOpen(Destination.Dialog) },
+            )
+        }
+
+        RuiText(
+            text = "Rui · Compose Unstyled",
+            style = RuiTheme.typography.labelSm,
+            color = RuiTheme.colors.contentDisabled,
+        )
+    }
+}

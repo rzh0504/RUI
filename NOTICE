@@ -11,6 +11,14 @@ License, Version 2.0.
     - Modified: re-exposed as a Compose Shape (SmoothCornerShape) integrated
       with Rui's theme tokens instead of miuix's modifier API.
 
+  rui-ui/src/commonMain/kotlin/rui/foundation/BlurBackdrop.kt
+    - Backdrop-capture mechanism (GraphicsLayer recording + coordinates
+      translation) adapted from miuix's miuix-blur module
+      (LayerBackdrop/LayerBackdropModifier).
+    - Modified: heavily reduced - blur applies through Compose's
+      cross-platform BlurEffect instead of miuix's AGSL/SkSL runtime-shader
+      pipeline; no progressive blur, noise dither or highlights.
+
 A copy of the Apache License, Version 2.0 for that portion of the code is
 available at https://www.apache.org/licenses/LICENSE-2.0 and must be
 distributed alongside this product.

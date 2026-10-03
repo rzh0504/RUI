@@ -1,6 +1,5 @@
 package rui.sample.screens
 
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
@@ -9,10 +8,10 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import rui.components.RuiListGroup
 import rui.components.RuiTabGroup
 import rui.foundation.RuiText
-import rui.sample.ui.DetailScaffold
-import rui.sample.ui.GroupedCard
+import rui.sample.ui.ContentColumn
 import rui.sample.ui.SectionLabel
 import rui.theme.RuiTheme
 
@@ -20,14 +19,14 @@ private enum class MediaTab { Listen, Watch, Read }
 private enum class PairTab { Day, Night }
 
 @Composable
-public fun TabsScreen(onBack: () -> Unit) {
+public fun TabsScreen(modifier: Modifier = Modifier) {
     val typography = RuiTheme.typography
     val colors = RuiTheme.colors
 
     var media by remember { mutableStateOf(MediaTab.Listen) }
     var pair by remember { mutableStateOf(PairTab.Day) }
 
-    DetailScaffold(title = "Segmented tabs", onBack = onBack) {
+    ContentColumn(modifier = modifier) {
         RuiText(
             text = "Unstyled's roving-focus tab behavior in a segmented skin: " +
                 "arrow keys move the selection, Tab joins and leaves the group.",
@@ -36,50 +35,50 @@ public fun TabsScreen(onBack: () -> Unit) {
         )
 
         SectionLabel("Three segments")
-        GroupedCard {
-            Column(modifier = Modifier.padding(RuiTheme.spacing.md)) {
-                RuiTabGroup(
-                    selectedTab = media,
-                    onSelectedTabChange = { media = it },
-                    tabs = MediaTab.entries.toList(),
-                    label = { it.name },
+        RuiListGroup {
+            RuiTabGroup(
+                selectedTab = media,
+                onSelectedTabChange = { media = it },
+                tabs = MediaTab.entries.toList(),
+                label = { it.name },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(RuiTheme.spacing.md),
+            ) { active ->
+                RuiText(
+                    text = when (active) {
+                        MediaTab.Listen -> "Audio goes here."
+                        MediaTab.Watch -> "Video goes here."
+                        MediaTab.Read -> "Articles go here."
+                    },
+                    style = typography.bodyMd,
+                    color = colors.contentMuted,
                     modifier = Modifier.fillMaxWidth(),
-                ) { active ->
-                    RuiText(
-                        text = when (active) {
-                            MediaTab.Listen -> "Audio goes here."
-                            MediaTab.Watch -> "Video goes here."
-                            MediaTab.Read -> "Articles go here."
-                        },
-                        style = typography.bodyMd,
-                        color = colors.contentMuted,
-                        modifier = Modifier.fillMaxWidth(),
-                    )
-                }
+                )
             }
         }
 
         SectionLabel("Two segments")
-        GroupedCard {
-            Column(modifier = Modifier.padding(RuiTheme.spacing.md)) {
-                RuiTabGroup(
-                    selectedTab = pair,
-                    onSelectedTabChange = { pair = it },
-                    tabs = PairTab.entries.toList(),
-                    labelStyle = typography.labelMd,
-                    label = { it.name },
+        RuiListGroup {
+            RuiTabGroup(
+                selectedTab = pair,
+                onSelectedTabChange = { pair = it },
+                tabs = PairTab.entries.toList(),
+                labelStyle = typography.labelMd,
+                label = { it.name },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(RuiTheme.spacing.md),
+            ) { active ->
+                RuiText(
+                    text = when (active) {
+                        PairTab.Day -> "Light content."
+                        PairTab.Night -> "Dark content."
+                    },
+                    style = typography.bodyMd,
+                    color = colors.contentMuted,
                     modifier = Modifier.fillMaxWidth(),
-                ) { active ->
-                    RuiText(
-                        text = when (active) {
-                            PairTab.Day -> "Light content."
-                            PairTab.Night -> "Dark content."
-                        },
-                        style = typography.bodyMd,
-                        color = colors.contentMuted,
-                        modifier = Modifier.fillMaxWidth(),
-                    )
-                }
+                )
             }
         }
     }

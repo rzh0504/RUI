@@ -5,25 +5,31 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Modifier
 import rui.components.RuiButton
 import rui.components.RuiButtonVariant
 import rui.components.RuiDialog
+import rui.components.RuiDivider
+import rui.components.RuiListGroup
+import rui.components.RuiListItem
+import rui.foundation.BlurBackdrop
 import rui.foundation.ExperimentalRuiApi
 import rui.foundation.RuiText
-import rui.sample.ui.DetailScaffold
-import rui.sample.ui.GroupedCard
-import rui.sample.ui.ListRow
-import rui.sample.ui.RowSeparator
+import rui.sample.ui.ContentColumn
 import rui.sample.ui.SectionLabel
 import rui.theme.RuiTheme
 
 @OptIn(ExperimentalRuiApi::class)
 @Composable
-public fun DialogScreen(onBack: () -> Unit) {
+public fun DialogScreen(
+    glassEnabled: Boolean,
+    backdrop: BlurBackdrop,
+    modifier: Modifier = Modifier,
+) {
     var standardDialog by remember { mutableStateOf(false) }
     var glassDialog by remember { mutableStateOf(false) }
 
-    DetailScaffold(title = "Dialog", onBack = onBack) {
+    ContentColumn(modifier = modifier) {
         RuiText(
             text = "Portaled through DialogHost at the app root. Esc and back " +
                 "dismiss, the scrim fades, the panel scales in on a spring.",
@@ -32,8 +38,8 @@ public fun DialogScreen(onBack: () -> Unit) {
         )
 
         SectionLabel("Alert")
-        GroupedCard {
-            ListRow(
+        RuiListGroup {
+            RuiListItem(
                 title = "Destructive confirmation",
                 subtitle = "Title, supporting text, actions",
                 showChevron = true,
@@ -42,10 +48,10 @@ public fun DialogScreen(onBack: () -> Unit) {
         }
 
         SectionLabel("Glass")
-        GroupedCard {
-            ListRow(
+        RuiListGroup {
+            RuiListItem(
                 title = "Glass panel",
-                subtitle = "Same behavior, translucent material",
+                subtitle = if (glassEnabled) "Backdrop blur behind a translucent panel" else "Glass is off — solid surface",
                 showChevron = true,
                 onClick = { glassDialog = true },
             )
@@ -70,7 +76,8 @@ public fun DialogScreen(onBack: () -> Unit) {
     RuiDialog(
         visible = glassDialog,
         onDismissRequest = { glassDialog = false },
-        glass = true,
+        glass = glassEnabled,
+        backdrop = backdrop,
         title = "Glass panel",
         supportingText = "Unsupported platforms get a near-opaque fallback automatically.",
         actions = {

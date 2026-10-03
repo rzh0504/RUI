@@ -4,18 +4,18 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.input.rememberTextFieldState
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import rui.components.RuiListGroup
 import rui.components.RuiTextField
 import rui.foundation.RuiIcon
 import rui.foundation.RuiIcons
 import rui.foundation.RuiText
-import rui.sample.ui.DetailScaffold
-import rui.sample.ui.GroupedCard
+import rui.sample.ui.ContentColumn
 import rui.sample.ui.SectionLabel
 import rui.theme.RuiTheme
 
 @Composable
-public fun TextFieldScreen(onBack: () -> Unit) {
-    DetailScaffold(title = "Text field", onBack = onBack) {
+public fun TextFieldScreen(modifier: Modifier = Modifier) {
+    ContentColumn(modifier = modifier) {
         RuiText(
             text = "Filled, borderless input built on Unstyled's TextFieldState. " +
                 "A hairline border appears only to mark errors.",
@@ -24,7 +24,7 @@ public fun TextFieldScreen(onBack: () -> Unit) {
         )
 
         SectionLabel("Default")
-        GroupedCard {
+        RuiListGroup {
             RuiTextField(
                 state = rememberTextFieldState(),
                 label = "Email",
@@ -36,7 +36,7 @@ public fun TextFieldScreen(onBack: () -> Unit) {
         }
 
         SectionLabel("Error")
-        GroupedCard {
+        RuiListGroup {
             RuiTextField(
                 state = rememberTextFieldState("Invalid input"),
                 label = "Email",
@@ -47,7 +47,7 @@ public fun TextFieldScreen(onBack: () -> Unit) {
         }
 
         SectionLabel("Disabled")
-        GroupedCard {
+        RuiListGroup {
             RuiTextField(
                 state = rememberTextFieldState("Read-only value"),
                 label = "Account",

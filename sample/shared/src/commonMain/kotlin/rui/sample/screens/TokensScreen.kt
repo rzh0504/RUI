@@ -1,11 +1,9 @@
 package rui.sample.screens
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
@@ -19,70 +17,69 @@ import rui.foundation.ExperimentalRuiApi
 import rui.foundation.GlassSurface
 import rui.foundation.RuiIcon
 import rui.foundation.RuiIcons
+import rui.components.RuiDivider
+import rui.components.RuiListGroup
 import rui.foundation.RuiSurface
 import rui.foundation.RuiText
-import rui.sample.ui.DetailScaffold
-import rui.sample.ui.GroupedCard
-import rui.sample.ui.RowSeparator
+import rui.sample.ui.ContentColumn
 import rui.sample.ui.SectionLabel
-import rui.theme.RuiColorScheme
 import rui.theme.RuiTheme
 
 @OptIn(ExperimentalRuiApi::class)
 @Composable
-public fun FoundationsScreen(onBack: () -> Unit) {
+public fun TokensScreen(modifier: Modifier = Modifier) {
     val colors = RuiTheme.colors
     val typography = RuiTheme.typography
     val spacing = RuiTheme.spacing
 
-    DetailScaffold(title = "Foundations", onBack = onBack) {
+    ContentColumn(modifier = modifier) {
         SectionLabel("Type scale")
-        GroupedCard {
+        RuiListGroup {
             TypeRow("titleLg", typography.titleLg)
-            RowSeparator()
+            RuiDivider(inset = spacing.lg)
             TypeRow("titleMd", typography.titleMd)
-            RowSeparator()
+            RuiDivider(inset = spacing.lg)
             TypeRow("titleSm", typography.titleSm)
-            RowSeparator()
+            RuiDivider(inset = spacing.lg)
             TypeRow("bodyLg", typography.bodyLg)
-            RowSeparator()
+            RuiDivider(inset = spacing.lg)
             TypeRow("bodyMd", typography.bodyMd)
-            RowSeparator()
+            RuiDivider(inset = spacing.lg)
             TypeRow("bodySm", typography.bodySm)
-            RowSeparator()
+            RuiDivider(inset = spacing.lg)
             TypeRow("labelLg", typography.labelLg)
-            RowSeparator()
+            RuiDivider(inset = spacing.lg)
             TypeRow("labelMd", typography.labelMd)
-            RowSeparator()
+            RuiDivider(inset = spacing.lg)
             TypeRow("labelSm", typography.labelSm)
         }
 
         SectionLabel("Color tokens")
-        GroupedCard {
+        RuiListGroup {
             TokenRow("background", colors.background)
-            RowSeparator()
+            RuiDivider(inset = spacing.lg)
             TokenRow("surface", colors.surface)
-            RowSeparator()
+            RuiDivider(inset = spacing.lg)
             TokenRow("surfaceMuted", colors.surfaceMuted)
-            RowSeparator()
+            RuiDivider(inset = spacing.lg)
             TokenRow("content", colors.content)
-            RowSeparator()
+            RuiDivider(inset = spacing.lg)
             TokenRow("contentMuted", colors.contentMuted)
-            RowSeparator()
+            RuiDivider(inset = spacing.lg)
             TokenRow("primary", colors.primary)
-            RowSeparator()
+            RuiDivider(inset = spacing.lg)
             TokenRow("danger", colors.danger)
-            RowSeparator()
+            RuiDivider(inset = spacing.lg)
             TokenRow("success", colors.success)
-            RowSeparator()
+            RuiDivider(inset = spacing.lg)
             TokenRow("scrim", colors.scrim)
         }
 
         SectionLabel("Icons")
-        GroupedCard {
+        RuiListGroup {
             Row(
                 modifier = Modifier.padding(vertical = spacing.md),
-                horizontalArrangement = Arrangement.spacedBy(spacing.xl),
+                horizontalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(spacing.xl),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 RuiIcon(imageVector = RuiIcons.Check, contentDescription = null)
@@ -95,7 +92,7 @@ public fun FoundationsScreen(onBack: () -> Unit) {
         }
 
         SectionLabel("Surfaces")
-        GroupedCard {
+        RuiListGroup {
             RuiSurface(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -129,7 +126,7 @@ public fun FoundationsScreen(onBack: () -> Unit) {
         }
 
         SectionLabel("Glass material")
-        GroupedCard {
+        RuiListGroup {
             GlassSurface(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -137,7 +134,7 @@ public fun FoundationsScreen(onBack: () -> Unit) {
                 shape = RuiTheme.shapes.md,
             ) {
                 RuiText(
-                    text = "Translucent tint; near-opaque where backdrop blur is unsupported.",
+                    text = "Translucent tint; degrades to near-opaque where backdrop blur is unsupported.",
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(spacing.lg),
@@ -175,7 +172,7 @@ private fun TokenRow(name: String, color: Color) {
             .fillMaxWidth()
             .padding(horizontal = RuiTheme.spacing.lg, vertical = RuiTheme.spacing.md),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(RuiTheme.spacing.md),
+        horizontalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(RuiTheme.spacing.md),
     ) {
         Box(
             modifier = Modifier
