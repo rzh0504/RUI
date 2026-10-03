@@ -1,7 +1,6 @@
 package rui.components
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.PaddingValues
@@ -26,11 +25,23 @@ import com.composeunstyled.LocalContentColor
 import com.composeunstyled.UnstyledButton
 import com.composeunstyled.theme.ColoredIndication
 import rui.foundation.ruiFocusRing
-import rui.theme.StateLayerAlphas
 import rui.theme.RuiTheme
+import rui.theme.StateLayerAlphas
 
 /** Visual weight of a [RuiButton]. */
-public enum class RuiButtonVariant { Primary, Secondary, Ghost, Danger }
+public enum class RuiButtonVariant {
+    /** Filled with the accent color — the one main action on a screen. */
+    Primary,
+
+    /** Filled with a neutral muted color — secondary actions. */
+    Tonal,
+
+    /** No fill — inline and low-emphasis actions. */
+    Plain,
+
+    /** Filled with the danger color — destructive actions. */
+    Danger,
+}
 
 /** Height and padding tier of a [RuiButton]. */
 public enum class RuiButtonSize { Sm, Md, Lg }
@@ -39,7 +50,6 @@ public enum class RuiButtonSize { Sm, Md, Lg }
 public data class RuiButtonColors(
     public val container: Color,
     public val content: Color,
-    public val outline: Color? = null,
 )
 
 public object RuiButtonDefaults {
@@ -57,13 +67,12 @@ public object RuiButtonDefaults {
                 if (enabled) RuiButtonColors(colors.primary, colors.onPrimary)
                 else RuiButtonColors(disabledContainer, disabledContent)
 
-            RuiButtonVariant.Secondary ->
-                if (enabled) RuiButtonColors(colors.surface, colors.content, colors.outline)
-                else RuiButtonColors(colors.surface, disabledContent, colors.outlineSubtle)
+            RuiButtonVariant.Tonal ->
+                if (enabled) RuiButtonColors(colors.surfaceMuted, colors.content)
+                else RuiButtonColors(disabledContainer, disabledContent)
 
-            RuiButtonVariant.Ghost ->
-                if (enabled) RuiButtonColors(Color.Transparent, colors.content)
-                else RuiButtonColors(Color.Transparent, disabledContent)
+            RuiButtonVariant.Plain ->
+                RuiButtonColors(Color.Transparent, if (enabled) colors.content else disabledContent)
 
             RuiButtonVariant.Danger ->
                 if (enabled) RuiButtonColors(colors.danger, Color.White)
@@ -93,8 +102,8 @@ public object RuiButtonDefaults {
 
 /**
  * The Rui push button: a token-driven skin over Unstyled's behavior (role,
- * keyboard activation, focus). Every visual slot is a parameter, so the default
- * look never locks anyone out.
+ * keyboard activation, focus). Filled variants carry the hierarchy; no
+ * borders — emphasis comes from fill and content weight.
  */
 @Composable
 public fun RuiButton(
@@ -132,13 +141,6 @@ public fun RuiButton(
             .heightIn(min = RuiButtonDefaults.minHeight(size))
             .clip(shape)
             .background(colors.container, shape)
-            .then(
-                if (colors.outline != null) {
-                    Modifier.border(RuiTheme.dimens.borderWidth, colors.outline, shape)
-                } else {
-                    Modifier
-                },
-            )
             .ruiFocusRing(resolvedInteractionSource, shape),
         role = Role.Button,
         indication = stateLayer,

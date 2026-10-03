@@ -8,6 +8,7 @@ activityCompose = "1.12.4"
 [libraries]
 composeunstyled = { module = "com.composables:composeunstyled", version.ref = "composeunstyled" }
 composeunstyled-colored-indication = { module = "com.composables:composeunstyled-colored-indication", version.ref = "composeunstyled" }
+compose-ui-backhandler = { module = "org.jetbrains.compose.ui:ui-backhandler", version.ref = "composeMultiplatform" }
 androidx-activity-compose = { module = "androidx.activity:activity-compose", version.ref = "activityCompose" }
 
 [plugins]

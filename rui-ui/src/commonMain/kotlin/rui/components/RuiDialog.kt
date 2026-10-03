@@ -121,7 +121,7 @@ private fun RuiDialogPanel(
         ) {
             DialogPanel(
                 modifier = Modifier
-                    .widthIn(max = 400.dp)
+                    .widthIn(max = 320.dp)
                     .fillMaxWidth(),
                 paneTitle = title,
                 enter = fadeIn(motion.normal) + scaleIn(
@@ -142,7 +142,6 @@ private fun RuiDialogPanel(
                         modifier = Modifier.fillMaxWidth(),
                         shape = RuiTheme.shapes.xl,
                         color = colors.surfaceElevated,
-                        border = BorderStroke(dimens.borderWidth, colors.outline),
                     ) {
                         DialogBody(title, supportingText, actions, content)
                     }

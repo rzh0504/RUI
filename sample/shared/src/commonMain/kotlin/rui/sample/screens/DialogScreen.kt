@@ -1,7 +1,6 @@
-package rui.sample.demos
+package rui.sample.screens
 
 import androidx.compose.runtime.Composable
-import rui.theme.RuiTheme
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -11,36 +10,45 @@ import rui.components.RuiButtonVariant
 import rui.components.RuiDialog
 import rui.foundation.ExperimentalRuiApi
 import rui.foundation.RuiText
+import rui.sample.ui.DetailScaffold
+import rui.sample.ui.GroupedCard
+import rui.sample.ui.ListRow
+import rui.sample.ui.RowSeparator
+import rui.sample.ui.SectionLabel
+import rui.theme.RuiTheme
 
 @OptIn(ExperimentalRuiApi::class)
 @Composable
-internal fun OverlayDemos(glassEnabled: Boolean) {
+public fun DialogScreen(onBack: () -> Unit) {
     var standardDialog by remember { mutableStateOf(false) }
     var glassDialog by remember { mutableStateOf(false) }
 
-    DemoCard(title = "Dialog") {
+    DetailScaffold(title = "Dialog", onBack = onBack) {
         RuiText(
-            text = "Portaled through DialogHost; Esc and back dismiss; scrim and panel animate.",
+            text = "Portaled through DialogHost at the app root. Esc and back " +
+                "dismiss, the scrim fades, the panel scales in on a spring.",
             style = RuiTheme.typography.bodySm,
             color = RuiTheme.colors.contentMuted,
         )
-        RuiButton(onClick = { standardDialog = true }) {
-            RuiText("Show dialog")
-        }
-    }
 
-    DemoCard(title = "Glass dialog") {
-        RuiText(
-            text = if (glassEnabled) {
-                "The panel renders with the glass material."
-            } else {
-                "Glass is off — the panel falls back to a solid surface."
-            },
-            style = RuiTheme.typography.bodySm,
-            color = RuiTheme.colors.contentMuted,
-        )
-        RuiButton(onClick = { glassDialog = true }, variant = RuiButtonVariant.Secondary) {
-            RuiText("Show glass dialog")
+        SectionLabel("Alert")
+        GroupedCard {
+            ListRow(
+                title = "Destructive confirmation",
+                subtitle = "Title, supporting text, actions",
+                showChevron = true,
+                onClick = { standardDialog = true },
+            )
+        }
+
+        SectionLabel("Glass")
+        GroupedCard {
+            ListRow(
+                title = "Glass panel",
+                subtitle = "Same behavior, translucent material",
+                showChevron = true,
+                onClick = { glassDialog = true },
+            )
         }
     }
 
@@ -50,7 +58,7 @@ internal fun OverlayDemos(glassEnabled: Boolean) {
         title = "Delete item?",
         supportingText = "This action cannot be undone. The item will be removed from all your devices.",
         actions = {
-            RuiButton(onClick = { standardDialog = false }, variant = RuiButtonVariant.Ghost) {
+            RuiButton(onClick = { standardDialog = false }, variant = RuiButtonVariant.Plain) {
                 RuiText("Cancel")
             }
             RuiButton(onClick = { standardDialog = false }, variant = RuiButtonVariant.Danger) {
@@ -62,11 +70,11 @@ internal fun OverlayDemos(glassEnabled: Boolean) {
     RuiDialog(
         visible = glassDialog,
         onDismissRequest = { glassDialog = false },
-        glass = glassEnabled,
+        glass = true,
         title = "Glass panel",
-        supportingText = "A translucent material for floating chrome. Unsupported platforms get a near-opaque fallback.",
+        supportingText = "Unsupported platforms get a near-opaque fallback automatically.",
         actions = {
-            RuiButton(onClick = { glassDialog = false }, variant = RuiButtonVariant.Secondary) {
+            RuiButton(onClick = { glassDialog = false }, variant = RuiButtonVariant.Tonal) {
                 RuiText("Got it")
             }
         },

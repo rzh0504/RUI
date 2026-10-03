@@ -6,13 +6,13 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.composeunstyled.Tab
 import com.composeunstyled.TabList
@@ -23,11 +23,11 @@ import rui.theme.RuiTheme
 
 /**
  * The Rui tab group: Unstyled's roving-focus, keyboard-navigable tab behavior
- * with an underline indicator. `activateOnFocus` follows Unstyled's default, so
- * arrow keys move selection directly.
+ * rendered as a segmented control — a muted track with a raised pill marking
+ * the selection.
  *
- * With [fillWidth] the tabs share the available width evenly; otherwise each
- * tab hugs its label.
+ * With [fillWidth] the segments share the available width evenly (the common
+ * case); otherwise each hugs its label.
  *
  * Tab panels are composed through [content] for the activated tab key.
  */
@@ -37,7 +37,7 @@ public fun <T> RuiTabGroup(
     onSelectedTabChange: (T) -> Unit,
     tabs: List<T>,
     modifier: Modifier = Modifier,
-    fillWidth: Boolean = false,
+    fillWidth: Boolean = true,
     labelStyle: TextStyle = RuiTheme.typography.labelLg,
     label: (T) -> String,
     content: @Composable (T) -> Unit,
@@ -54,36 +54,32 @@ public fun <T> RuiTabGroup(
         Column {
             TabList(modifier = Modifier.fillMaxWidth()) {
                 Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(spacing.xs),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RuiTheme.shapes.full)
+                        .background(colors.surfaceMuted)
+                        .padding(2.dp),
+                    horizontalArrangement = Arrangement.spacedBy(2.dp),
                 ) {
                     tabs.forEach { key ->
                         Tab(
                             key = key,
                             modifier = if (fillWidth) Modifier.weight(1f) else Modifier,
                         ) {
-                            Column {
-                                Box(
-                                    modifier = Modifier.padding(
-                                        horizontal = spacing.sm,
-                                        vertical = spacing.sm,
-                                    ),
-                                ) {
-                                    RuiText(
-                                        text = label(key),
-                                        style = labelStyle,
-                                        color = if (selected) colors.content else colors.contentMuted,
-                                        maxLines = 1,
-                                    )
-                                }
-                                Box(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .height(2.dp)
-                                        .background(
-                                            color = if (selected) colors.primary else Color.Transparent,
-                                            shape = RoundedCornerShape(1.dp),
-                                        ),
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clip(RuiTheme.shapes.full)
+                                    .background(if (selected) colors.surface else androidx.compose.ui.graphics.Color.Transparent)
+                                    .padding(vertical = spacing.sm, horizontal = spacing.md),
+                                contentAlignment = Alignment.Center,
+                            ) {
+                                RuiText(
+                                    text = label(key),
+                                    style = labelStyle,
+                                    color = if (selected) colors.content else colors.contentMuted,
+                                    textAlign = TextAlign.Center,
+                                    maxLines = 1,
                                 )
                             }
                         }

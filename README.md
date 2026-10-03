@@ -2,7 +2,7 @@
 
 A neutral, cross-platform design system for **Compose Multiplatform**, built on [Compose Unstyled](https://composeunstyled.com) headless primitives.
 
-Rui renders the same clean, restrained UI on Android and iOS — it is not a Material skin and not a Liquid Glass clone. It borrows the best of both: Material's semantic tokens, state-layer feedback and accessibility discipline; Liquid Glass's translucent material and content-first chrome. Platforms converge because **all UI code lives in `commonMain`**.
+Rui renders the same clean, restrained UI on Android and iOS — it is not a Material skin, not a Liquid Glass clone, and not a web framework's design language. The visual base sits closest to iOS (grouped backgrounds, filled controls, tight radii, hairline separators) without copying it: no platform-specific components, no system chrome imitation. It borrows Material's semantic tokens, state-layer feedback and accessibility discipline, and Liquid Glass's translucent material. Platforms converge because **all UI code lives in `commonMain`**.
 
 ## Architecture
 
@@ -51,7 +51,7 @@ Targets today: `android`, `iosArm64`, `iosSimulatorArm64`. Desktop (`jvm`) and W
 # or verify remotely: see .github/workflows/ios-ci.yml
 ```
 
-The catalog exercises every component, with light/dark and glass toggles.
+The catalog is a structured showcase: an iOS-style grouped index page navigates to one page per component, each organized into labeled demo groups. Light/dark and glass toggles live on the home page.
 
 ### Use Rui in an app
 

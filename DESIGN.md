@@ -18,11 +18,11 @@ Semantic roles only; light and dark factory defaults ship in `RuiColorScheme.lig
 
 | Role | Used for |
 |---|---|
-| `background` | Page behind everything |
+| `background` | Page behind everything (the grouped background surfaces sit on) |
 | `surface` | Cards, sheets, inputs |
 | `surfaceMuted` | Wells, headers, disabled containers |
 | `surfaceElevated` | Menus, dialogs |
-| `outline` / `outlineSubtle` | Container hairlines / internal dividers |
+| `outline` / `outlineSubtle` | Rare hairlines (error fields) / row separators |
 | `content` / `contentMuted` / `contentDisabled` | Text & icon hierarchy |
 | `primary` / `onPrimary` | Accent and emphasis |
 | `danger` / `success` | Destructive / affirmative feedback |
@@ -38,7 +38,7 @@ Three levels × three sizes. Default family is the platform system font, so text
 
 ### Shapes — `RuiShapes`
 
-`sm 8 · md 12 · lg 16 · xl 20 · full 50%` — components pick by role (buttons md, cards lg, dialogs xl, pills full). Squircle/continuous corners are a future swap inside `ruiShapes()`, not a component change.
+`sm 6 · md 10 · lg 12 · xl 16 · full 50%` — components pick by role (buttons and inputs md, grouped cards lg, dialogs xl, pills full). The radii sit below Material's defaults, close to iOS but not identical. Squircle/continuous corners are a future swap inside `ruiShapes()`, not a component change.
 
 ### Spacing & metrics
 
@@ -62,6 +62,14 @@ State layers: 90ms in / 180ms out. Short transitions 120ms, medium 200ms. Compon
 Marked `@ExperimentalRuiApi` until blur lands.
 
 ## Component conventions
+
+Visual signatures worth keeping consistent:
+
+- **No chrome borders.** Surfaces separate by contrast (`surface` on `background`); a hairline only marks errors.
+- **Filled button hierarchy** — `Primary` (accent fill) > `Tonal` (muted fill) > `Plain` (no fill) > `Danger`; no outlined buttons.
+- **Filled text field** with label above; error is red label + hairline, never a filled red box.
+- **Segmented control** for tabs: muted track, raised surface pill marks selection.
+- **Inset grouped lists** for any index of items (see the catalog app for the canonical pattern).
 
 Every component in `rui.components`:
 

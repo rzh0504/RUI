@@ -24,9 +24,9 @@ public data class RuiShapes(
 )
 
 public fun ruiShapes(): RuiShapes = RuiShapes(
-    sm = RoundedCornerShape(8),
-    md = RoundedCornerShape(12),
-    lg = RoundedCornerShape(16),
-    xl = RoundedCornerShape(20),
+    sm = RoundedCornerShape(6),
+    md = RoundedCornerShape(10),
+    lg = RoundedCornerShape(12),
+    xl = RoundedCornerShape(16),
     full = RoundedCornerShape(percent = 50),
 )

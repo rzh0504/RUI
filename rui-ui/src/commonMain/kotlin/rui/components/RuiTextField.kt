@@ -3,7 +3,6 @@ package rui.components
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.interaction.collectIsFocusedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -15,7 +14,6 @@ import androidx.compose.foundation.text.input.TextFieldLineLimits
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.text.selection.TextSelectionColors
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -30,7 +28,8 @@ import rui.theme.RuiTheme
 
 /**
  * The Rui text field: Unstyled's state-driven input (hoisted [TextFieldState])
- * wrapped in a labeled, bordered surface with helper/error text support.
+ * in a filled, borderless container — separation comes from the fill color,
+ * a hairline appears only to mark the error state.
  */
 @Composable
 public fun RuiTextField(
@@ -55,19 +54,8 @@ public fun RuiTextField(
     val dimens = RuiTheme.dimens
 
     val resolvedInteractionSource = interactionSource ?: remember { MutableInteractionSource() }
-    val focused by resolvedInteractionSource.collectIsFocusedAsState()
 
-    val borderColor = when {
-        isError -> colors.danger
-        focused -> colors.primary
-        else -> colors.outline
-    }
-    val containerColor = if (enabled) colors.surface else colors.surfaceMuted
-    val contentColor = when {
-        !enabled -> colors.contentDisabled
-        isError -> colors.danger
-        else -> colors.content
-    }
+    val contentColor = if (enabled) colors.content else colors.contentDisabled
 
     Column(modifier = modifier) {
         if (label != null) {
@@ -75,7 +63,7 @@ public fun RuiTextField(
                 text = label,
                 modifier = Modifier.padding(bottom = spacing.xs),
                 style = typography.labelMd,
-                color = colors.contentMuted,
+                color = if (isError) colors.danger else colors.contentMuted,
             )
         }
 
@@ -85,8 +73,14 @@ public fun RuiTextField(
                 .fillMaxWidth()
                 .heightIn(min = dimens.touchTarget)
                 .clip(shape)
-                .background(containerColor, shape)
-                .border(dimens.borderWidth, borderColor, shape)
+                .background(colors.surfaceMuted, shape)
+                .then(
+                    if (isError) {
+                        Modifier.border(dimens.borderWidth, colors.danger, shape)
+                    } else {
+                        Modifier
+                    },
+                )
                 .ruiFocusRing(resolvedInteractionSource, shape),
             enabled = enabled,
             readOnly = readOnly,

@@ -23,6 +23,7 @@ kotlin {
             implementation(compose.runtime)
             implementation(compose.foundation)
             implementation(compose.ui)
+            implementation(libs.compose.ui.backhandler)
         }
     }
 

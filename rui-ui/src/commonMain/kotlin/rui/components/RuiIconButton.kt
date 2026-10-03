@@ -1,7 +1,6 @@
 package rui.components
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.Composable
@@ -17,8 +16,8 @@ import com.composeunstyled.LocalContentColor
 import com.composeunstyled.UnstyledButton
 import com.composeunstyled.theme.ColoredIndication
 import rui.foundation.ruiFocusRing
-import rui.theme.StateLayerAlphas
 import rui.theme.RuiTheme
+import rui.theme.StateLayerAlphas
 
 /**
  * A square [RuiButton] for a single icon. The icon slot is rendered with the
@@ -29,7 +28,7 @@ import rui.theme.RuiTheme
 public fun RuiIconButton(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
-    variant: RuiButtonVariant = RuiButtonVariant.Ghost,
+    variant: RuiButtonVariant = RuiButtonVariant.Tonal,
     size: RuiButtonSize = RuiButtonSize.Md,
     enabled: Boolean = true,
     shape: Shape = RuiTheme.shapes.md,
@@ -58,13 +57,6 @@ public fun RuiIconButton(
             .size(RuiButtonDefaults.iconButtonSize(size))
             .clip(shape)
             .background(colors.container, shape)
-            .then(
-                if (colors.outline != null) {
-                    Modifier.border(RuiTheme.dimens.borderWidth, colors.outline, shape)
-                } else {
-                    Modifier
-                },
-            )
             .ruiFocusRing(resolvedInteractionSource, shape),
         role = Role.Button,
         indication = stateLayer,

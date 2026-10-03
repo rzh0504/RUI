@@ -20,8 +20,8 @@ import rui.theme.RuiTheme
  * scopes [LocalContentColor] so descendant [rui.foundation.RuiText] picks up
  * the right color automatically.
  *
- * Rui surfaces are flat by default — separation comes from hairline borders and
- * (optionally) a soft shadow, not from tonal color shifts.
+ * Surfaces separate from their surroundings through color contrast, not
+ * borders — borders are opt-in for the rare case a hairline is needed.
  */
 @Composable
 public fun RuiSurface(
@@ -29,7 +29,7 @@ public fun RuiSurface(
     shape: Shape = RuiTheme.shapes.md,
     color: Color = RuiTheme.colors.surface,
     contentColor: Color = RuiTheme.colors.content,
-    border: BorderStroke? = BorderStroke(RuiTheme.dimens.borderWidth, RuiTheme.colors.outlineSubtle),
+    border: BorderStroke? = null,
     elevation: Dp = 0.dp,
     content: @Composable () -> Unit,
 ) {
