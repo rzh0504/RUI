@@ -19,6 +19,7 @@ import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.composeunstyled.Scrim
@@ -74,10 +75,18 @@ public fun RuiBottomSheet(
     LaunchedEffect(visible) {
         state.targetDetent = if (visible) SheetDetent.FullyExpanded else SheetDetent.Hidden
     }
-    // …and report drag-to-hidden back to the caller, like scrim/back do.
+    // …and report drag-to-hidden back to the caller, like scrim/back do. The
+    // sheet starts AT Hidden, so only a return to Hidden after having left it
+    // counts — otherwise the entrance itself would read as a dismissal.
     LaunchedEffect(state) {
+        var entered = false
         snapshotFlow { state.currentDetent }.collect { detent ->
-            if (detent == SheetDetent.Hidden && isVisible) onDismiss()
+            if (detent != SheetDetent.Hidden) {
+                entered = true
+            } else if (entered) {
+                entered = false
+                if (isVisible) onDismiss()
+            }
         }
     }
 
@@ -88,6 +97,15 @@ public fun RuiBottomSheet(
             radius = 24.dp,
             tint = colors.surfaceElevated.copy(alpha = 0.72f),
             shape = shapes.sheet,
+            // The sheet lives in the modal's own window and slides with a
+            // lazy Modifier.offset, whose placement changes never refresh
+            // captured coordinates — sampling from onGloballyPositioned
+            // stuck at the pre-entrance position. The backdrop layer is the
+            // full-screen page, so provide the sheet's live top edge
+            // (layerHeight - state.offset) directly instead.
+            positionOverride = {
+                Offset(0f, backdrop.graphicsLayer.size.height.toFloat() - state.bottomSheetState.offset)
+            },
         )
     } else {
         Modifier.background(colors.surfaceElevated, shapes.sheet)

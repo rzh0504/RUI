@@ -113,6 +113,14 @@ public fun Modifier.blurBackdrop(
  *
  * The modifier paints backdrop, tint and then the content — it replaces the
  * surface's own background in the blur path. Chain it before the content.
+ *
+ * @param positionOverride The sampling position — this node's position in the
+ *   backdrop's coordinate space — provided directly instead of derived from
+ *   `onGloballyPositioned`. Use it when the node is placed by a mechanism
+ *   whose placement changes don't refresh captured coordinates (a lazy
+ *   `Modifier.offset {}` inside another window, e.g. a bottom sheet): return
+ *   an offset with a NaN component to skip the blur for a frame. When null,
+ *   coordinates are tracked automatically.
  */
 public fun Modifier.blurSurface(
     backdrop: BlurBackdrop,
@@ -120,6 +128,7 @@ public fun Modifier.blurSurface(
     tint: Color = Color.Transparent,
     shape: Shape = RectangleShape,
     enabled: Boolean = isBlurSupported,
+    positionOverride: (() -> Offset)? = null,
 ): Modifier {
     val consumerCoordinates = mutableStateOf<LayoutCoordinates?>(null)
 
@@ -135,24 +144,31 @@ public fun Modifier.blurSurface(
                 drawContent()
                 return@drawWithContent
             }
-            val source = backdrop.layerCoordinates
-            val consumer = consumerCoordinates.value
-            if (source == null || consumer == null) {
-                drawContent()
-                return@drawWithContent
-            }
-            val offset = try {
-                source.localPositionOf(consumer, Offset.Zero)
-            } catch (_: Exception) {
-                drawContent()
-                return@drawWithContent
+
+            val offset = if (positionOverride != null) {
+                positionOverride()
+            } else {
+                val source = backdrop.layerCoordinates
+                val consumer = consumerCoordinates.value
+                if (source == null || consumer == null) {
+                    drawContent()
+                    return@drawWithContent
+                }
+                try {
+                    source.localPositionOf(consumer, Offset.Zero)
+                } catch (_: Exception) {
+                    drawContent()
+                    return@drawWithContent
+                }
             }
 
             val radiusPx = radius.toPx()
-            backdrop.graphicsLayer.renderEffect =
-                BlurEffect(radiusPx, radiusPx, TileMode.Clamp)
-            translate(-offset.x, -offset.y) {
-                drawLayer(backdrop.graphicsLayer)
+            if (offset.x.isFinite() && offset.y.isFinite()) {
+                backdrop.graphicsLayer.renderEffect =
+                    BlurEffect(radiusPx, radiusPx, TileMode.Clamp)
+                translate(-offset.x, -offset.y) {
+                    drawLayer(backdrop.graphicsLayer)
+                }
             }
             if (tint != Color.Transparent) {
                 drawRect(tint)

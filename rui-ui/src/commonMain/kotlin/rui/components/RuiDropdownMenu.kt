@@ -11,7 +11,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.layout.width
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -80,8 +80,11 @@ public fun RuiDropdownMenu(
         alignment = alignment,
         anchor = anchor,
         panel = {
+            // Fixed width: the panel layer measures content with unbounded
+            // constraints, so min-width would leave item rows unbounded too
+            // (weighted text collapses). Same approach as Unstyled's demo.
             DropdownMenuPanel(
-                modifier = Modifier.widthIn(min = MenuMinWidth).then(panelBackground),
+                modifier = Modifier.width(MenuMinWidth).then(panelBackground),
                 enter = fadeIn(motion.normal) + scaleIn(
                     initialScale = 0.94f,
                     animationSpec = spring(dampingRatio = 0.85f, stiffness = 400f),
