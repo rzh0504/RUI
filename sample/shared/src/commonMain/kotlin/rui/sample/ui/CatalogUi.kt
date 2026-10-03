@@ -26,7 +26,7 @@ public fun SectionLabel(text: String, modifier: Modifier = Modifier) {
         text = text,
         style = RuiTheme.typography.labelMd,
         color = RuiTheme.colors.contentMuted,
-        modifier = modifier.padding(start = RuiTheme.spacing.lg, bottom = RuiTheme.spacing.xs),
+        modifier = modifier.padding(start = RuiTheme.spacing.lg),
     )
 }
 
@@ -57,7 +57,7 @@ public fun ContentColumn(
                 end = contentPadding.calculateEndPadding(layoutDirection),
             )
             .padding(horizontal = spacing.xl, vertical = spacing.lg),
-        verticalArrangement = Arrangement.spacedBy(spacing.xl),
+        verticalArrangement = Arrangement.spacedBy(spacing.lg),
     ) {
         content()
     }

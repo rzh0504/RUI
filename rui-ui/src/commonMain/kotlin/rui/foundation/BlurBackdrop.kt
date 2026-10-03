@@ -61,6 +61,11 @@ private class BlurBackdropImpl(
  * (defaults to drawing the captured content as-is). Draw an opaque background
  * color first when the captured tree has transparent areas — blurring
  * transparent pixels fades toward nothing.
+ *
+ * Scope one backdrop to one screen (one navigation entry): every
+ * [Modifier.blurBackdrop] recorder overwrites the layer and its coordinates,
+ * so pages stacked on top of each other sharing a backdrop would sample the
+ * wrong content at the wrong offset.
  */
 @Composable
 public fun rememberBlurBackdrop(

@@ -62,8 +62,12 @@ import kotlin.math.abs
 
 /**
  * The app bar: a small centered-title bar, or a large-title variant for entry
- * screens. With a [backdrop] the bar renders as frosted glass over scrolling
- * content; otherwise it is a plain surface. Always closes with a hairline.
+ * screens. The bar shares the page [RuiTheme.colors.background] color — at
+ * rest it merges with the screen, and scrolled content is only revealed
+ * through the frosted blur (miuix's unified-bar design). With a [backdrop]
+ * the bar renders as frosted glass over scrolling content; without one it is
+ * an opaque page-background strip. No hairline — the blur edge separates the
+ * bar from the content, as in miuix/iOS.
  *
  * Pass a [scrollBehavior] (from [rememberRuiScrollBehavior]) for the iOS-style
  * collapsing large title: the large title shows by default and, as the content
@@ -92,10 +96,10 @@ public fun RuiTopAppBar(
         Modifier.blurSurface(
             backdrop = backdrop,
             radius = 32.dp,
-            tint = colors.surface.copy(alpha = 0.65f),
+            tint = colors.background.copy(alpha = 0.65f),
         )
     } else {
-        Modifier.background(colors.surface)
+        Modifier.background(colors.background)
     }
 
     Column(modifier = modifier.fillMaxWidth().then(barBackground).statusBarsPadding()) {
@@ -160,7 +164,6 @@ public fun RuiTopAppBar(
                 }
             }
         }
-        RuiDivider()
     }
 }
 

@@ -68,28 +68,39 @@ public fun CatalogApp() {
     val nav = remember { RuiNavController(backStack) }
 
     RuiTheme(darkTheme = darkTheme) {
-        val background = RuiTheme.colors.background
-        val backdrop = rememberBlurBackdrop {
-            drawRect(background)
-            drawContent()
-        }
-
         DialogHost {
             RuiNavDisplay(backStack = backStack, onBack = { nav.pop() }) { page ->
                 val atRoot = page == CatalogPage.Root
-                // Per stack entry: covered pages keep their scroll state, so
-                // returning to a page restores its bar and scroll position.
-                val scrollBehavior = rememberRuiScrollBehavior()
+                // Top-level pages get the collapsing large title; pushed
+                // pages keep miuix's SmallTopAppBar form: a pinned small
+                // centered title (no scroll behavior).
+                val scrollBehavior = if (atRoot) rememberRuiScrollBehavior() else null
+                // One backdrop per stack entry — the capture and the bars
+                // sampling it must share a coordinate space. A backdrop shared
+                // across stacked pages samples covered pages' translated
+                // content and the blur lands misaligned.
+                val background = RuiTheme.colors.background
+                val backdrop = rememberBlurBackdrop {
+                    drawRect(background)
+                    drawContent()
+                }
                 RuiScaffold(
                     backdrop = backdrop,
                     topBar = {
-                        RuiTopAppBar(
-                            title = page.title(),
-                            showBack = !atRoot,
-                            onBack = { nav.pop() },
-                            backdrop = backdrop,
-                            scrollBehavior = scrollBehavior,
-                        )
+                        if (atRoot) {
+                            RuiTopAppBar(
+                                title = page.title(),
+                                backdrop = backdrop,
+                                scrollBehavior = scrollBehavior,
+                            )
+                        } else {
+                            RuiTopAppBar(
+                                title = page.title(),
+                                showBack = true,
+                                onBack = { nav.pop() },
+                                backdrop = backdrop,
+                            )
+                        }
                     },
                     bottomBar = {
                         if (atRoot) {
@@ -107,8 +118,13 @@ public fun CatalogApp() {
                 ) { padding ->
                     // Above the screens' overscroll modifiers, so the bar
                     // collapses/expands before the content bounces (miuix's
-                    // example wiring).
-                    Box(Modifier.nestedScroll(scrollBehavior.nestedScrollConnection)) {
+                    // example wiring). Only the large-title page drives a bar.
+                    Box(
+                        Modifier.then(
+                            scrollBehavior?.let { Modifier.nestedScroll(it.nestedScrollConnection) }
+                                ?: Modifier,
+                        ),
+                    ) {
                         when (page) {
                             CatalogPage.Root -> when (tab) {
                                 0 -> ComponentsScreen(
