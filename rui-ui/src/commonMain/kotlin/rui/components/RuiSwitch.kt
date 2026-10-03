@@ -8,10 +8,11 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.ui.draw.clip
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -21,8 +22,9 @@ import com.composeunstyled.UnstyledSwitch
 import rui.theme.RuiTheme
 
 /**
- * The Rui switch: Unstyled's accessible toggle with a neutral track and thumb.
- * The thumb glides on a spring; colors resolve from the theme.
+ * The Rui switch: Unstyled's accessible toggle with a neutral track and a
+ * perfectly round thumb in a circular track (no corner smoothing here —
+ * switches read as pure circles).
  */
 @Composable
 public fun RuiSwitch(
@@ -57,12 +59,12 @@ public fun RuiSwitch(
             Track(
                 modifier = Modifier
                     .size(width = 40.dp, height = 24.dp)
-                    .clip(RuiTheme.shapes.full)
+                    .clip(CircleShape)
                     .background(trackColor)
                     .border(
                         width = dimens.borderWidth,
                         color = if (checked) Color.Transparent else colors.outline,
-                        shape = RuiTheme.shapes.full,
+                        shape = CircleShape,
                     ),
             ) {
                 Thumb(
@@ -72,7 +74,7 @@ public fun RuiSwitch(
                     Box(
                         modifier = Modifier
                             .size(18.dp)
-                            .clip(RuiTheme.shapes.full)
+                            .clip(CircleShape)
                             .background(thumbColor),
                     )
                 }

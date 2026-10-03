@@ -50,7 +50,7 @@ public enum class Destination(public val label: String) {
 public fun CatalogApp() {
     val systemDark = isSystemInDarkTheme()
     var darkTheme by remember { mutableStateOf(systemDark) }
-    var glassEnabled by remember { mutableStateOf(true) }
+    var frostedEnabled by remember { mutableStateOf(true) }
     var tab by remember { mutableStateOf(0) }
     val backStack = remember { mutableStateListOf<Destination>() }
 
@@ -72,8 +72,8 @@ public fun CatalogApp() {
                 onTabChange = { tab = it },
                 darkTheme = darkTheme,
                 onDarkThemeChange = { darkTheme = it },
-                glassEnabled = glassEnabled,
-                onGlassEnabledChange = { glassEnabled = it },
+                frostedEnabled = frostedEnabled,
+                onFrostedEnabledChange = { frostedEnabled = it },
                 backStack = backStack,
             )
         }
@@ -88,8 +88,8 @@ private fun CatalogBody(
     onTabChange: (Int) -> Unit,
     darkTheme: Boolean,
     onDarkThemeChange: (Boolean) -> Unit,
-    glassEnabled: Boolean,
-    onGlassEnabledChange: (Boolean) -> Unit,
+    frostedEnabled: Boolean,
+    onFrostedEnabledChange: (Boolean) -> Unit,
     backStack: MutableList<Destination>,
 ) {
     val current = backStack.lastOrNull()
@@ -128,8 +128,8 @@ private fun CatalogBody(
                 0 -> ComponentsScreen(
                     darkTheme = darkTheme,
                     onDarkThemeChange = onDarkThemeChange,
-                    glassEnabled = glassEnabled,
-                    onGlassEnabledChange = onGlassEnabledChange,
+                    frostedEnabled = frostedEnabled,
+                    onFrostedEnabledChange = onFrostedEnabledChange,
                     onOpen = { backStack.add(it) },
                     modifier = Modifier.fillMaxSize().padding(top = topPadding),
                 )
@@ -140,7 +140,7 @@ private fun CatalogBody(
             Destination.Toggles -> TogglesScreen(Modifier.fillMaxSize().padding(top = topPadding))
             Destination.Tabs -> TabsScreen(Modifier.fillMaxSize().padding(top = topPadding))
             Destination.Dialog -> DialogScreen(
-                glassEnabled = glassEnabled,
+                frostedEnabled = frostedEnabled,
                 backdrop = backdrop,
                 modifier = Modifier.fillMaxSize().padding(top = topPadding),
             )

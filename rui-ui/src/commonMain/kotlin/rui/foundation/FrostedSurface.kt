@@ -24,19 +24,19 @@ import rui.theme.RuiTheme
 public annotation class ExperimentalRuiApi
 
 /**
- * A frosted-glass material: the [backdrop] (when provided and supported)
- * renders blurred behind a translucent tint; without a backdrop the tint
- * becomes near-opaque so legibility never depends on platform capability.
+ * A frosted surface: with a [backdrop] it renders the captured content
+ * blurred behind a translucent tint (frosted glass); without one it is an
+ * honest translucent panel — tint plus hairline border, no blur.
  *
  * Pass a [BlurBackdrop] from [rememberBlurBackdrop] + [blurBackdrop] to get
- * real backdrop blur; see the catalog app for the wiring.
+ * the frosted look; see the catalog app for the wiring.
  */
 @ExperimentalRuiApi
 @Composable
-public fun GlassSurface(
+public fun FrostedSurface(
     modifier: Modifier = Modifier,
     shape: Shape = RuiTheme.shapes.md,
-    tint: Color = RuiTheme.colors.surfaceElevated,
+    tint: Color = RuiTheme.colors.surface,
     contentColor: Color = RuiTheme.colors.content,
     backdrop: BlurBackdrop? = null,
     blurRadius: Dp = 24.dp,
@@ -44,7 +44,7 @@ public fun GlassSurface(
 ) {
     val colors = RuiTheme.colors
     val useBlur = backdrop != null && isBlurSupported
-    val effectiveTint = if (useBlur) tint.copy(alpha = 0.72f) else tint.copy(alpha = 0.97f)
+    val effectiveTint = if (useBlur) tint.copy(alpha = 0.72f) else tint.copy(alpha = 0.85f)
 
     CompositionLocalProvider(LocalContentColor provides contentColor) {
         Box(

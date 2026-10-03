@@ -25,7 +25,7 @@ import com.composeunstyled.Scrim
 import com.composeunstyled.UnstyledDialog
 import rui.foundation.BlurBackdrop
 import rui.foundation.ExperimentalRuiApi
-import rui.foundation.GlassSurface
+import rui.foundation.FrostedSurface
 import rui.foundation.RuiText
 import rui.foundation.RuiSurface
 import rui.theme.RuiTheme
@@ -52,7 +52,7 @@ public fun RuiDialog(
         visible = visible,
         onDismissRequest = onDismissRequest,
         modifier = modifier,
-        glass = false,
+        frosted = false,
         backdrop = null,
         title = title,
         supportingText = supportingText,
@@ -61,13 +61,13 @@ public fun RuiDialog(
     )
 }
 
-/** Glass-skinned variant of [RuiDialog]; experimental until backdrop blur lands. */
+/** Frosted-skinned variant of [RuiDialog]; experimental until backdrop blur lands. */
 @ExperimentalRuiApi
 @Composable
 public fun RuiDialog(
     visible: Boolean,
     onDismissRequest: () -> Unit,
-    glass: Boolean,
+    frosted: Boolean,
     modifier: Modifier = Modifier,
     backdrop: BlurBackdrop? = null,
     title: String? = null,
@@ -79,7 +79,7 @@ public fun RuiDialog(
         visible = visible,
         onDismissRequest = onDismissRequest,
         modifier = modifier,
-        glass = glass,
+        frosted = frosted,
         backdrop = backdrop,
         title = title,
         supportingText = supportingText,
@@ -94,7 +94,7 @@ private fun RuiDialogPanel(
     visible: Boolean,
     onDismissRequest: () -> Unit,
     modifier: Modifier,
-    glass: Boolean,
+    frosted: Boolean,
     backdrop: BlurBackdrop?,
     title: String?,
     supportingText: String?,
@@ -135,8 +135,8 @@ private fun RuiDialogPanel(
                 ),
                 exit = fadeOut(motion.fast) + scaleOut(targetScale = 0.96f),
             ) {
-                if (glass) {
-                    GlassSurface(
+                if (frosted) {
+                    FrostedSurface(
                         modifier = Modifier.fillMaxWidth(),
                         shape = RuiTheme.shapes.xl,
                         backdrop = backdrop,

@@ -16,8 +16,8 @@ import rui.theme.RuiTheme
 public fun ComponentsScreen(
     darkTheme: Boolean,
     onDarkThemeChange: (Boolean) -> Unit,
-    glassEnabled: Boolean,
-    onGlassEnabledChange: (Boolean) -> Unit,
+    frostedEnabled: Boolean,
+    onFrostedEnabledChange: (Boolean) -> Unit,
     onOpen: (Destination) -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -30,8 +30,8 @@ public fun ComponentsScreen(
             )
             RuiDivider(inset = RuiTheme.spacing.lg)
             RuiListItem(
-                title = "Glass material",
-                trailing = { RuiSwitch(checked = glassEnabled, onCheckedChange = onGlassEnabledChange) },
+                title = "Frosted material",
+                trailing = { RuiSwitch(checked = frostedEnabled, onCheckedChange = onFrostedEnabledChange) },
             )
         }
 

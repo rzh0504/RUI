@@ -14,7 +14,7 @@ compose-unstyled          behavior, state, keyboard, a11y (zero visuals)
 │  ├─ theme       tokens: colors / type / shapes /   │
 │  │              spacing / motion  (RuiTheme)       │
 │  ├─ foundation  Surface · Text · Icon · state      │
-│  │              layer · GlassSurface · BlurBackdrop│
+│  │              layer · FrostedSurface · BlurBackdrop│
 │  └─ components  Scaffold · TopAppBar · NavBar ·    │
 │                 Button · TextField · Switch ·      │
 │                 Checkbox · Dialog · Tabs · List    │
@@ -84,7 +84,7 @@ See [DESIGN.md](DESIGN.md) for principles, the token dictionary and the recipes:
 
 ## Roadmap
 
-- Backdrop blur for `GlassSurface` (Haze integration) behind the existing `isBlurSupported` seam
+- Progressive blur and glass highlights for `FrostedSurface` (port miuix's runtime-shader pipeline)
 - More primitives: DropdownMenu, BottomSheet, Slider, Progress, Avatar, Tooltip, Disclosure
 - Continuous (squircle) corner shapes as a token swap
 - `jvm` / `wasmJs` targets + a desktop demo

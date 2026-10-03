@@ -14,7 +14,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.unit.dp
 import rui.foundation.ExperimentalRuiApi
-import rui.foundation.GlassSurface
+import rui.foundation.FrostedSurface
 import rui.foundation.RuiIcon
 import rui.foundation.RuiIcons
 import rui.components.RuiDivider
@@ -125,9 +125,9 @@ public fun TokensScreen(modifier: Modifier = Modifier) {
             }
         }
 
-        SectionLabel("Glass material")
+        SectionLabel("Frosted material")
         RuiListGroup {
-            GlassSurface(
+            FrostedSurface(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(spacing.md),

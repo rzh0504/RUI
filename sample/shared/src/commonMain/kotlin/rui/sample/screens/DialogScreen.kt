@@ -22,7 +22,7 @@ import rui.theme.RuiTheme
 @OptIn(ExperimentalRuiApi::class)
 @Composable
 public fun DialogScreen(
-    glassEnabled: Boolean,
+    frostedEnabled: Boolean,
     backdrop: BlurBackdrop,
     modifier: Modifier = Modifier,
 ) {
@@ -47,11 +47,11 @@ public fun DialogScreen(
             )
         }
 
-        SectionLabel("Glass")
+        SectionLabel("Frosted")
         RuiListGroup {
             RuiListItem(
-                title = "Glass panel",
-                subtitle = if (glassEnabled) "Backdrop blur behind a translucent panel" else "Glass is off — solid surface",
+                title = "Frosted panel",
+                subtitle = if (frostedEnabled) "Backdrop blur behind a translucent panel" else "Frosted is off — solid surface",
                 showChevron = true,
                 onClick = { glassDialog = true },
             )
@@ -76,9 +76,9 @@ public fun DialogScreen(
     RuiDialog(
         visible = glassDialog,
         onDismissRequest = { glassDialog = false },
-        glass = glassEnabled,
+        frosted = frostedEnabled,
         backdrop = backdrop,
-        title = "Glass panel",
+        title = "Frosted panel",
         supportingText = "Unsupported platforms get a near-opaque fallback automatically.",
         actions = {
             RuiButton(onClick = { glassDialog = false }, variant = RuiButtonVariant.Tonal) {

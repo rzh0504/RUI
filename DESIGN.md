@@ -5,7 +5,7 @@ Rui is a **neutral** design system: it belongs to no platform and no brand. On A
 ## Principles
 
 1. **Content first.** Chrome is quiet: flat surfaces, hairline borders, generous whitespace. Nothing shouts.
-2. **One accent.** The default palette is a neutral gray ramp plus a graphite accent. A brand is a single `copy(primary = …)` away, never a redesign.
+2. **One accent.** The default palette is a neutral gray ramp plus a single blue accent (`#3C87FF`, both modes). A brand is a single `copy(primary = …)` away, never a redesign.
 3. **Feedback you can feel, not see.** Interactions answer with a subtle content-colored state layer and a keyboard-only focus ring — Material's discipline, without tonal shadows.
 4. **One geometry.** The same radius scale, 4dp spacing grid and type scale on every platform. Geometry is a token decision, never a per-component pixel decision.
 5. **Material is an enhancement, not a dependency.** Glass translucency degrades to solid surfaces when the platform can't support it. Nothing breaks without it.
@@ -24,7 +24,7 @@ Semantic roles only; light and dark factory defaults ship in `RuiColorScheme.lig
 | `surfaceElevated` | Menus, dialogs |
 | `outline` / `outlineSubtle` | Rare hairlines (error fields) / row separators |
 | `content` / `contentMuted` / `contentDisabled` | Text & icon hierarchy |
-| `primary` / `onPrimary` | Accent and emphasis |
+| `primary` / `onPrimary` | Accent and emphasis — defaults to `#3C87FF` blue, light and dark |
 | `danger` / `success` | Destructive / affirmative feedback |
 | `scrim` | Overlay behind modal fragments |
 
@@ -61,13 +61,13 @@ State layers: 90ms in / 180ms out. Short transitions 120ms, medium 200ms. Compon
 - **Focus** — 2dp ring in `primary`, drawn outside the shape (`focusRing`), visible only for keyboard focus (`FocusVisibilityProvider` at the app root enables this).
 - **Selection** — checkboxes and switches fill with `primary`; marks animate with short springs.
 
-## Glass material
+## Frosted material
 
-`GlassSurface` is Liquid Glass's translucency without its platform lock-in. With a `BlurBackdrop` it renders the captured content blurred behind a 72% tint; without one (or where unsupported — Android below API 31) the tint becomes near-opaque so legibility never depends on platform capability.
+`FrostedSurface` is deliberately named: with a `BlurBackdrop` it renders the captured content blurred behind a translucent tint — frosted glass. Without a backdrop it is an honest translucent panel (tint + hairline), not glass; don't present it as one.
 
 The backdrop mechanism follows miuix's blur module (Apache-2.0, see NOTICE): one composable captures itself via `Modifier.blurBackdrop(backdrop)` (`rememberBlurBackdrop()` + opaque background first), and any surface applies `Modifier.blurSurface(...)` — a GraphicsLayer record drawn with the cross-platform `BlurEffect`, translated into local coordinates. No pixels are read back.
 
-The catalog wires it end to end: `RuiScaffold(backdrop = …)` captures the content area; `RuiTopAppBar` and `RuiNavigationBar` sample it as frosted bars, and the glass dialog samples it through the portal. Blur surfaces are marked `@ExperimentalRuiApi`.
+The catalog wires it end to end: `RuiScaffold(backdrop = …)` captures the content area; `RuiTopAppBar` and `RuiNavigationBar` sample it as frosted bars, and the frosted dialog samples it through the portal. Frosted surfaces are marked `@ExperimentalRuiApi`.
 
 ## Component conventions
 
@@ -78,7 +78,9 @@ Visual signatures worth keeping consistent:
 - **Filled text field** with label above; error is red label + hairline, never a filled red box.
 - **Segmented control** for tabs: muted track, raised surface pill marks selection.
 - **Inset grouped lists** for any index of items (`RuiListGroup` + `RuiListItem` + `RuiDivider(inset = …)`).
-- **App chrome is glass-capable**: `RuiScaffold` overlays `RuiTopAppBar` / `RuiNavigationBar` on the content; with a backdrop they render frosted, without it they are plain surfaces.
+- **App chrome is frosted-capable**: `RuiScaffold` overlays `RuiTopAppBar` / `RuiNavigationBar` on the content; with a backdrop they render frosted, without it they are plain surfaces.
+- **Switches stay circular**: the switch track and thumb use pure `CircleShape`, exempt from corner smoothing — circles read as circles.
+- **List item titles sit at the title level** (`titleSm`), matching how real apps treat settings rows as section headlines; subtitles stay `bodySm`.
 
 Every component in `rui.components`:
 

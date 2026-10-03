@@ -61,7 +61,7 @@ public fun RuiListItem(
         horizontalArrangement = Arrangement.spacedBy(spacing.md),
     ) {
         Column(modifier = Modifier.weight(1f)) {
-            RuiText(text = title, style = RuiTheme.typography.bodyMd)
+            RuiText(text = title, style = RuiTheme.typography.titleSm)
             if (subtitle != null) {
                 RuiText(
                     text = subtitle,
