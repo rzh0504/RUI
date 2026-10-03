@@ -5,19 +5,23 @@ import androidx.compose.animation.core.spring
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.backhandler.BackHandler
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.zIndex
+import rui.foundation.LocalRuiTransitionActive
 
 /**
  * Marker interface for routes rendered by [RuiNavDisplay]. Modeled after the
@@ -95,6 +99,7 @@ public fun <T : RuiNavKey> RuiNavDisplay(
 
     val renderStack = remember { mutableStateListOf(backStack.first()) }
     val animatedTop = remember { Animatable(0f) }
+    var transitionRunning by remember { mutableStateOf(false) }
 
     LaunchedEffect(backStack.size, backStack.lastOrNull()) {
         // Pushes join the render stack immediately so the new entry slides in.
@@ -106,10 +111,14 @@ public fun <T : RuiNavKey> RuiNavDisplay(
             renderStack[renderStack.lastIndex] = backStack.last()
         }
 
+        transitionRunning = true
         animatedTop.animateTo(
             (backStack.size - 1).toFloat(),
-            spring(dampingRatio = 1f, stiffness = 380f),
+            spring(dampingRatio = 1f, stiffness = 550f),
         )
+        // Let the settled frame render before structural changes land.
+        withFrameNanos { }
+        transitionRunning = false
 
         // Pops: only once the motion settles do the removed entries leave the
         // render stack, which is what lets them animate out to the right.
@@ -122,43 +131,45 @@ public fun <T : RuiNavKey> RuiNavDisplay(
         BackHandler(onBack = onBack)
     }
 
-    var containerWidthPx by remember { mutableIntStateOf(0) }
+    CompositionLocalProvider(LocalRuiTransitionActive provides transitionRunning) {
+        var containerWidthPx by remember { mutableIntStateOf(0) }
 
-    Box(
-        modifier = modifier
-            .fillMaxSize()
-            .onSizeChanged { containerWidthPx = it.width },
-    ) {
-        renderStack.forEachIndexed { index, key ->
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .graphicsLayer {
-                        val depth = animatedTop.value - index
-                        val width = containerWidthPx.toFloat()
-                        when {
-                            depth <= -1f -> {
-                                translationX = width
-                                alpha = 0f
+        Box(
+            modifier = modifier
+                .fillMaxSize()
+                .onSizeChanged { containerWidthPx = it.width },
+        ) {
+            renderStack.forEachIndexed { index, key ->
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .graphicsLayer {
+                            val depth = animatedTop.value - index
+                            val width = containerWidthPx.toFloat()
+                            when {
+                                depth <= -1f -> {
+                                    translationX = width
+                                    alpha = 0f
+                                }
+                                depth >= 1f -> {
+                                    translationX = -width * 0.25f * depth
+                                    alpha = 0f
+                                }
+                                depth < 0f -> {
+                                    // Incoming: slides in from the right.
+                                    translationX = -depth * width
+                                    alpha = 1f
+                                }
+                                else -> {
+                                    // Covered: parallax to the left and dim.
+                                    translationX = -depth * width * 0.25f
+                                    alpha = 1f - 0.12f * depth
+                                }
                             }
-                            depth >= 1f -> {
-                                translationX = -width * 0.25f * depth
-                                alpha = 0f
-                            }
-                            depth < 0f -> {
-                                // Incoming: slides in from the right.
-                                translationX = -depth * width
-                                alpha = 1f
-                            }
-                            else -> {
-                                // Covered: parallax to the left and dim.
-                                translationX = -depth * width * 0.25f
-                                alpha = 1f - 0.12f * depth
-                            }
-                        }
-                    },
-            ) {
-                content(key)
+                        },
+                ) {
+                    content(key)
+                }
             }
         }
     }

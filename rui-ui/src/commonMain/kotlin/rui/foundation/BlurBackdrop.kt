@@ -5,6 +5,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawWithContent
@@ -25,6 +26,13 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import rui.foundation.platform.isBlurSupported
+
+/**
+ * True while a navigation transition is running. Backdrop captures pause
+ * re-recording during transitions — moving bars sample the last frame, which
+ * is invisible in motion, and the animation keeps its full frame budget.
+ */
+internal val LocalRuiTransitionActive = staticCompositionLocalOf { false }
 
 /**
  * Captures the drawing of one composable so other surfaces can render it
@@ -65,11 +73,16 @@ public fun rememberBlurBackdrop(
 /**
  * Marks this composable as the content [backdrop] captures. Every redraw
  * re-records the layer; recording is cheap and doesn't invalidate consumers
- * on its own.
+ * on its own. Set [recordEnabled] to false while a transition is running to
+ * keep the animation's frame budget (surfaces sample the last frame).
  */
-public fun Modifier.blurBackdrop(backdrop: BlurBackdrop): Modifier =
+public fun Modifier.blurBackdrop(
+    backdrop: BlurBackdrop,
+    recordEnabled: Boolean = true,
+): Modifier =
     drawWithContent {
         drawContent()
+        if (!recordEnabled) return@drawWithContent
         val impl = backdrop as BlurBackdropImpl
         val sourceDensity = drawContext.density
         val scope: ContentDrawScope = this
