@@ -38,7 +38,13 @@ Three levels × three sizes. Default family is the platform system font, so text
 
 ### Shapes — `RuiShapes`
 
-`sm 6 · md 10 · lg 12 · xl 16 · full 50%` — components pick by role (buttons and inputs md, grouped cards lg, dialogs xl, pills full). The radii sit below Material's defaults, close to iOS but not identical. Squircle/continuous corners are a future swap inside `ruiShapes()`, not a component change.
+Every corner renders through `SmoothCornerShape` — continuous ("squircle") corners, adapted from miuix's squircle module (Apache-2.0, see NOTICE): the corner curve extends `smoothing × radius` into the edges (default 1.1), so curvature flows instead of a circle glued to a rectangle. Radii larger than half the shorter side clamp, producing smooth stadiums for pills.
+
+Token values — `sm 6 · md 10 · lg 14 · xl 18 · full (stadium)`:
+
+- **md (10) is the workhorse tier and is shared**: buttons, icon buttons, text fields, grouped cards, glass surfaces. One tier, one value — corners never fight on the same screen, and a small control nested in a card reads as the same family.
+- **sm (6)**: checkboxes, badges, swatches. **xl (18)**: dialogs. **full**: switch and segmented tracks (smooth stadium).
+- Never construct ad-hoc shapes in components; pick a token, and if a new role genuinely appears, add it to `ruiShapes()` and document it here.
 
 ### Spacing & metrics
 

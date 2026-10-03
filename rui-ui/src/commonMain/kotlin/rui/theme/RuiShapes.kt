@@ -1,32 +1,33 @@
 package rui.theme
 
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Immutable
 import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.unit.dp
 
 /**
- * Corner-radius tokens. Components pick a token by *role*, never by pixel value,
- * so the geometry language stays consistent and a future squircle implementation
- * can replace [RoundedCornerShape] in one place.
+ * Corner-radius tokens, rendered as continuous ("squircle") corners — see
+ * [SmoothCornerShape]. Components pick a token by *role*, never by pixel
+ * value, and every rectangular surface at the same nesting level shares the
+ * same token so radii never fight on one screen.
  */
 @Immutable
 public data class RuiShapes(
-    /** Small controls: checkbox, small badge. */
+    /** Tiny controls: checkbox, badges, token swatches. */
     public val sm: Shape,
-    /** Default control shape: buttons, inputs, switches. */
+    /** The workhorse radius: buttons, inputs, cards — one tier, always matching. */
     public val md: Shape,
-    /** Grouped containers: cards, sheets. */
+    /** Larger grouped containers: sheets, bottom surfaces. */
     public val lg: Shape,
     /** Large floating containers: dialogs. */
     public val xl: Shape,
-    /** Pill / fully-round controls. */
+    /** Pills and stadiums: switches, segmented tracks. */
     public val full: Shape,
 )
 
 public fun ruiShapes(): RuiShapes = RuiShapes(
-    sm = RoundedCornerShape(6),
-    md = RoundedCornerShape(10),
-    lg = RoundedCornerShape(12),
-    xl = RoundedCornerShape(16),
-    full = RoundedCornerShape(percent = 50),
+    sm = SmoothCornerShape(6.dp),
+    md = SmoothCornerShape(10.dp),
+    lg = SmoothCornerShape(14.dp),
+    xl = SmoothCornerShape(18.dp),
+    full = SmoothCornerShape(100.dp),
 )

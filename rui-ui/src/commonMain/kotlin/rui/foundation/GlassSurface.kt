@@ -34,7 +34,7 @@ public annotation class ExperimentalRuiApi
 @Composable
 public fun GlassSurface(
     modifier: Modifier = Modifier,
-    shape: Shape = RuiTheme.shapes.lg,
+    shape: Shape = RuiTheme.shapes.md,
     tint: Color = RuiTheme.colors.surfaceElevated,
     contentColor: Color = RuiTheme.colors.content,
     content: @Composable () -> Unit,

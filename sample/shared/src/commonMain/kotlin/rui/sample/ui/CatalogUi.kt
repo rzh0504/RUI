@@ -77,7 +77,7 @@ public fun GroupedCard(
 ) {
     RuiSurface(
         modifier = modifier.fillMaxWidth(),
-        shape = RuiTheme.shapes.lg,
+        shape = RuiTheme.shapes.md,
     ) {
         Column(content = content)
     }

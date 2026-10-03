@@ -1,0 +1,16 @@
+NOTICE
+======
+
+This product includes software developed by the miuix project
+(https://github.com/composable-miuix-ui/miuix) and used under the Apache
+License, Version 2.0.
+
+  rui-ui/src/commonMain/kotlin/rui/theme/RuiShape.kt
+    - Continuous-corner ("squircle") shape algorithm adapted from miuix's
+      miuix-squircle module (Path.addSquircleRect).
+    - Modified: re-exposed as a Compose Shape (SmoothCornerShape) integrated
+      with Rui's theme tokens instead of miuix's modifier API.
+
+A copy of the Apache License, Version 2.0 for that portion of the code is
+available at https://www.apache.org/licenses/LICENSE-2.0 and must be
+distributed alongside this product.
