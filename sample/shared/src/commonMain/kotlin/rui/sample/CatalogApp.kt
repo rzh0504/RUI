@@ -24,6 +24,7 @@ import rui.components.rememberRuiScrollBehavior
 import rui.foundation.ExperimentalRuiApi
 import rui.foundation.RuiIcons
 import rui.foundation.rememberBlurBackdrop
+import rui.foundation.utils.StatusBarAppearance
 import rui.sample.screens.ButtonsScreen
 import rui.sample.screens.DialogScreen
 import rui.sample.screens.TabsScreen
@@ -68,6 +69,9 @@ public fun CatalogApp() {
     val nav = remember { RuiNavController(backStack) }
 
     RuiTheme(darkTheme = darkTheme) {
+        // In-app theme toggle: push the appearance to the system bars in the
+        // same frame, so icons stay visible over the switched background.
+        StatusBarAppearance(darkIcons = !darkTheme)
         DialogHost {
             RuiNavDisplay(backStack = backStack, onBack = { nav.pop() }) { page ->
                 val atRoot = page == CatalogPage.Root

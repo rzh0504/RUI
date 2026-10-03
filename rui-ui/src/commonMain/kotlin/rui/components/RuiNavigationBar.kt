@@ -30,9 +30,11 @@ public data class RuiNavigationBarItem(
 )
 
 /**
- * The bottom navigation bar. With a [backdrop] the bar renders as frosted
- * glass over content that scrolls beneath it; otherwise a plain surface.
- * Place inside [RuiScaffold]'s `bottomBar` slot.
+ * The bottom navigation bar. The bar shares the page
+ * [RuiTheme.colors.background] color, like the top bar — with a [backdrop]
+ * scrolled content is only revealed through the frosted blur; without one it
+ * is an opaque page-background strip. Place inside [RuiScaffold]'s
+ * `bottomBar` slot.
  */
 @Composable
 public fun RuiNavigationBar(
@@ -49,10 +51,10 @@ public fun RuiNavigationBar(
         Modifier.blurSurface(
             backdrop = backdrop,
             radius = 32.dp,
-            tint = colors.surface.copy(alpha = 0.65f),
+            tint = colors.background.copy(alpha = 0.65f),
         )
     } else {
-        Modifier.background(colors.surface)
+        Modifier.background(colors.background)
     }
 
     Column(modifier = modifier.fillMaxWidth().then(barBackground)) {
@@ -70,7 +72,12 @@ public fun RuiNavigationBar(
                     modifier = Modifier
                         .weight(1f)
                         .heightIn(min = 56.dp)
-                        .clickable(role = Role.Tab) { onSelect(index) },
+                        // No press indication: iOS tab bars don't ripple.
+                        .clickable(
+                            interactionSource = null,
+                            indication = null,
+                            role = Role.Tab,
+                        ) { onSelect(index) },
                     contentAlignment = Alignment.Center,
                 ) {
                     Column(
