@@ -28,6 +28,14 @@ License, Version 2.0.
       cross-platform BlurEffect instead of miuix's AGSL/SkSL runtime-shader
       pipeline; no progressive blur, noise dither or highlights.
 
+  rui-ui/src/commonMain/kotlin/rui/components/RuiTopAppBar.kt
+    - Collapsing large-title top app bar (RuiScrollBehavior /
+      RuiTopAppBarState, the exit-until-collapsed nested-scroll connection
+      and the collapsing bar layout) adapted from miuix's basic/TopAppBar.kt.
+    - Modified: no subtitle or bottom-content slots and no small-bar pinning
+      interplay; integrated with Rui's frosted bar background, typography
+      and spacing tokens.
+
 A copy of the Apache License, Version 2.0 for that portion of the code is
 available at https://www.apache.org/licenses/LICENSE-2.0 and must be
 distributed alongside this product.

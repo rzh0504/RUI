@@ -7,13 +7,15 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
 
 /**
- * Type scale: three levels (title / body / label) in three sizes (Lg / Md / Sm).
+ * Type scale: three levels (title / body / label) in three sizes (Lg / Md / Sm),
+ * plus the iOS-style large title ([titleXl]).
  *
  * The default family is the platform system font (Roboto on Android, SF on iOS),
  * keeping rendering native while the *scale* stays identical on every platform.
  */
 @Immutable
 public data class RuiTypography(
+    public val titleXl: TextStyle,
     public val titleLg: TextStyle,
     public val titleMd: TextStyle,
     public val titleSm: TextStyle,
@@ -34,6 +36,7 @@ public fun ruiTypography(fontFamily: FontFamily = FontFamily.Default): RuiTypogr
     )
 
     return RuiTypography(
+        titleXl = style(34, 41, FontWeight.Bold),
         titleLg = style(22, 28, FontWeight.SemiBold),
         titleMd = style(17, 24, FontWeight.SemiBold),
         titleSm = style(15, 20, FontWeight.SemiBold),

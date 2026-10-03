@@ -1,6 +1,7 @@
 package rui.sample
 
 import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.foundation.layout.Box
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -8,6 +9,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.unit.dp
 import com.composeunstyled.DialogHost
 import rui.components.RuiNavigationBar
@@ -18,6 +20,7 @@ import rui.components.navigation.RuiNavDisplay
 import rui.components.navigation.RuiNavKey
 import rui.components.navigation.RuiNavController
 import rui.components.navigation.rememberRuiNavBackStack
+import rui.components.rememberRuiScrollBehavior
 import rui.foundation.ExperimentalRuiApi
 import rui.foundation.RuiIcons
 import rui.foundation.rememberBlurBackdrop
@@ -74,19 +77,19 @@ public fun CatalogApp() {
         DialogHost {
             RuiNavDisplay(backStack = backStack, onBack = { nav.pop() }) { page ->
                 val atRoot = page == CatalogPage.Root
+                // Per stack entry: covered pages keep their scroll state, so
+                // returning to a page restores its bar and scroll position.
+                val scrollBehavior = rememberRuiScrollBehavior()
                 RuiScaffold(
                     backdrop = backdrop,
                     topBar = {
-                        if (atRoot) {
-                            RuiTopAppBar(title = page.title(), largeTitle = true, backdrop = backdrop)
-                        } else {
-                            RuiTopAppBar(
-                                title = page.title(),
-                                showBack = true,
-                                onBack = { nav.pop() },
-                                backdrop = backdrop,
-                            )
-                        }
+                        RuiTopAppBar(
+                            title = page.title(),
+                            showBack = !atRoot,
+                            onBack = { nav.pop() },
+                            backdrop = backdrop,
+                            scrollBehavior = scrollBehavior,
+                        )
                     },
                     bottomBar = {
                         if (atRoot) {
@@ -102,27 +105,32 @@ public fun CatalogApp() {
                         }
                     },
                 ) { padding ->
-                    when (page) {
-                        CatalogPage.Root -> when (tab) {
-                            0 -> ComponentsScreen(
-                                darkTheme = darkTheme,
-                                onDarkThemeChange = { darkTheme = it },
+                    // Above the screens' overscroll modifiers, so the bar
+                    // collapses/expands before the content bounces (miuix's
+                    // example wiring).
+                    Box(Modifier.nestedScroll(scrollBehavior.nestedScrollConnection)) {
+                        when (page) {
+                            CatalogPage.Root -> when (tab) {
+                                0 -> ComponentsScreen(
+                                    darkTheme = darkTheme,
+                                    onDarkThemeChange = { darkTheme = it },
+                                    frostedEnabled = frostedEnabled,
+                                    onFrostedEnabledChange = { frostedEnabled = it },
+                                    onOpen = { nav.push(it) },
+                                    contentPadding = padding,
+                                )
+                                else -> TokensScreen(contentPadding = padding)
+                            }
+                            CatalogPage.Buttons -> ButtonsScreen(contentPadding = padding)
+                            CatalogPage.TextField -> TextFieldScreen(contentPadding = padding)
+                            CatalogPage.Toggles -> TogglesScreen(contentPadding = padding)
+                            CatalogPage.Tabs -> TabsScreen(contentPadding = padding)
+                            CatalogPage.Dialog -> DialogScreen(
                                 frostedEnabled = frostedEnabled,
-                                onFrostedEnabledChange = { frostedEnabled = it },
-                                onOpen = { nav.push(it) },
+                                backdrop = backdrop,
                                 contentPadding = padding,
                             )
-                            else -> TokensScreen(contentPadding = padding)
                         }
-                        CatalogPage.Buttons -> ButtonsScreen(contentPadding = padding)
-                        CatalogPage.TextField -> TextFieldScreen(contentPadding = padding)
-                        CatalogPage.Toggles -> TogglesScreen(contentPadding = padding)
-                        CatalogPage.Tabs -> TabsScreen(contentPadding = padding)
-                        CatalogPage.Dialog -> DialogScreen(
-                            frostedEnabled = frostedEnabled,
-                            backdrop = backdrop,
-                            contentPadding = padding,
-                        )
                     }
                 }
             }
