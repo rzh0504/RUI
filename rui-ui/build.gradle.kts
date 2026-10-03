@@ -24,6 +24,7 @@ kotlin {
             api(compose.foundation)
             api(compose.ui)
             api(libs.composeunstyled)
+            implementation(libs.compose.ui.backhandler)
             implementation(libs.composeunstyled.colored.indication)
         }
         commonTest.dependencies {

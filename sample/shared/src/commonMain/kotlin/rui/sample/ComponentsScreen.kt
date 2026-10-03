@@ -20,7 +20,7 @@ public fun ComponentsScreen(
     onDarkThemeChange: (Boolean) -> Unit,
     frostedEnabled: Boolean,
     onFrostedEnabledChange: (Boolean) -> Unit,
-    onOpen: (Destination) -> Unit,
+    onOpen: (CatalogPage) -> Unit,
     contentPadding: PaddingValues = PaddingValues(0.dp),
 ) {
     ContentColumn(contentPadding = contentPadding) {
@@ -43,28 +43,28 @@ public fun ComponentsScreen(
                 title = "Buttons",
                 subtitle = "Variants, sizes, icons",
                 showChevron = true,
-                onClick = { onOpen(Destination.Buttons) },
+                onClick = { onOpen(CatalogPage.Buttons) },
             )
             RuiDivider(inset = RuiTheme.spacing.lg)
             RuiListItem(
                 title = "Text field",
                 subtitle = "Filled input with error and disabled states",
                 showChevron = true,
-                onClick = { onOpen(Destination.TextField) },
+                onClick = { onOpen(CatalogPage.TextField) },
             )
             RuiDivider(inset = RuiTheme.spacing.lg)
             RuiListItem(
                 title = "Selection controls",
                 subtitle = "Switch and checkbox",
                 showChevron = true,
-                onClick = { onOpen(Destination.Toggles) },
+                onClick = { onOpen(CatalogPage.Toggles) },
             )
             RuiDivider(inset = RuiTheme.spacing.lg)
             RuiListItem(
                 title = "Segmented tabs",
                 subtitle = "Roving focus, keyboard navigation",
                 showChevron = true,
-                onClick = { onOpen(Destination.Tabs) },
+                onClick = { onOpen(CatalogPage.Tabs) },
             )
         }
 
@@ -74,7 +74,7 @@ public fun ComponentsScreen(
                 title = "Dialog",
                 subtitle = "Scrim, actions, portal hosting",
                 showChevron = true,
-                onClick = { onOpen(Destination.Dialog) },
+                onClick = { onOpen(CatalogPage.Dialog) },
             )
         }
 
