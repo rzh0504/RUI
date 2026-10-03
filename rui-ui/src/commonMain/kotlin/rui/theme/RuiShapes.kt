@@ -18,6 +18,8 @@ public data class RuiShapes(
     public val md: Shape,
     /** Larger grouped containers: sheets, bottom surfaces. */
     public val lg: Shape,
+    /** Surfaces docked to the screen's bottom edge (sheets): rounded at the top, square at the edge. */
+    public val sheet: Shape,
     /** Large floating containers: dialogs. */
     public val xl: Shape,
     /** Pills and stadiums: switches, segmented tracks. */
@@ -28,6 +30,7 @@ public fun ruiShapes(): RuiShapes = RuiShapes(
     sm = SmoothCornerShape(6.dp),
     md = SmoothCornerShape(10.dp),
     lg = SmoothCornerShape(14.dp),
+    sheet = TopSmoothCornerShape(14.dp),
     xl = SmoothCornerShape(18.dp),
     full = SmoothCornerShape(100.dp),
 )

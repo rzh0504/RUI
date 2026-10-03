@@ -40,10 +40,11 @@ Three levels × three sizes. Default family is the platform system font, so text
 
 Every corner renders through `SmoothCornerShape` — continuous ("squircle") corners, adapted from miuix's squircle module (Apache-2.0, see NOTICE): the corner curve extends `smoothing × radius` into the edges (default 1.1), so curvature flows instead of a circle glued to a rectangle. Radii larger than half the shorter side clamp, producing smooth stadiums for pills.
 
-Token values — `sm 6 · md 10 · lg 14 · xl 18 · full (stadium)`:
+Token values — `sm 6 · md 10 · lg 14 · xl 18 · sheet 14 (top only) · full (stadium)`:
 
 - **md (10) is the workhorse tier and is shared**: buttons, icon buttons, text fields, grouped cards, glass surfaces. One tier, one value — corners never fight on the same screen, and a small control nested in a card reads as the same family.
-- **sm (6)**: checkboxes, badges, swatches. **xl (18)**: dialogs. **full**: switch and segmented tracks (smooth stadium).
+- **sm (6)**: checkboxes, badges, swatches. **xl (18)**: dialogs and dropdown menu panels. **full**: switch and segmented tracks (smooth stadium).
+- **sheet (14)**: `TopSmoothCornerShape` — the same 14 tier as `lg` but rounded at the top edge only, square at the bottom, for surfaces docked to the screen's bottom edge (bottom sheets).
 - Never construct ad-hoc shapes in components; pick a token, and if a new role genuinely appears, add it to `ruiShapes()` and document it here.
 
 ### Spacing & metrics

@@ -76,6 +76,20 @@ public fun ComponentsScreen(
                 showChevron = true,
                 onClick = { onOpen(CatalogPage.Dialog) },
             )
+            RuiDivider(inset = RuiTheme.spacing.lg)
+            RuiListItem(
+                title = "Dropdown menu",
+                subtitle = "Anchored panels, icons, destructive rows",
+                showChevron = true,
+                onClick = { onOpen(CatalogPage.DropdownMenu) },
+            )
+            RuiDivider(inset = RuiTheme.spacing.lg)
+            RuiListItem(
+                title = "Bottom sheet",
+                subtitle = "Grabber, detents, scrim",
+                showChevron = true,
+                onClick = { onOpen(CatalogPage.BottomSheet) },
+            )
         }
 
         RuiText(

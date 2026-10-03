@@ -9,7 +9,9 @@ License, Version 2.0.
     - Continuous-corner ("squircle") shape algorithm adapted from miuix's
       miuix-squircle module (Path.addSquircleRect).
     - Modified: re-exposed as a Compose Shape (SmoothCornerShape) integrated
-      with Rui's theme tokens instead of miuix's modifier API.
+      with Rui's theme tokens instead of miuix's modifier API; extended with
+      a top-edge-only variant (TopSmoothCornerShape) for surfaces docked to
+      the screen's bottom edge, using the same corner math.
 
   rui-ui/src/commonMain/kotlin/rui/foundation/utils/RuiOverscroll.kt
   rui-ui/src/commonMain/kotlin/rui/foundation/utils/RuiScrollEndHaptic.kt

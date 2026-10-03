@@ -57,6 +57,36 @@ public class SmoothCornerShape(
     }
 }
 
+/**
+ * Continuous corners on the top edge only, square at the bottom — for
+ * surfaces docked to the screen's bottom edge (sheets), where square bottom
+ * corners keep the shape flush with the screen. Radius and smoothing follow
+ * the same model as [SmoothCornerShape].
+ */
+public class TopSmoothCornerShape(
+    public val radius: Dp,
+    public val smoothing: Float = SmoothCornerShape.DefaultSmoothing,
+) : Shape {
+
+    override fun createOutline(
+        size: Size,
+        layoutDirection: LayoutDirection,
+        density: Density,
+    ): Outline {
+        val radiusPx = with(density) { radius.toPx() }
+        val path = Path()
+        path.addSmoothTopCornerRect(size.width, size.height, radiusPx, smoothing)
+        return Outline.Generic(path)
+    }
+
+    override fun equals(other: Any?): Boolean =
+        other is TopSmoothCornerShape && other.radius == radius && other.smoothing == smoothing
+
+    override fun hashCode(): Int = radius.hashCode() * 31 + smoothing.hashCode()
+
+    override fun toString(): String = "TopSmoothCornerShape(radius=$radius, smoothing=$smoothing)"
+}
+
 /** Cubic Bézier handle ratio matching Apple-style continuous corners. */
 private const val CornerControl = 0.643f
 
@@ -92,6 +122,40 @@ public fun Path.addSmoothCornerRect(
     cubicTo(width, height - handle, width - handle, height, width - tile, height)
     lineTo(tile, height)
     cubicTo(handle, height, 0f, height - handle, 0f, height - tile)
+    lineTo(0f, tile)
+    cubicTo(0f, handle, handle, 0f, tile, 0f)
+    close()
+}
+
+/**
+ * Appends a closed smooth-corner rectangle with rounded top corners and
+ * square bottom corners, for surfaces docked to the screen's bottom edge.
+ */
+public fun Path.addSmoothTopCornerRect(
+    width: Float,
+    height: Float,
+    cornerRadius: Float,
+    smoothing: Float = SmoothCornerShape.DefaultSmoothing,
+) {    if (width <= 0f || height <= 0f) {
+        return
+    }
+
+    val ext = smoothing.coerceIn(1f, 2f)
+    val halfMin = min(width, height) * 0.5f
+    val tile = max(0f, cornerRadius * ext).coerceAtMost(halfMin)
+
+    if (tile <= 0f) {
+        addRect(Rect(0f, 0f, width, height))
+        return
+    }
+
+    val handle = tile * (1f - CornerControl)
+
+    moveTo(tile, 0f)
+    lineTo(width - tile, 0f)
+    cubicTo(width - handle, 0f, width, handle, width, tile)
+    lineTo(width, height)
+    lineTo(0f, height)
     lineTo(0f, tile)
     cubicTo(0f, handle, handle, 0f, tile, 0f)
     close()

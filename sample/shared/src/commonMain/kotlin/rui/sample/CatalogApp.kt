@@ -12,6 +12,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.unit.dp
 import com.composeunstyled.DialogHost
+import com.composeunstyled.ModalBottomSheetHost
 import rui.components.RuiNavigationBar
 import rui.components.RuiNavigationBarItem
 import rui.components.RuiScaffold
@@ -26,7 +27,9 @@ import rui.foundation.RuiIcons
 import rui.foundation.rememberBlurBackdrop
 import rui.foundation.utils.StatusBarAppearance
 import rui.sample.screens.ButtonsScreen
+import rui.sample.screens.BottomSheetScreen
 import rui.sample.screens.DialogScreen
+import rui.sample.screens.DropdownMenuScreen
 import rui.sample.screens.TabsScreen
 import rui.sample.screens.TextFieldScreen
 import rui.sample.screens.TokensScreen
@@ -41,6 +44,8 @@ public sealed interface CatalogPage : RuiNavKey {
     public data object Toggles : CatalogPage
     public data object Tabs : CatalogPage
     public data object Dialog : CatalogPage
+    public data object DropdownMenu : CatalogPage
+    public data object BottomSheet : CatalogPage
 }
 
 private fun CatalogPage.title(): String = when (this) {
@@ -50,6 +55,8 @@ private fun CatalogPage.title(): String = when (this) {
     CatalogPage.Toggles -> "Selection controls"
     CatalogPage.Tabs -> "Segmented tabs"
     CatalogPage.Dialog -> "Dialog"
+    CatalogPage.DropdownMenu -> "Dropdown menu"
+    CatalogPage.BottomSheet -> "Bottom sheet"
 }
 
 /**
@@ -73,7 +80,10 @@ public fun CatalogApp() {
         // same frame, so icons stay visible over the switched background.
         StatusBarAppearance(darkIcons = !darkTheme)
         DialogHost {
-            RuiNavDisplay(backStack = backStack, onBack = { nav.pop() }) { page ->
+            // Bottom sheets portal here, above the navigation stack, exactly
+            // like dialogs portal through DialogHost.
+            ModalBottomSheetHost {
+                RuiNavDisplay(backStack = backStack, onBack = { nav.pop() }) { page ->
                 val atRoot = page == CatalogPage.Root
                 // Top-level pages get the collapsing large title; pushed
                 // pages keep miuix's SmallTopAppBar form: a pinned small
@@ -150,8 +160,17 @@ public fun CatalogApp() {
                                 backdrop = backdrop,
                                 contentPadding = padding,
                             )
+                            CatalogPage.DropdownMenu -> DropdownMenuScreen(
+                                backdrop = backdrop,
+                                contentPadding = padding,
+                            )
+                            CatalogPage.BottomSheet -> BottomSheetScreen(
+                                backdrop = backdrop,
+                                contentPadding = padding,
+                            )
                         }
                     }
+                }
                 }
             }
         }
