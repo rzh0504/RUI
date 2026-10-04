@@ -19,6 +19,13 @@ android {
     buildFeatures {
         compose = true
     }
+
+    buildTypes {
+        release {
+            // Test release builds on real devices without a distribution key.
+            signingConfig = signingConfigs.getByName("debug")
+        }
+    }
 }
 
 dependencies {
