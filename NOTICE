@@ -30,9 +30,9 @@ License, Version 2.0.
       (angle, fractions, curve) adapted from miuix's ProgressiveBlur.
     - Modified: blur applies through Compose's cross-platform BlurEffect
       instead of miuix's AGSL/SkSL runtime-shader pipeline; progressive blur
-      renders as a three-level gradient cross-fade over the same capture and
-      the glass highlight is a gradient sheen — miuix's noise dither,
-      multi-scale shader pyramid and tilt highlights are not ported.
+      renders as a three-level gradient cross-fade over the same capture —
+      miuix's noise dither, multi-scale shader pyramid, highlights and tilt
+      lights are not ported.
 
   rui-ui/src/commonMain/kotlin/rui/components/RuiTopAppBar.kt
     - Collapsing large-title top app bar (RuiScrollBehavior /

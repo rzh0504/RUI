@@ -18,7 +18,6 @@ import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.TileMode
 import androidx.compose.ui.graphics.drawscope.ContentDrawScope
-import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.translate
 import androidx.compose.ui.graphics.layer.GraphicsLayer
 import androidx.compose.ui.graphics.layer.drawLayer
@@ -144,7 +143,6 @@ public fun Modifier.blurSurface(
     shape: Shape = RectangleShape,
     enabled: Boolean = isBlurSupported,
     progressive: ProgressiveBlur? = null,
-    highlight: Boolean = false,
     positionOverride: (() -> Offset)? = null,
 ): Modifier {
     val consumerCoordinates = mutableStateOf<LayoutCoordinates?>(null)
@@ -201,9 +199,6 @@ public fun Modifier.blurSurface(
             }
             if (tint != Color.Transparent) {
                 drawRect(tint)
-            }
-            if (highlight) {
-                drawGlassHighlight()
             }
             drawContent()
         }
@@ -281,32 +276,4 @@ private fun ContentDrawScope.drawProgressive(
     drawLevel(mid, 0.5f)
     drawLevel(clear, 0f)
     backdrop.graphicsLayer.renderEffect = null
-}
-
-/**
- * A subtle top-edge sheen and hairline catch-light — the glass highlight.
- * Light comes from the top regardless of content direction.
- */
-private fun ContentDrawScope.drawGlassHighlight() {
-    drawRect(
-        brush = Brush.verticalGradient(
-            colors = listOf(
-                Color.White.copy(alpha = 0.14f),
-                Color.Transparent,
-            ),
-            startY = 0f,
-            endY = size.height * 0.5f,
-        ),
-    )
-    drawRect(
-        brush = Brush.verticalGradient(
-            colors = listOf(
-                Color.White.copy(alpha = 0.35f),
-                Color.Transparent,
-            ),
-            startY = 0f,
-            endY = size.height,
-        ),
-        style = Stroke(width = 1.dp.toPx()),
-    )
 }

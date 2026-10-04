@@ -158,22 +158,30 @@ public fun TokensScreen(contentPadding: PaddingValues = PaddingValues(0.dp)) {
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .heightIn(min = 220.dp)
-                .clip(RuiTheme.shapes.md)
-                .blurBackdrop(demoBackdrop),
+                .heightIn(min = 220.dp),
         ) {
+            // The capture node holds the backdrop content only — the frosted
+            // surfaces sampling it must live outside it, or the layer would
+            // draw itself (native recursion crash).
             Box(
                 modifier = Modifier
-                    .fillMaxSize()
-                    .background(
-                        Brush.verticalGradient(
-                            listOf(Color(0xFF3C87FF), Color(0xFF9B6BFF), Color(0xFFFF8FB0)),
+                    .matchParentSize()
+                    .clip(RuiTheme.shapes.md)
+                    .blurBackdrop(demoBackdrop),
+            ) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(
+                            Brush.verticalGradient(
+                                listOf(Color(0xFF3C87FF), Color(0xFF9B6BFF), Color(0xFFFF8FB0)),
+                            ),
                         ),
-                    ),
-            )
+                )
+            }
             Row(
                 modifier = Modifier
-                    .fillMaxSize()
+                    .matchParentSize()
                     .padding(spacing.md),
                 horizontalArrangement = Arrangement.spacedBy(spacing.md),
             ) {
@@ -193,9 +201,8 @@ public fun TokensScreen(contentPadding: PaddingValues = PaddingValues(0.dp)) {
                     shape = RuiTheme.shapes.md,
                     backdrop = demoBackdrop,
                     progressive = ProgressiveBlur.Bottom,
-                    highlight = true,
                 ) {
-                    FrostedLabel("Progressive + highlight")
+                    FrostedLabel("Progressive")
                 }
             }
         }
