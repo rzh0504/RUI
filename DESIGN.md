@@ -86,6 +86,7 @@ Visual signatures worth keeping consistent:
 - **Filled button hierarchy** — `Primary` (accent fill) > `Tonal` (muted fill) > `Plain` (no fill) > `Danger`; no outlined buttons.
 - **Filled text field** with label above; error is red label + hairline, never a filled red box.
 - **Segmented control** for tabs: muted track, raised surface pill marks selection.
+- **Progress is thin** — a 4dp capsule (linear) or 4dp ring (circular) in `outlineSubtle` with a `primary` fill, like the slider's rest track; `progress = null` renders the indeterminate state (sweeping segment / rotating arc, never a blink).
 - **Inset grouped lists** for any index of items (`RuiListGroup` + `RuiListItem` + `RuiDivider(inset = …)`).
 - **App chrome is frosted-capable**: `RuiScaffold` overlays `RuiTopAppBar` / `RuiNavigationBar` on the content; with a backdrop they render frosted, without it they are plain surfaces.
 - **Switches stay circular**: the switch track and thumb use pure `CircleShape`, exempt from corner smoothing — circles read as circles.

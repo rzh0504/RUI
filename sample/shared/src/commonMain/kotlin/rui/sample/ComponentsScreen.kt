@@ -68,6 +68,16 @@ public fun ComponentsScreen(
             )
         }
 
+        SectionLabel("Indicators")
+        RuiListGroup {
+            RuiListItem(
+                title = "Progress",
+                subtitle = "Linear and circular, determinate and indeterminate",
+                showChevron = true,
+                onClick = { onOpen(CatalogPage.Progress) },
+            )
+        }
+
         SectionLabel("Overlays")
         RuiListGroup {
             RuiListItem(

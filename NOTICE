@@ -45,6 +45,13 @@ License, Version 2.0.
       marks; iOS UISlider visuals (jump to touch, white thumb with shadow)
       on Rui's token system.
 
+  rui-ui/src/commonMain/kotlin/rui/components/RuiProgress.kt
+    - Indeterminate circular mechanics (rotating arc with keyframed sweep)
+      adapted from miuix's basic/ProgressIndicator.kt.
+    - Modified: built on Compose Unstyled's UnstyledProgress for semantics;
+      iOS-adjacent visuals (4dp capsule linear bar, thin ring, animated fill)
+      on Rui's token system; no third orbiting-dot variant.
+
 A copy of the Apache License, Version 2.0 for that portion of the code is
 available at https://www.apache.org/licenses/LICENSE-2.0 and must be
 distributed alongside this product.

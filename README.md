@@ -18,7 +18,9 @@ compose-unstyled          behavior, state, keyboard, a11y (zero visuals)
 │  │              utils: bounce overscroll · haptics │
 │  └─ components  Scaffold · TopAppBar · NavBar ·    │
 │                 Button · TextField · Switch ·      │
-│                 Checkbox · Dialog · Tabs · List    │
+│                 Checkbox · Slider · DropdownMenu · │
+│                 BottomSheet · Progress · Dialog ·  │
+│                 Tabs · List                        │
 └───────┬────────────────────────────────────────────┘
         │
   sample/          catalog app: shared UI + androidApp + iosApp
@@ -86,7 +88,7 @@ See [DESIGN.md](DESIGN.md) for principles, the token dictionary and the recipes:
 ## Roadmap
 
 - Progressive blur and glass highlights for `FrostedSurface` (port miuix's runtime-shader pipeline)
-- More primitives: DropdownMenu, BottomSheet, Slider, Progress, Avatar, Tooltip, Disclosure
+- More primitives: Avatar, Tooltip, Disclosure (DropdownMenu, BottomSheet, Slider and Progress are done)
 - Continuous (squircle) corner shapes as a token swap
 - `jvm` / `wasmJs` targets + a desktop demo
 - Anthology of motion tokens (springs per component family)
