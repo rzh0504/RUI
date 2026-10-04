@@ -19,9 +19,17 @@ import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.backhandler.BackHandler
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.zIndex
 import rui.foundation.LocalRuiTransitionActive
+
+/**
+ * Input filters on an entry's host must not share a pointerInput key with any
+ * other filter on the same node chain: an equal key updates the node in place
+ * instead of restarting its handler coroutine.
+ */
+private const val OpaqueInputKey = "rui.components.navigation.opaqueInput"
 
 /**
  * Marker interface for routes rendered by [RuiNavDisplay]. Modeled after the
@@ -143,6 +151,16 @@ public fun <T : RuiNavKey> RuiNavDisplay(
                 Box(
                     modifier = Modifier
                         .fillMaxSize()
+                        // Pages are input-opaque within their bounds: a
+                        // hit-testable but non-consuming filter keeps a touch
+                        // on a blank region of this entry (a page shorter
+                        // than the screen) from falling through to a covered
+                        // entry below. Mechanism from miuix-nav's entry host.
+                        .pointerInput(OpaqueInputKey) {
+                            awaitPointerEventScope {
+                                while (true) awaitPointerEvent()
+                            }
+                        }
                         .graphicsLayer {
                             val depth = animatedTop.value - index
                             val width = containerWidthPx.toFloat()
