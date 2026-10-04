@@ -23,9 +23,9 @@ import rui.foundation.rememberRuiIndication
 import rui.theme.RuiTheme
 
 /**
- * A row of an inset grouped list: title (and optional subtitle), trailing
- * control, optional chevron. Rows with [onClick] get the state layer and are
- * pressed as one.
+ * A row of an inset grouped list: optional leading view (icon, avatar), title
+ * (and optional subtitle), trailing control, optional chevron. Rows with
+ * [onClick] get the state layer and are pressed as one.
  */
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
@@ -33,6 +33,7 @@ public fun RuiListItem(
     title: String,
     modifier: Modifier = Modifier,
     subtitle: String? = null,
+    leading: (@Composable RowScope.() -> Unit)? = null,
     showChevron: Boolean = false,
     onClick: (() -> Unit)? = null,
     trailing: (@Composable RowScope.() -> Unit)? = null,
@@ -60,6 +61,7 @@ public fun RuiListItem(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(spacing.md),
     ) {
+        leading?.invoke(this)
         Column(modifier = Modifier.weight(1f)) {
             RuiText(text = title, style = RuiTheme.typography.titleSm)
             if (subtitle != null) {

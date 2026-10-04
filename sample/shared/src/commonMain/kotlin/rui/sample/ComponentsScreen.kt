@@ -68,6 +68,16 @@ public fun ComponentsScreen(
             )
         }
 
+        SectionLabel("Identity")
+        RuiListGroup {
+            RuiListItem(
+                title = "Avatar",
+                subtitle = "Images, initials, sizes",
+                showChevron = true,
+                onClick = { onOpen(CatalogPage.Avatar) },
+            )
+        }
+
         SectionLabel("Indicators")
         RuiListGroup {
             RuiListItem(

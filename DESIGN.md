@@ -89,7 +89,7 @@ Visual signatures worth keeping consistent:
 - **Progress is thin** — a 4dp capsule (linear) or 4dp ring (circular) in `outlineSubtle` with a `primary` fill, like the slider's rest track; `progress = null` renders the indeterminate state (sweeping segment / rotating arc, never a blink).
 - **Inset grouped lists** for any index of items (`RuiListGroup` + `RuiListItem` + `RuiDivider(inset = …)`).
 - **App chrome is frosted-capable**: `RuiScaffold` overlays `RuiTopAppBar` / `RuiNavigationBar` on the content; with a backdrop they render frosted, without it they are plain surfaces.
-- **Switches stay circular**: the switch track and thumb use pure `CircleShape`, exempt from corner smoothing — circles read as circles.
+- **Switches and avatars stay circular**: the switch track, thumb and avatars use pure `CircleShape`, exempt from corner smoothing — circles read as circles.
 - **List item titles sit at the title level** (`titleSm`), matching how real apps treat settings rows as section headlines; subtitles stay `bodySm`.
 
 Every component in `rui.components`:
