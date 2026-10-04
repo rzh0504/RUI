@@ -20,7 +20,7 @@ compose-unstyled          behavior, state, keyboard, a11y (zero visuals)
 │                 Button · TextField · Switch ·      │
 │                 Checkbox · Slider · DropdownMenu · │
 │                 BottomSheet · Progress · Avatar ·  │
-│                 Dialog · Tabs · List               │
+│                 Tooltip · Dialog · Tabs · List     │
 └───────┬────────────────────────────────────────────┘
         │
   sample/          catalog app: shared UI + androidApp + iosApp
@@ -88,7 +88,7 @@ See [DESIGN.md](DESIGN.md) for principles, the token dictionary and the recipes:
 ## Roadmap
 
 - Progressive blur and glass highlights for `FrostedSurface` (port miuix's runtime-shader pipeline)
-- More primitives: Tooltip, Disclosure (DropdownMenu, BottomSheet, Slider, Progress and Avatar are done)
+- More primitives: Disclosure (DropdownMenu, BottomSheet, Slider, Progress, Avatar and Tooltip are done)
 - Continuous (squircle) corner shapes as a token swap
 - `jvm` / `wasmJs` targets + a desktop demo
 - Anthology of motion tokens (springs per component family)

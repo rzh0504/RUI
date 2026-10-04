@@ -13,6 +13,7 @@ import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.unit.dp
 import com.composeunstyled.DialogHost
 import com.composeunstyled.ModalBottomSheetHost
+import com.composeunstyled.TooltipHost
 import rui.components.RuiNavigationBar
 import rui.components.RuiNavigationBarItem
 import rui.components.RuiScaffold
@@ -32,6 +33,7 @@ import rui.sample.screens.DialogScreen
 import rui.sample.screens.DropdownMenuScreen
 import rui.sample.screens.AvatarScreen
 import rui.sample.screens.ProgressScreen
+import rui.sample.screens.TooltipScreen
 import rui.sample.screens.TabsScreen
 import rui.sample.screens.TextFieldScreen
 import rui.sample.screens.TokensScreen
@@ -50,6 +52,7 @@ public sealed interface CatalogPage : RuiNavKey {
     public data object BottomSheet : CatalogPage
     public data object Progress : CatalogPage
     public data object Avatar : CatalogPage
+    public data object Tooltip : CatalogPage
 }
 
 private fun CatalogPage.title(): String = when (this) {
@@ -63,6 +66,7 @@ private fun CatalogPage.title(): String = when (this) {
     CatalogPage.BottomSheet -> "Bottom sheet"
     CatalogPage.Progress -> "Progress"
     CatalogPage.Avatar -> "Avatar"
+    CatalogPage.Tooltip -> "Tooltip"
 }
 
 /**
@@ -89,6 +93,8 @@ public fun CatalogApp() {
             // Bottom sheets portal here, above the navigation stack, exactly
             // like dialogs portal through DialogHost.
             ModalBottomSheetHost {
+                // Tooltip panels portal above the navigation stack too.
+                TooltipHost {
                 RuiNavDisplay(backStack = backStack, onBack = { nav.pop() }) { page ->
                 val atRoot = page == CatalogPage.Root
                 // Top-level pages get the collapsing large title; pushed
@@ -176,6 +182,7 @@ public fun CatalogApp() {
                             )
                             CatalogPage.Progress -> ProgressScreen(contentPadding = padding)
                             CatalogPage.Avatar -> AvatarScreen(contentPadding = padding)
+                            CatalogPage.Tooltip -> TooltipScreen(contentPadding = padding)
                         }
                     }
                 }
@@ -183,4 +190,5 @@ public fun CatalogApp() {
             }
         }
     }
+}
 }

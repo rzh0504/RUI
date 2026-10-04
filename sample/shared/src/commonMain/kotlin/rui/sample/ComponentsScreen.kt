@@ -110,6 +110,13 @@ public fun ComponentsScreen(
                 showChevron = true,
                 onClick = { onOpen(CatalogPage.BottomSheet) },
             )
+            RuiDivider(inset = RuiTheme.spacing.lg)
+            RuiListItem(
+                title = "Tooltip",
+                subtitle = "Anchored explanation bubbles",
+                showChevron = true,
+                onClick = { onOpen(CatalogPage.Tooltip) },
+            )
         }
 
         RuiText(
