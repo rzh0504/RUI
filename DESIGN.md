@@ -88,6 +88,7 @@ Visual signatures worth keeping consistent:
 - **Segmented control** for tabs: muted track, raised surface pill marks selection.
 - **Progress is thin** — a 4dp capsule (linear) or 4dp ring (circular) in `outlineSubtle` with a `primary` fill, like the slider's rest track; `progress = null` renders the indeterminate state (sweeping segment / rotating arc, never a blink).
 - **Tooltips are inverted** — the bubble uses `content` as its container and `background` as its text color, the one sanctioned color inversion; `sm` shape tier, no caret, shown on long-press (touch), hover (pointer) or keyboard focus.
+- **Disclosures are grouped cards** — a header row (list-title text, chevron rotating 90°) toggles content revealed in place; expand/collapse semantics come from Unstyled, motion is the shared fast tokens.
 - **Inset grouped lists** for any index of items (`RuiListGroup` + `RuiListItem` + `RuiDivider(inset = …)`).
 - **App chrome is frosted-capable**: `RuiScaffold` overlays `RuiTopAppBar` / `RuiNavigationBar` on the content; with a backdrop they render frosted, without it they are plain surfaces.
 - **Switches and avatars stay circular**: the switch track, thumb and avatars use pure `CircleShape`, exempt from corner smoothing — circles read as circles.

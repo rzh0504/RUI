@@ -66,6 +66,13 @@ public fun ComponentsScreen(
                 showChevron = true,
                 onClick = { onOpen(CatalogPage.Tabs) },
             )
+            RuiDivider(inset = RuiTheme.spacing.lg)
+            RuiListItem(
+                title = "Disclosure",
+                subtitle = "Expandable sections in place",
+                showChevron = true,
+                onClick = { onOpen(CatalogPage.Disclosure) },
+            )
         }
 
         SectionLabel("Identity")
