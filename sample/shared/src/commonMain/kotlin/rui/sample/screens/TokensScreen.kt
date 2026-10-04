@@ -1,32 +1,38 @@
 package rui.sample.screens
 
+import androidx.compose.animation.core.SpringSpec
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxHeight
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.unit.dp
 import rui.foundation.ExperimentalRuiApi
 import rui.foundation.FrostedSurface
-import rui.foundation.ProgressiveBlur
 import rui.foundation.RuiIcon
 import rui.foundation.RuiIcons
-import rui.foundation.blurBackdrop
-import rui.foundation.rememberBlurBackdrop
 import rui.components.RuiDivider
 import rui.components.RuiListGroup
 import rui.foundation.RuiSurface
@@ -153,70 +159,65 @@ public fun TokensScreen(contentPadding: PaddingValues = PaddingValues(0.dp)) {
             }
         }
 
-        SectionLabel("Progressive blur")
-        val demoBackdrop = rememberBlurBackdrop()
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .heightIn(min = 220.dp),
-        ) {
-            // The capture node holds the backdrop content only — the frosted
-            // surfaces sampling it must live outside it, or the layer would
-            // draw itself (native recursion crash).
-            Box(
-                modifier = Modifier
-                    .matchParentSize()
-                    .clip(RuiTheme.shapes.md)
-                    .blurBackdrop(demoBackdrop),
-            ) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .background(
-                            Brush.verticalGradient(
-                                listOf(Color(0xFF3C87FF), Color(0xFF9B6BFF), Color(0xFFFF8FB0)),
-                            ),
-                        ),
-                )
-            }
-            Row(
-                modifier = Modifier
-                    .matchParentSize()
-                    .padding(spacing.md),
-                horizontalArrangement = Arrangement.spacedBy(spacing.md),
-            ) {
-                FrostedSurface(
-                    modifier = Modifier
-                        .weight(1f)
-                        .fillMaxHeight(),
-                    shape = RuiTheme.shapes.md,
-                    backdrop = demoBackdrop,
-                ) {
-                    FrostedLabel("Uniform")
-                }
-                FrostedSurface(
-                    modifier = Modifier
-                        .weight(1f)
-                        .fillMaxHeight(),
-                    shape = RuiTheme.shapes.md,
-                    backdrop = demoBackdrop,
-                    progressive = ProgressiveBlur.Bottom,
-                ) {
-                    FrostedLabel("Progressive")
-                }
-            }
+        SectionLabel("Motion")
+        RuiListGroup {
+            MotionRow("tracking", "0.9 / 1755", RuiTheme.motion.tracking)
+            RuiDivider(inset = RuiTheme.spacing.lg)
+            MotionRow("settle", "0.96 / 322", RuiTheme.motion.settle)
+            RuiDivider(inset = RuiTheme.spacing.lg)
+            MotionRow("press", "0.6 / 987", RuiTheme.motion.press)
+            RuiDivider(inset = RuiTheme.spacing.lg)
+            MotionRow("pop", "0.85 / 450", RuiTheme.motion.pop)
+            RuiDivider(inset = RuiTheme.spacing.lg)
+            MotionRow("navigation", "1.0 / 550", RuiTheme.motion.navigation)
         }
     }
 }
 
+/**
+ * Tapping the row springs the dot across the track with the given family's
+ * spec — toggling direction shows the return feel too.
+ */
 @Composable
-private fun FrostedLabel(text: String) {
-    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-        RuiText(
-            text = text,
-            style = RuiTheme.typography.labelMd,
-            color = RuiTheme.colors.content,
-        )
+private fun MotionRow(name: String, spec: String, animationSpec: SpringSpec<Float>) {
+    var target by remember { mutableStateOf(0f) }
+    val position by animateFloatAsState(
+        targetValue = target,
+        animationSpec = animationSpec,
+        label = "MotionRow",
+    )
+
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .heightIn(min = RuiTheme.dimens.touchTarget)
+            .clickable { target = if (target == 1f) 0f else 1f }
+            .padding(horizontal = RuiTheme.spacing.lg, vertical = RuiTheme.spacing.md),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(RuiTheme.spacing.md),
+    ) {
+        Column(Modifier.weight(1f)) {
+            RuiText(text = name, style = RuiTheme.typography.titleSm)
+            RuiText(
+                text = "damping / stiffness",
+                style = RuiTheme.typography.bodySm,
+                color = RuiTheme.colors.contentMuted,
+            )
+        }
+        BoxWithConstraints(Modifier.width(120.dp)) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(RuiTheme.spacing.lg)
+                    .background(RuiTheme.colors.surfaceMuted, RuiTheme.shapes.full),
+            )
+            Box(
+                modifier = Modifier
+                    .offset(x = (maxWidth - 16.dp) * position)
+                    .size(16.dp)
+                    .background(RuiTheme.colors.primary, CircleShape),
+            )
+        }
     }
 }
 

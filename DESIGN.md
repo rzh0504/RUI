@@ -78,8 +78,6 @@ The only sanctioned exceptions live with their component: the top app bar's coll
 
 The backdrop mechanism follows miuix's blur module (Apache-2.0, see NOTICE): one composable captures itself via `Modifier.blurBackdrop(backdrop)` (`rememberBlurBackdrop()` + opaque background first), and any surface applies `Modifier.blurSurface(...)` — a GraphicsLayer record drawn with the cross-platform `BlurEffect`, translated into local coordinates. No pixels are read back.
 
-**Progressive blur.** `blurSurface` accepts a `ProgressiveBlur` descriptor (angle, start/end fractions, curve — adapted from miuix) and renders it as a three-level cross-fade: the backdrop is composited at full radius, half radius and clear, each masked by a `DstIn` gradient so the effective strength ramps along the gradient. It is an honest approximation built on the same layer capture — not miuix's per-pixel runtime-shader pipeline — and runs on every target the library builds for. One hard rule: the surfaces sampling a backdrop must live **outside** the captured node — a layer that draws itself recurses natively.
-
 The catalog wires it end to end: `RuiScaffold(backdrop = …)` captures the content area; `RuiTopAppBar` and `RuiNavigationBar` sample it as frosted bars, and the frosted dialog samples it through the portal. Frosted surfaces are marked `@ExperimentalRuiApi`.
 
 ## Utilities

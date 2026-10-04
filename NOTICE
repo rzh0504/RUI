@@ -23,16 +23,12 @@ License, Version 2.0.
       overscroll factory; renamed to Rui's modifier convention.
 
   rui-ui/src/commonMain/kotlin/rui/foundation/BlurBackdrop.kt
-  rui-ui/src/commonMain/kotlin/rui/foundation/ProgressiveBlur.kt
     - Backdrop-capture mechanism (GraphicsLayer recording + coordinates
       translation) adapted from miuix's miuix-blur module
-      (LayerBackdrop/LayerBackdropModifier); the progressive-blur descriptor
-      (angle, fractions, curve) adapted from miuix's ProgressiveBlur.
-    - Modified: blur applies through Compose's cross-platform BlurEffect
-      instead of miuix's AGSL/SkSL runtime-shader pipeline; progressive blur
-      renders as a three-level gradient cross-fade over the same capture —
-      miuix's noise dither, multi-scale shader pyramid, highlights and tilt
-      lights are not ported.
+      (LayerBackdrop/LayerBackdropModifier).
+    - Modified: heavily reduced - blur applies through Compose's
+      cross-platform BlurEffect instead of miuix's AGSL/SkSL runtime-shader
+      pipeline; no progressive blur, noise dither or highlights.
 
   rui-ui/src/commonMain/kotlin/rui/components/RuiTopAppBar.kt
     - Collapsing large-title top app bar (RuiScrollBehavior /
