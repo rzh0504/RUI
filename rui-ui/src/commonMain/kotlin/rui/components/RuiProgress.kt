@@ -18,6 +18,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
@@ -110,7 +111,10 @@ public fun RuiLinearProgress(
             Canvas(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(RuiProgressDefaults.LinearTrackHeight),
+                    .height(RuiProgressDefaults.LinearTrackHeight)
+                    // Drawing is not clipped to bounds by default; the sweep
+                    // segment enters and exits past the track's edges.
+                    .clipToBounds(),
             ) {
                 drawRoundRect(
                     color = track,
@@ -138,7 +142,8 @@ public fun RuiLinearProgress(
             Canvas(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(RuiProgressDefaults.LinearTrackHeight),
+                    .height(RuiProgressDefaults.LinearTrackHeight)
+                    .clipToBounds(),
             ) {
                 drawRoundRect(
                     color = track,
