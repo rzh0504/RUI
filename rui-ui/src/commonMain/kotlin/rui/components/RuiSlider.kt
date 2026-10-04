@@ -1,7 +1,6 @@
 package rui.components
 
 import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.spring
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.awaitEachGesture
@@ -125,20 +124,17 @@ public fun RuiSlider(
     val hapticState = remember { SliderHapticState() }
     var isDragging by remember { mutableStateOf(false) }
     var trackWidthPx by remember { mutableIntStateOf(0) }
+    val motion = RuiTheme.motion
 
     val coercedValue = value.coerceIn(valueRange.start, valueRange.endInclusive)
 
     // Tight spring while dragging so the thumb tracks the finger; soft spring
-    // for tap jumps and programmatic changes. Specs from miuix's Slider.
-    val progressSpec = if (isDragging) {
-        spring<Float>(dampingRatio = 0.9f, stiffness = 1755f)
-    } else {
-        spring<Float>(dampingRatio = 0.96f, stiffness = 322f)
-    }
+    // for tap jumps and programmatic changes.
+    val progressSpec = if (isDragging) motion.tracking else motion.settle
     val animatedValue by animateFloatAsState(coercedValue, progressSpec)
     val thumbScale by animateFloatAsState(
         targetValue = if (isDragging) 1.127f else 1f,
-        animationSpec = spring(dampingRatio = 0.6f, stiffness = 987f),
+        animationSpec = motion.press,
     )
 
     val fill = if (enabled) colors.trackFill else colors.disabledTrackFill

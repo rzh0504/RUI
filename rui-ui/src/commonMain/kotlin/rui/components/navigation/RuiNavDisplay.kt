@@ -1,7 +1,6 @@
 package rui.components.navigation
 
 import androidx.compose.animation.core.Animatable
-import androidx.compose.animation.core.spring
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
@@ -23,6 +22,7 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.zIndex
 import rui.foundation.LocalRuiTransitionActive
+import rui.theme.RuiTheme
 
 /**
  * Input filters on an entry's host must not share a pointerInput key with any
@@ -108,6 +108,7 @@ public fun <T : RuiNavKey> RuiNavDisplay(
     val renderStack = remember { mutableStateListOf(backStack.first()) }
     val animatedTop = remember { Animatable(0f) }
     var transitionRunning by remember { mutableStateOf(false) }
+    val transitionSpec = RuiTheme.motion.navigation
 
     LaunchedEffect(backStack.size, backStack.lastOrNull()) {
         // Pushes join the render stack immediately so the new entry slides in.
@@ -122,7 +123,7 @@ public fun <T : RuiNavKey> RuiNavDisplay(
         transitionRunning = true
         animatedTop.animateTo(
             (backStack.size - 1).toFloat(),
-            spring(dampingRatio = 1f, stiffness = 550f),
+            transitionSpec,
         )
         // Let the settled frame render before structural changes land.
         withFrameNanos { }

@@ -10,12 +10,15 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.BlendMode
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.BlurEffect
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.TileMode
 import androidx.compose.ui.graphics.drawscope.ContentDrawScope
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.translate
 import androidx.compose.ui.graphics.layer.GraphicsLayer
 import androidx.compose.ui.graphics.layer.drawLayer
@@ -26,6 +29,11 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import rui.foundation.platform.isBlurSupported
+import kotlin.math.PI
+import kotlin.math.abs
+import kotlin.math.cos
+import kotlin.math.pow
+import kotlin.math.sin
 
 /**
  * True while a navigation transition is running. Backdrop captures pause
@@ -111,6 +119,12 @@ public fun Modifier.blurBackdrop(
  * [shape] and washed with [tint]. Falls back to drawing content directly when
  * [enabled] is false (platforms without RenderEffect support).
  *
+ * With [progressive] set, the blur strength ramps along the descriptor's
+ * gradient instead of staying uniform: the backdrop is composited at three
+ * blur levels (full radius, half, clear) whose alpha weights cross-fade along
+ * the gradient — an approximation of per-pixel progressive blur built on the
+ * same layer capture, with no runtime shaders.
+ *
  * The modifier paints backdrop, tint and then the content — it replaces the
  * surface's own background in the blur path. Chain it before the content.
  *
@@ -122,15 +136,19 @@ public fun Modifier.blurBackdrop(
  *   an offset with a NaN component to skip the blur for a frame. When null,
  *   coordinates are tracked automatically.
  */
+@Composable
 public fun Modifier.blurSurface(
     backdrop: BlurBackdrop,
     radius: Dp = 24.dp,
     tint: Color = Color.Transparent,
     shape: Shape = RectangleShape,
     enabled: Boolean = isBlurSupported,
+    progressive: ProgressiveBlur? = null,
+    highlight: Boolean = false,
     positionOverride: (() -> Offset)? = null,
 ): Modifier {
     val consumerCoordinates = mutableStateOf<LayoutCoordinates?>(null)
+    val levelLayer = rememberGraphicsLayer()
 
     return this
         .clip(shape)
@@ -162,17 +180,133 @@ public fun Modifier.blurSurface(
                 }
             }
 
-            val radiusPx = radius.toPx()
             if (offset.x.isFinite() && offset.y.isFinite()) {
-                backdrop.graphicsLayer.renderEffect =
-                    BlurEffect(radiusPx, radiusPx, TileMode.Clamp)
-                translate(-offset.x, -offset.y) {
-                    drawLayer(backdrop.graphicsLayer)
+                if (progressive == null) {
+                    val radiusPx = radius.toPx()
+                    backdrop.graphicsLayer.renderEffect =
+                        BlurEffect(radiusPx, radiusPx, TileMode.Clamp)
+                    translate(-offset.x, -offset.y) {
+                        drawLayer(backdrop.graphicsLayer)
+                    }
+                    backdrop.graphicsLayer.renderEffect = null
+                } else {
+                    drawProgressive(
+                        backdrop = backdrop,
+                        levelLayer = levelLayer,
+                        offset = offset,
+                        radiusPx = radius.toPx(),
+                        progressive = progressive,
+                    )
                 }
             }
             if (tint != Color.Transparent) {
                 drawRect(tint)
             }
+            if (highlight) {
+                drawGlassHighlight()
+            }
             drawContent()
         }
+}
+
+/**
+ * Composites the backdrop at three blur levels — full radius, half, clear —
+ * masked by gradient weights that cross-fade along [progressive]'s gradient,
+ * so the effective blur strength ramps from full at [ProgressiveBlur.startFraction]
+ * to zero at [ProgressiveBlur.endFraction]. Each level is recorded into
+ * [levelLayer] with a `DstIn` gradient mask, then drawn immediately — the
+ * effect is set before the record and changed only after the draw, so the
+ * shared backdrop layer is sampled with the intended radius.
+ */
+private fun ContentDrawScope.drawProgressive(
+    backdrop: BlurBackdrop,
+    levelLayer: GraphicsLayer,
+    offset: Offset,
+    radiusPx: Float,
+    progressive: ProgressiveBlur,
+) {
+    val direction = Offset(cos(progressive.angle * (PI / 180.0).toFloat()), sin(progressive.angle * (PI / 180.0).toFloat()))
+    val extent = size.width * abs(direction.x) + size.height * abs(direction.y)
+    if (extent <= 0f) {
+        return
+    }
+    // The corner where the projection starts (blur-full end of the gradient).
+    val gradientStart = Offset(
+        if (direction.x < 0f) size.width else 0f,
+        if (direction.y < 0f) size.height else 0f,
+    )
+    val gradientEnd = gradientStart + direction * extent
+
+    fun blurFactor(t: Float): Float {
+        val raw = ((t - progressive.startFraction) /
+            (progressive.endFraction - progressive.startFraction)).coerceIn(0f, 1f)
+        val shaped = raw.pow(progressive.curve)
+        return 1f - shaped
+    }
+
+    fun weightBrush(weight: (Float) -> Float): Brush = Brush.linearGradient(
+        colorStops = arrayOf(
+            0f to Color.White.copy(alpha = weight(0f)),
+            0.25f to Color.White.copy(alpha = weight(0.25f)),
+            0.5f to Color.White.copy(alpha = weight(0.5f)),
+            0.75f to Color.White.copy(alpha = weight(0.75f)),
+            1f to Color.White.copy(alpha = weight(1f)),
+        ),
+        start = gradientStart,
+        end = gradientEnd,
+    )
+
+    // Weights sum to 1: effective radius = wFull·r + wMid·r/2.
+    val full = weightBrush { t -> (2f * blurFactor(t) - 1f).coerceIn(0f, 1f) }
+    val mid = weightBrush { t -> 1f - abs(2f * blurFactor(t) - 1f) }
+    val clear = weightBrush { t -> (1f - 2f * blurFactor(t)).coerceIn(0f, 1f) }
+
+    fun drawLevel(mask: Brush, radiusFactor: Float) {
+        if (radiusFactor > 0f) {
+            val r = radiusPx * radiusFactor
+            backdrop.graphicsLayer.renderEffect = BlurEffect(r, r, TileMode.Clamp)
+        } else {
+            backdrop.graphicsLayer.renderEffect = null
+        }
+        levelLayer.record(IntSize(size.width.toInt(), size.height.toInt())) {
+            translate(-offset.x, -offset.y) {
+                drawLayer(backdrop.graphicsLayer)
+            }
+            drawRect(mask, blendMode = BlendMode.DstIn)
+        }
+        drawLayer(levelLayer)
+    }
+
+    drawLevel(full, 1f)
+    drawLevel(mid, 0.5f)
+    drawLevel(clear, 0f)
+    backdrop.graphicsLayer.renderEffect = null
+}
+
+/**
+ * A subtle top-edge sheen and hairline catch-light — the glass highlight.
+ * Light comes from the top regardless of content direction.
+ */
+private fun ContentDrawScope.drawGlassHighlight() {
+    drawRect(
+        brush = Brush.verticalGradient(
+            colors = listOf(
+                Color.White.copy(alpha = 0.14f),
+                Color.Transparent,
+            ),
+            startY = 0f,
+            endY = size.height * 0.5f,
+        ),
+    )
+    drawRect(
+        brush = Brush.verticalGradient(
+            colors = listOf(
+                Color.White.copy(alpha = 0.35f),
+                Color.Transparent,
+            ),
+            startY = 0f,
+            endY = size.height,
+        ),
+        style = Stroke(width = 1.dp.toPx()),
+    )
 }

@@ -1,23 +1,32 @@
 package rui.sample.screens
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.unit.dp
 import rui.foundation.ExperimentalRuiApi
 import rui.foundation.FrostedSurface
+import rui.foundation.ProgressiveBlur
 import rui.foundation.RuiIcon
 import rui.foundation.RuiIcons
+import rui.foundation.blurBackdrop
+import rui.foundation.rememberBlurBackdrop
 import rui.components.RuiDivider
 import rui.components.RuiListGroup
 import rui.foundation.RuiSurface
@@ -143,6 +152,64 @@ public fun TokensScreen(contentPadding: PaddingValues = PaddingValues(0.dp)) {
                 )
             }
         }
+
+        SectionLabel("Progressive blur")
+        val demoBackdrop = rememberBlurBackdrop()
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .heightIn(min = 220.dp)
+                .clip(RuiTheme.shapes.md)
+                .blurBackdrop(demoBackdrop),
+        ) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(
+                        Brush.verticalGradient(
+                            listOf(Color(0xFF3C87FF), Color(0xFF9B6BFF), Color(0xFFFF8FB0)),
+                        ),
+                    ),
+            )
+            Row(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(spacing.md),
+                horizontalArrangement = Arrangement.spacedBy(spacing.md),
+            ) {
+                FrostedSurface(
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxHeight(),
+                    shape = RuiTheme.shapes.md,
+                    backdrop = demoBackdrop,
+                ) {
+                    FrostedLabel("Uniform")
+                }
+                FrostedSurface(
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxHeight(),
+                    shape = RuiTheme.shapes.md,
+                    backdrop = demoBackdrop,
+                    progressive = ProgressiveBlur.Bottom,
+                    highlight = true,
+                ) {
+                    FrostedLabel("Progressive + highlight")
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun FrostedLabel(text: String) {
+    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+        RuiText(
+            text = text,
+            style = RuiTheme.typography.labelMd,
+            color = RuiTheme.colors.content,
+        )
     }
 }
 

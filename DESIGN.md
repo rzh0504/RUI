@@ -54,7 +54,17 @@ Token values — `sm 6 · md 10 · lg 14 · xl 18 · sheet 14 (top only) · full
 
 ### Motion — `RuiMotion`
 
-State layers: 90ms in / 180ms out. Short transitions 120ms, medium 200ms. Component springs (switch thumb, dialog scale) live with the component and stay restrained.
+Duration tokens: state layers 90ms in / 180ms out, short transitions 120ms, medium 200ms. Spring tokens, one per motion family — components pick a family, never a raw spec:
+
+| Family | Spec | Used for |
+|---|---|---|
+| `tracking` | 0.9 / 1755 | a value following the finger (slider drag) |
+| `settle` | 0.96 / 322 | the soft catch-up after a gesture or programmatic change |
+| `press` | 0.6 / 987 | press-emphasis transforms (slider thumb scale) — the bounciest |
+| `pop` | 0.85 / 450 | small values and surfaces with one soft overshoot (check mark, switch thumb, dialog, menu) |
+| `navigation` | 1.0 / 550 | screen-scale moves, critically damped (nav stack driver, sheet detents) |
+
+The only sanctioned exceptions live with their component: the top app bar's collapse snap and the title spring (its stiffness is parameterized by the miuix-folme response math).
 
 ## Interaction recipes
 
@@ -67,6 +77,8 @@ State layers: 90ms in / 180ms out. Short transitions 120ms, medium 200ms. Compon
 `FrostedSurface` is deliberately named: with a `BlurBackdrop` it renders the captured content blurred behind a translucent tint — frosted glass. Without a backdrop it is an honest translucent panel (tint + hairline), not glass; don't present it as one.
 
 The backdrop mechanism follows miuix's blur module (Apache-2.0, see NOTICE): one composable captures itself via `Modifier.blurBackdrop(backdrop)` (`rememberBlurBackdrop()` + opaque background first), and any surface applies `Modifier.blurSurface(...)` — a GraphicsLayer record drawn with the cross-platform `BlurEffect`, translated into local coordinates. No pixels are read back.
+
+**Progressive blur and glass highlight.** `blurSurface` accepts a `ProgressiveBlur` descriptor (angle, start/end fractions, curve — adapted from miuix) and renders it as a three-level cross-fade: the backdrop is composited at full radius, half radius and clear, each masked by a `DstIn` gradient so the effective strength ramps along the gradient. It is an honest approximation built on the same layer capture — not miuix's per-pixel runtime-shader pipeline — and runs on every target the library builds for. `highlight = true` adds a top-edge sheen and hairline catch-light (light always comes from above).
 
 The catalog wires it end to end: `RuiScaffold(backdrop = …)` captures the content area; `RuiTopAppBar` and `RuiNavigationBar` sample it as frosted bars, and the frosted dialog samples it through the portal. Frosted surfaces are marked `@ExperimentalRuiApi`.
 

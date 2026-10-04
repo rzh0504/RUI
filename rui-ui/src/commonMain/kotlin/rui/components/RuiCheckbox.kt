@@ -1,6 +1,5 @@
 package rui.components
 
-import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -68,7 +67,7 @@ public fun RuiCheckbox(
                     ),
                 enter = fadeIn(motion.fast) + scaleIn(
                     initialScale = 0.6f,
-                    animationSpec = spring(dampingRatio = 0.9f, stiffness = 600f),
+                    animationSpec = motion.pop,
                 ),
                 exit = fadeOut(tween(durationMillis = 90)),
             ) {

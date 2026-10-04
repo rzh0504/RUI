@@ -29,7 +29,9 @@ public annotation class ExperimentalRuiApi
  * honest translucent panel — tint plus hairline border, no blur.
  *
  * Pass a [BlurBackdrop] from [rememberBlurBackdrop] + [blurBackdrop] to get
- * the frosted look; see the catalog app for the wiring.
+ * the frosted look; see the catalog app for the wiring. [progressive] ramps
+ * the blur strength along a gradient instead of a uniform radius, and
+ * [highlight] adds a subtle top-edge sheen — the glass look.
  */
 @ExperimentalRuiApi
 @Composable
@@ -40,6 +42,8 @@ public fun FrostedSurface(
     contentColor: Color = RuiTheme.colors.content,
     backdrop: BlurBackdrop? = null,
     blurRadius: Dp = 24.dp,
+    progressive: ProgressiveBlur? = null,
+    highlight: Boolean = false,
     content: @Composable () -> Unit,
 ) {
     val colors = RuiTheme.colors
@@ -56,6 +60,8 @@ public fun FrostedSurface(
                             radius = blurRadius,
                             tint = effectiveTint,
                             shape = shape,
+                            progressive = progressive,
+                            highlight = highlight,
                         )
                     } else {
                         Modifier.background(effectiveTint, shape)

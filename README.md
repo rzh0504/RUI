@@ -88,8 +88,4 @@ See [DESIGN.md](DESIGN.md) for principles, the token dictionary and the recipes:
 
 ## Roadmap
 
-- Progressive blur and glass highlights for `FrostedSurface` (port miuix's runtime-shader pipeline)
-- Primitives complete: DropdownMenu, BottomSheet, Slider, Progress, Avatar, Tooltip, Disclosure
-- Continuous (squircle) corner shapes as a token swap
 - `jvm` / `wasmJs` targets + a desktop demo
-- Anthology of motion tokens (springs per component family)

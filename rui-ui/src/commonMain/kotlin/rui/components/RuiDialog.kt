@@ -4,7 +4,6 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
-import androidx.compose.animation.core.spring
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -131,7 +130,7 @@ private fun RuiDialogPanel(
                 paneTitle = title,
                 enter = fadeIn(motion.normal) + scaleIn(
                     initialScale = 0.94f,
-                    animationSpec = spring(dampingRatio = 0.85f, stiffness = 400f),
+                    animationSpec = motion.pop,
                 ),
                 exit = fadeOut(motion.fast) + scaleOut(targetScale = 0.96f),
             ) {

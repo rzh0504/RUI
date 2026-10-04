@@ -69,7 +69,9 @@ public fun RuiSwitch(
             ) {
                 Thumb(
                     modifier = Modifier.padding(3.dp),
-                    animationSpec = spring(dampingRatio = 0.8f, stiffness = 500f),
+                    // The pop family in Dp — Thumb animates an offset, not a
+                    // fraction, and the motion tokens are Float-typed.
+                    animationSpec = spring<Dp>(dampingRatio = 0.85f, stiffness = 450f),
                 ) {
                     Box(
                         modifier = Modifier

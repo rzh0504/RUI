@@ -1,6 +1,5 @@
 package rui.components
 
-import androidx.compose.animation.core.spring
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
@@ -68,7 +67,7 @@ public fun RuiBottomSheet(
 
     val state = rememberModalBottomSheetState(
         initialDetent = SheetDetent.Hidden,
-        animationSpec = spring(dampingRatio = 1f, stiffness = 550f),
+        animationSpec = motion.navigation,
     )
 
     // Drive the detents from the caller's visibility flag…
