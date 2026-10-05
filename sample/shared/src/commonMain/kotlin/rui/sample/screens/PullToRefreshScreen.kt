@@ -44,6 +44,9 @@ public fun PullToRefreshScreen(contentPadding: PaddingValues = PaddingValues(0.d
         RuiPullToRefresh(
             isRefreshing = refreshing,
             onRefresh = {
+                // The contract: initiate loading and raise isRefreshing
+                // immediately; lower it when the work is done.
+                refreshing = true
                 scope.launch {
                     delay(1500)
                     refreshCount++
