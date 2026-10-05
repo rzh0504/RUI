@@ -54,6 +54,13 @@ public fun ComponentsScreen(
             )
             RuiDivider(inset = RuiTheme.spacing.lg)
             RuiListItem(
+                title = "Search bar",
+                subtitle = "Filterable query field with cancel",
+                showChevron = true,
+                onClick = { onOpen(CatalogPage.Search) },
+            )
+            RuiDivider(inset = RuiTheme.spacing.lg)
+            RuiListItem(
                 title = "Selection controls",
                 subtitle = "Switch, checkbox, slider",
                 showChevron = true,

@@ -80,6 +80,16 @@ public object RuiIcons {
         }
     }
 
+    public val Search: ImageVector by lazy {
+        strokedIcon("RuiSearch") {
+            moveTo(18f, 11f)
+            arcTo(7f, 7f, 0f, true, true, 4f, 11f)
+            arcTo(7f, 7f, 0f, true, true, 18f, 11f)
+            moveTo(16.2f, 16.2f)
+            lineTo(20.5f, 20.5f)
+        }
+    }
+
     private fun strokedIcon(name: String, path: PathBuilder.() -> Unit): ImageVector =
         ImageVector.Builder(
             name = name,

@@ -17,7 +17,8 @@ compose-unstyled          behavior, state, keyboard, a11y (zero visuals)
 │  │              layer · FrostedSurface · BlurBackdrop│
 │  │              utils: bounce overscroll · haptics │
 │  └─ components  Scaffold · TopAppBar · NavBar ·    │
-│                 Button · TextField · Switch ·      │
+│                 Button · TextField · SearchBar ·   │
+│                 Switch ·                           │
 │                 Checkbox · Radio · Slider ·        │
 │                 DropdownMenu · BottomSheet ·       │
 │                 ActionPanel · Progress · Avatar ·  │

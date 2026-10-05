@@ -95,6 +95,7 @@ Visual signatures worth keeping consistent:
 - **No chrome borders.** Surfaces separate by contrast (`surface` on `background`); a hairline only marks errors.
 - **Filled button hierarchy** — `Primary` (accent fill) > `Tonal` (muted fill) > `Plain` (no fill) > `Danger`; no outlined buttons.
 - **Filled text field** with label above; error is red label + hairline, never a filled red box.
+- **Search is a tuned text field** — a `RuiTextField` with a leading muted magnifier, search IME action and a plain clear button once text is entered; the optional cancel button empties the query and drops focus, iOS style. No new container: same `surfaceMuted` fill and `md` shape.
 - **Segmented control** for tabs: muted track, raised surface pill marks selection.
 - **Progress is thin** — a 4dp capsule (linear) or 4dp ring (circular) in `outlineSubtle` with a `primary` fill, like the slider's rest track; `progress = null` renders the indeterminate state (sweeping segment / rotating arc, never a blink).
 - **Tooltips are inverted** — the bubble uses `content` as its container and `background` as its text color, the one sanctioned color inversion; `sm` shape tier, no caret, shown on long-press (touch), hover (pointer) or keyboard focus.
