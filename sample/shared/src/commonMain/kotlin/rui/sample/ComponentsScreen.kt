@@ -113,6 +113,13 @@ public fun ComponentsScreen(
                 showChevron = true,
                 onClick = { onOpen(CatalogPage.PullToRefresh) },
             )
+            RuiDivider(inset = RuiTheme.spacing.lg)
+            RuiListItem(
+                title = "Swipe actions",
+                subtitle = "Rows reveal actions behind them",
+                showChevron = true,
+                onClick = { onOpen(CatalogPage.SwipeActions) },
+            )
         }
 
         SectionLabel("Overlays")

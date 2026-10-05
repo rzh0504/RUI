@@ -22,8 +22,8 @@ compose-unstyled          behavior, state, keyboard, a11y (zero visuals)
 │                 DropdownMenu · BottomSheet ·       │
 │                 ActionPanel · Progress · Avatar ·  │
 │                 Tooltip · Disclosure · Snackbar ·  │
-│                 PullToRefresh · Dialog · Tabs ·    │
-│                 List                               │
+│                 PullToRefresh · SwipeActions ·     │
+│                 Dialog · Tabs · List               │
 └───────┬────────────────────────────────────────────┘
         │
   sample/          catalog app: shared UI + androidApp + iosApp
