@@ -114,6 +114,13 @@ public fun ComponentsScreen(
                 showChevron = true,
                 onClick = { onOpen(CatalogPage.Skeleton) },
             )
+            RuiDivider(inset = RuiTheme.spacing.lg)
+            RuiListItem(
+                title = "Empty state",
+                subtitle = "Quiet placeholder with optional action",
+                showChevron = true,
+                onClick = { onOpen(CatalogPage.EmptyState) },
+            )
         }
 
         SectionLabel("Feedback")

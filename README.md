@@ -25,7 +25,8 @@ compose-unstyled          behavior, state, keyboard, a11y (zero visuals)
 │                 Tooltip · Disclosure · Snackbar ·  │
 │                 PullToRefresh · SwipeActions ·     │
 │                 WheelPicker · Date/TimePicker ·    │
-│                 Skeleton · Dialog · Tabs · List    │
+│                 Skeleton · EmptyState · Dialog ·   │
+│                 Tabs · List                        │
 └───────┬────────────────────────────────────────────┘
         │
   sample/          catalog app: shared UI + androidApp + iosApp

@@ -37,6 +37,7 @@ import rui.sample.screens.ProgressScreen
 import rui.sample.screens.PullToRefreshScreen
 import rui.sample.screens.SnackbarScreen
 import rui.sample.screens.SearchBarScreen
+import rui.sample.screens.EmptyStateScreen
 import rui.sample.screens.PickersScreen
 import rui.sample.screens.SkeletonScreen
 import rui.sample.screens.SwipeActionsScreen
@@ -67,6 +68,7 @@ public sealed interface CatalogPage : RuiNavKey {
     public data object Search : CatalogPage
     public data object Pickers : CatalogPage
     public data object Skeleton : CatalogPage
+    public data object EmptyState : CatalogPage
 }
 
 private fun CatalogPage.title(): String = when (this) {
@@ -88,6 +90,7 @@ private fun CatalogPage.title(): String = when (this) {
     CatalogPage.Search -> "Search bar"
     CatalogPage.Pickers -> "Pickers"
     CatalogPage.Skeleton -> "Skeleton"
+    CatalogPage.EmptyState -> "Empty state"
 }
 
 /**
@@ -219,6 +222,7 @@ public fun CatalogApp() {
                             CatalogPage.Search -> SearchBarScreen(contentPadding = padding)
                             CatalogPage.Pickers -> PickersScreen(contentPadding = padding)
                             CatalogPage.Skeleton -> SkeletonScreen(contentPadding = padding)
+                            CatalogPage.EmptyState -> EmptyStateScreen(contentPadding = padding)
                         }
                     }
                 }
