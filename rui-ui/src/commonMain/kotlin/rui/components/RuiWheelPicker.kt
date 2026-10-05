@@ -77,8 +77,14 @@ public fun <T> RuiWheelPicker(
     }
 
     val reportedIndex by rememberUpdatedState(onSelectedIndexChange)
-    val hoistedIndex by rememberUpdatedState(selectedIndex)
     var positioned by remember { mutableStateOf(false) }
+    // The index the drum last reported. The parent echoing it back (writing
+    // the reported value into its state) must not read as an external change,
+    // or correction and reporting feed each other and the drum never rests.
+    var lastReportedIndex by remember { mutableStateOf<Int?>(null) }
+    // While an external correction animates, reporting is suppressed so the
+    // rows the drum passes on the way are not committed as new values.
+    var correcting by remember { mutableStateOf(false) }
 
     fun centeredIndex(): Int {
         val layout = listState.layoutInfo
@@ -89,46 +95,66 @@ public fun <T> RuiWheelPicker(
             .index
     }
 
-    // The drum owns the gesture; the hoisted value owns the rest position.
-    // Whenever the drum settles, it is corrected back to the hoisted value —
-    // which is a no-op unless the caller clamped it mid-gesture.
-    LaunchedEffect(listState, items.size) {
+    fun isPerfectlyCentered(index: Int): Boolean {
+        val layout = listState.layoutInfo
+        val info = layout.visibleItemsInfo.firstOrNull { it.index == index } ?: return true
+        val viewportCenter = (layout.viewportStartOffset + layout.viewportEndOffset) / 2f
+        return abs(info.offset + info.size / 2f - viewportCenter) < 1f
+    }
+
+    // External value changes (the initial position, programmatic sets, a
+    // wrapper clamping this wheel from another) move the drum; the drum's
+    // own echoes don't.
+    LaunchedEffect(selectedIndex, items.size) {
+        if (items.isEmpty()) return@LaunchedEffect
+        val target = selectedIndex.coerceIn(0, items.lastIndex)
+        if (target == lastReportedIndex) return@LaunchedEffect
+        if (!positioned) {
+            listState.scrollToItem(target)
+            positioned = true
+        } else {
+            correcting = true
+            try {
+                listState.animateScrollToItem(target)
+            } finally {
+                correcting = false
+            }
+        }
+        lastReportedIndex = target
+    }
+    // A slow release never flings, so the snap behavior never runs and the
+    // drum would rest between rows. When scrolling ends off-center, settle
+    // on the nearest row — value-neutral, the nearest row is the one
+    // already reported.
+    LaunchedEffect(listState) {
         snapshotFlow { listState.isScrollInProgress }
             .distinctUntilChanged()
             .collect { scrolling ->
-                if (!scrolling && positioned && items.isNotEmpty()) {
-                    val target = hoistedIndex.coerceIn(0, items.lastIndex)
-                    if (target != centeredIndex()) {
-                        scope.launch { listState.animateScrollToItem(target) }
+                if (!scrolling && positioned && !correcting &&
+                    listState.layoutInfo.visibleItemsInfo.isNotEmpty()
+                ) {
+                    val nearest = centeredIndex()
+                    if (nearest >= 0 && !isPerfectlyCentered(nearest)) {
+                        listState.animateScrollToItem(nearest)
                     }
                 }
             }
     }
-    LaunchedEffect(selectedIndex, items.size) {
-        if (items.isEmpty()) return@LaunchedEffect
-        val target = selectedIndex.coerceIn(0, items.lastIndex)
-        if (target != centeredIndex()) {
-            if (!positioned) {
-                listState.scrollToItem(target)
-            } else if (!listState.isScrollInProgress) {
-                scope.launch { listState.animateScrollToItem(target) }
-            }
-        }
-        positioned = true
-    }
+    // Report every row the drum passes over with a selection tick.
     LaunchedEffect(listState, items.size) {
         var first = true
         snapshotFlow { centeredIndex() }
             .distinctUntilChanged()
             .collect { index ->
-                if (index >= 0) {
-                    if (first) {
-                        first = false
-                    } else {
-                        haptics.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-                        reportedIndex(index)
-                    }
+                if (index < 0 || correcting) return@collect
+                if (first) {
+                    first = false
+                    lastReportedIndex = index
+                    return@collect
                 }
+                lastReportedIndex = index
+                haptics.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                reportedIndex(index)
             }
     }
 

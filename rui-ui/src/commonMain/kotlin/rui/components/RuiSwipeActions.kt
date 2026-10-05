@@ -26,11 +26,15 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clipToBounds
+import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.SubcomposeLayout
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.invisibleToUser
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.Density
@@ -167,17 +171,18 @@ public fun rememberRuiSwipeActionsState(
 private enum class SwipeSlot { Content, Start, End }
 
 /**
- * A list row whose horizontal drag reveals full-height action buttons behind
- * it, iOS style. Dragging the row towards its end exposes the buttons of
- * [endActions] at the end edge; dragging towards its start exposes
- * [startActions]. A drag settling past half the action width opens the row,
- * a fling opens it regardless. Tapping a revealed action closes the row
- * first, then reports through [RuiActionOption.onSelect].
+ * A list row whose horizontal drag reveals full-height action buttons,
+ * iOS style. The buttons travel with the row, attached beyond its start and
+ * end edges, and the container clips them out of sight while closed —
+ * dragging towards the end pulls [endActions] in from the end edge,
+ * dragging towards the start pulls [startActions] in from the start edge.
+ * A drag settling past half the action width opens the row, a fling opens
+ * it regardless. Tapping a revealed action closes the row first, then
+ * reports through [RuiActionOption.onSelect].
  *
- * The row's content is drawn on top of the actions and keeps its own
- * gestures — [content] is typically a [RuiListItem]. The actions use the
- * [RuiActionOption] data type of [RuiActionPanel]: `danger` options render
- * with the danger fill, others with the muted surface.
+ * [content] keeps its own gestures — it is typically a [RuiListItem]. The
+ * actions use the [RuiActionOption] data type of [RuiActionPanel]: `danger`
+ * options render with the danger fill, others with the muted surface.
  *
  * Rows are usually placed inside a [RuiListGroup], which clips the revealed
  * buttons to the card's shape.
@@ -198,13 +203,17 @@ public fun RuiSwipeActions(
     LaunchedEffect(startWidthPx, endWidthPx) {
         state.updateAnchors(startWidthPx, endWidthPx)
     }
+    // Hidden while closed so screen readers cannot reach the offscreen buttons.
+    val hidden = state.draggableState.targetValue == RuiSwipeValue.Closed
 
     SubcomposeLayout(
-        modifier = modifier.anchoredDraggable(
-            state = state.draggableState,
-            orientation = Orientation.Horizontal,
-            enabled = enabled,
-        ),
+        modifier = modifier
+            .clipToBounds()
+            .anchoredDraggable(
+                state = state.draggableState,
+                orientation = Orientation.Horizontal,
+                enabled = enabled,
+            ),
     ) { constraints ->
         val contentPlaceables = subcompose(SwipeSlot.Content) { content() }
             .map { it.measure(constraints) }
@@ -221,14 +230,14 @@ public fun RuiSwipeActions(
             emptyList()
         } else {
             subcompose(SwipeSlot.Start) {
-                SwipeActionButtons(state, startActions, actionWidth)
+                SwipeActionButtons(state, startActions, actionWidth, hidden)
             }.map { it.measure(heightLock) }
         }
         val endPlaceables = if (endActions.isEmpty()) {
             emptyList()
         } else {
             subcompose(SwipeSlot.End) {
-                SwipeActionButtons(state, endActions, actionWidth)
+                SwipeActionButtons(state, endActions, actionWidth, hidden)
             }.map { it.measure(heightLock) }
         }
 
@@ -237,23 +246,34 @@ public fun RuiSwipeActions(
 
         val offset = state.draggableState.offset
         val offsetX = if (offset.isNaN()) 0 else offset.roundToInt()
+        val startWidth = startWidthPx.toInt()
+        // The whole track (start actions, content, end actions) translates
+        // with the drag; closed, both action groups sit outside the bounds
+        // and the clip above keeps them invisible.
+        val trackX = offsetX - startWidth
 
         layout(contentWidth, contentHeight) {
-            startPlaceables.forEach { it.placeRelative(0, 0) }
-            endPlaceables.forEach { it.placeRelative(contentWidth - it.width, 0) }
-            contentPlaceables.forEach { it.placeRelative(offsetX, 0) }
+            startPlaceables.forEach { it.placeRelative(trackX, 0) }
+            contentPlaceables.forEach { it.placeRelative(trackX + startWidth, 0) }
+            endPlaceables.forEach { it.placeRelative(trackX + startWidth + contentWidth, 0) }
         }
     }
 }
 
 /** The row of revealed buttons, sized to the row height by the caller's measure pass. */
+@OptIn(ExperimentalComposeUiApi::class)
 @Composable
 private fun SwipeActionButtons(
     state: RuiSwipeActionsState,
     actions: List<RuiActionOption>,
     actionWidth: Dp,
+    hidden: Boolean,
 ) {
-    Row {
+    Row(
+        modifier = Modifier.semantics {
+            if (hidden) invisibleToUser()
+        },
+    ) {
         actions.forEach { option ->
             SwipeActionButton(state, option, actionWidth)
         }

@@ -1,19 +1,26 @@
 package rui.components
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.input.ImeAction
 import rui.foundation.RuiIcon
 import rui.foundation.RuiIcons
 import rui.foundation.RuiText
+import rui.foundation.rememberRuiIndication
 import rui.theme.RuiTheme
 
 /**
@@ -62,13 +69,7 @@ public fun RuiSearchBar(
             },
             trailing = if (state.text.isNotEmpty()) {
                 {
-                    RuiIconButton(
-                        onClick = { state.edit { replace(0, length, "") } },
-                        variant = RuiButtonVariant.Plain,
-                        size = RuiButtonSize.Sm,
-                    ) {
-                        RuiIcon(imageVector = RuiIcons.Close, contentDescription = "Clear")
-                    }
+                    ClearButton(onClick = { state.edit { replace(0, length, "") } })
                 }
             } else {
                 null
@@ -89,5 +90,34 @@ public fun RuiSearchBar(
                 RuiText(text = cancelLabel)
             }
         }
+    }
+}
+
+/**
+ * Icon-sized clear affordance: the same 20dp footprint as the magnifier, so
+ * its appearance never changes the field's height (a full icon button would
+ * push the row past the touch target).
+ */
+@Composable
+private fun ClearButton(onClick: () -> Unit) {
+    val interactionSource = remember { MutableInteractionSource() }
+    Box(
+        modifier = Modifier
+            .size(RuiTheme.dimens.iconSize)
+            .clip(CircleShape)
+            .clickable(
+                interactionSource = interactionSource,
+                indication = rememberRuiIndication(),
+                onClickLabel = "Clear",
+                role = Role.Button,
+                onClick = onClick,
+            ),
+        contentAlignment = Alignment.Center,
+    ) {
+        RuiIcon(
+            imageVector = RuiIcons.Close,
+            contentDescription = "Clear",
+            tint = RuiTheme.colors.contentMuted,
+        )
     }
 }
