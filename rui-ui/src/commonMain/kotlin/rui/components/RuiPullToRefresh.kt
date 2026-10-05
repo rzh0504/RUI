@@ -16,6 +16,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.graphicsLayer
@@ -168,8 +169,11 @@ public fun RuiPullToRefresh(
                         showing = true
                         settleTo(triggerPx)
                         currentOnRefresh()
-                        // A caller that never raises isRefreshing collapses
-                        // immediately instead of locking the indicator.
+                        // The raise from onRefresh lands on the next
+                        // composition — give it a frame before deciding the
+                        // caller opted out, or the stale read would collapse
+                        // and immediately re-open (visible as a bounce).
+                        withFrameNanos { }
                         if (!isRefreshingNow) {
                             settleTo(0f)
                             showing = false
