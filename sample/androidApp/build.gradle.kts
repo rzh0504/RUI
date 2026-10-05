@@ -21,7 +21,13 @@ android {
     }
 
     buildTypes {
+        debug {
+            // Coexists with the release build: own id and launcher label.
+            applicationIdSuffix = ".debug"
+            resValue("string", "app_name", "Rui Debug")
+        }
         release {
+            resValue("string", "app_name", "Rui")
             // Test release builds on real devices without a distribution key.
             signingConfig = signingConfigs.getByName("debug")
         }
