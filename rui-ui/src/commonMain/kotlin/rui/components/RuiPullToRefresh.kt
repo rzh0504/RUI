@@ -306,13 +306,14 @@ public class RuiPullToRefreshState internal constructor(
     internal suspend fun startRefreshing(onRefresh: () -> Unit, isRefreshingNow: () -> Boolean) {
         if (!isRefreshing) {
             isRefreshing = true
+            // Flip the visual to the spinning state immediately — the settle
+            // to the resting offset happens while loading is already visible,
+            // not after a fully-drawn ring sits still.
+            internalRefreshState = RuiRefreshState.Refreshing
             try {
                 animateToSpring(refreshThresholdOffset)
             } finally {
                 if (!isTouching) {
-                    // Refreshing must be written before onRefresh(): the sync
-                    // effect keys on this change to re-sample the level.
-                    internalRefreshState = RuiRefreshState.Refreshing
                     if (!isRefreshingNow()) onRefresh()
                 } else {
                     isRefreshing = false
