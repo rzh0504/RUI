@@ -27,9 +27,14 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
+import androidx.compose.ui.input.nestedscroll.NestedScrollSource
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.Velocity
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
@@ -39,8 +44,10 @@ import kotlin.math.abs
 /**
  * A wheel drum, iOS style: the rows scroll and snap so the selected row rests
  * in the center; rows fade and shrink towards the edges and a hairline marks
- * the selection. Every row the drum passes over reports through
- * [onSelectedIndexChange] with a selection tick.
+ * the selection. The value commits when the drum settles — the reported index
+ * is always the row visibly at rest — and every row the drum passes over
+ * ticks. The wheel consumes its own vertical gestures: a drum at either end
+ * never scrolls the page beneath it.
  *
  * The selected index is hoisted — the caller owns it, which is what lets
  * wrappers clamp one wheel's value when another changes (a date picker
@@ -123,9 +130,11 @@ public fun <T> RuiWheelPicker(
         lastReportedIndex = target
     }
     // A slow release never flings, so the snap behavior never runs and the
-    // drum would rest between rows. When scrolling ends off-center, settle
-    // on the nearest row — value-neutral, the nearest row is the one
-    // already reported.
+    // drum would rest between rows. Settling is also the moment the value
+    // commits: the reported index is the row the drum visibly rests on, so
+    // the committed value can never disagree with the drum. Rows passed on
+    // the way only tick — reporting per row would race the settle
+    // animations and commit values the drum then moves away from.
     LaunchedEffect(listState) {
         snapshotFlow { listState.isScrollInProgress }
             .distinctUntilChanged()
@@ -133,32 +142,37 @@ public fun <T> RuiWheelPicker(
                 if (!scrolling && positioned && !correcting &&
                     listState.layoutInfo.visibleItemsInfo.isNotEmpty()
                 ) {
-                    val nearest = centeredIndex()
-                    if (nearest >= 0 && !isPerfectlyCentered(nearest)) {
-                        listState.animateScrollToItem(nearest)
+                    val settled = centeredIndex()
+                    if (settled >= 0) {
+                        if (settled != lastReportedIndex) {
+                            lastReportedIndex = settled
+                            reportedIndex(settled)
+                        }
+                        if (!isPerfectlyCentered(settled)) {
+                            listState.animateScrollToItem(settled)
+                        }
                     }
                 }
             }
     }
-    // Report every row the drum passes over with a selection tick.
+    // Selection tick per row the drum passes over; no value commitment.
+    // The first observed row is the resting position, not a pass — no tick.
     LaunchedEffect(listState, items.size) {
-        var first = true
+        var lastTicked = -1
         snapshotFlow { centeredIndex() }
             .distinctUntilChanged()
             .collect { index ->
                 if (index < 0 || correcting) return@collect
-                if (first) {
-                    first = false
-                    lastReportedIndex = index
-                    return@collect
+                if (lastTicked == -1) {
+                    lastTicked = index
+                } else if (index != lastTicked) {
+                    lastTicked = index
+                    haptics.performHapticFeedback(HapticFeedbackType.TextHandleMove)
                 }
-                lastReportedIndex = index
-                haptics.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-                reportedIndex(index)
             }
     }
 
-    Box(modifier) {
+    Box(modifier.nestedScroll(ConsumeVerticalScroll)) {
         LazyColumn(
             state = listState,
             modifier = Modifier
@@ -228,3 +242,17 @@ public fun <T> RuiWheelPicker(
 
 private fun LazyListLayoutInfo.viewportCenter(): Float =
     (viewportStartOffset + viewportEndOffset) / 2f
+
+/**
+ * A wheel owns its vertical gesture end to end: whatever the drum cannot
+ * consume — scrolling past either end, leftover fling velocity — is eaten
+ * here instead of reaching the page the wheel sits on. Consumption happens
+ * on the post passes only: the pre passes are parent-first, and eating
+ * there would starve the drum itself.
+ */
+private val ConsumeVerticalScroll = object : NestedScrollConnection {
+    override fun onPostScroll(consumed: Offset, available: Offset, source: NestedScrollSource): Offset =
+        Offset(0f, available.y)
+
+    override suspend fun onPostFling(consumed: Velocity, available: Velocity): Velocity = available
+}
