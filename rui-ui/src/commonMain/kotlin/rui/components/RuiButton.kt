@@ -5,6 +5,7 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
@@ -158,4 +159,57 @@ public fun RuiButton(
             }
         }
     }
+}
+
+/**
+ * A [RuiButton] with a loading state: while [isLoading] the button is
+ * disabled and an indeterminate spinner replaces the leading slot, tinted
+ * with the variant's content color. The label stays visible.
+ */
+@Composable
+public fun RuiLoadingButton(
+    onClick: () -> Unit,
+    isLoading: Boolean,
+    modifier: Modifier = Modifier,
+    variant: RuiButtonVariant = RuiButtonVariant.Primary,
+    size: RuiButtonSize = RuiButtonSize.Md,
+    enabled: Boolean = true,
+    shape: Shape = RuiTheme.shapes.md,
+    colors: RuiButtonColors = RuiButtonDefaults.colors(variant, enabled),
+    interactionSource: MutableInteractionSource? = null,
+    contentPadding: PaddingValues = RuiButtonDefaults.contentPadding(size),
+    content: @Composable RowScope.() -> Unit,
+) {
+    RuiButton(
+        onClick = onClick,
+        modifier = modifier,
+        variant = variant,
+        size = size,
+        enabled = enabled && !isLoading,
+        shape = shape,
+        colors = colors,
+        interactionSource = interactionSource,
+        contentPadding = contentPadding,
+        leading = {
+            if (isLoading) {
+                RuiCircularProgress(
+                    colors = RuiProgressColors(
+                        fill = colors.content,
+                        track = Color.Transparent,
+                        disabledFill = colors.content,
+                        disabledTrack = Color.Transparent,
+                    ),
+                    modifier = Modifier.size(spinnerSize(size)),
+                )
+            }
+        },
+        content = content,
+    )
+}
+
+/** Spinner diameter per button tier; the stroke stays the shared 4dp. */
+private fun spinnerSize(size: RuiButtonSize): Dp = when (size) {
+    RuiButtonSize.Sm -> 16.dp
+    RuiButtonSize.Md -> 18.dp
+    RuiButtonSize.Lg -> 20.dp
 }

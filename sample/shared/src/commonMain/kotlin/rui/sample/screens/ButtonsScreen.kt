@@ -1,19 +1,31 @@
 package rui.sample.screens
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import kotlinx.coroutines.delay
+import rui.components.RuiAvatar
+import rui.components.RuiAvatarSize
+import rui.components.RuiBadge
 import rui.components.RuiButton
 import rui.components.RuiButtonSize
 import rui.components.RuiButtonVariant
 import rui.components.RuiDivider
 import rui.components.RuiIconButton
+import rui.components.RuiLoadingButton
 import rui.components.RuiListGroup
 import rui.components.RuiListItem
 import rui.foundation.RuiIcon
@@ -25,6 +37,15 @@ import rui.theme.RuiTheme
 
 @Composable
 public fun ButtonsScreen(contentPadding: PaddingValues = PaddingValues(0.dp)) {
+    var submitting by remember { mutableStateOf(false) }
+
+    LaunchedEffect(submitting) {
+        if (submitting) {
+            delay(2000)
+            submitting = false
+        }
+    }
+
     ContentColumn(contentPadding = contentPadding) {
         SectionLabel("Variants")
         RuiListGroup {
@@ -126,6 +147,63 @@ public fun ButtonsScreen(contentPadding: PaddingValues = PaddingValues(0.dp)) {
                     RuiIcon(imageVector = RuiIcons.Close, contentDescription = "Close")
                 }
             }
+        }
+
+        SectionLabel("Badge")
+        RuiListGroup {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = RuiTheme.spacing.lg, vertical = RuiTheme.spacing.md),
+                horizontalArrangement = Arrangement.spacedBy(RuiTheme.spacing.xl),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Box {
+                    RuiIconButton(onClick = {}) {
+                        RuiIcon(imageVector = RuiIcons.Grid, contentDescription = "Inbox")
+                    }
+                    RuiBadge(
+                        text = "3",
+                        modifier = Modifier
+                            .align(Alignment.TopEnd)
+                            .offset(x = 4.dp, y = (-4).dp),
+                    )
+                }
+                Box {
+                    RuiIconButton(onClick = {}) {
+                        RuiIcon(imageVector = RuiIcons.Close, contentDescription = "Alerts")
+                    }
+                    RuiBadge(
+                        modifier = Modifier
+                            .align(Alignment.TopEnd)
+                            .offset(x = 3.dp, y = 3.dp),
+                    )
+                }
+                Box {
+                    RuiAvatar(initials = "ZR", size = RuiAvatarSize.Md)
+                    RuiBadge(
+                        modifier = Modifier
+                            .align(Alignment.BottomEnd)
+                            .offset(x = 2.dp, y = 2.dp),
+                    )
+                }
+            }
+        }
+
+        SectionLabel("Loading button")
+        RuiListGroup {
+            RuiListItem(
+                title = "Simulate submit",
+                subtitle = "Disables and shows a spinner for two seconds",
+                trailing = {
+                    RuiLoadingButton(
+                        onClick = { submitting = true },
+                        isLoading = submitting,
+                    ) {
+                        RuiText("Submit")
+                    }
+                },
+            )
         }
     }
 }

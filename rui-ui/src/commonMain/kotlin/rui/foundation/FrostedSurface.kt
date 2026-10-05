@@ -58,7 +58,9 @@ public fun FrostedSurface(
                             shape = shape,
                         )
                     } else {
-                        Modifier.background(effectiveTint, shape)
+                        Modifier
+                            .background(effectiveTint, shape)
+                            .clip(shape)
                     },
                 )
                 .border(RuiTheme.dimens.borderWidth, colors.outlineSubtle, shape),
