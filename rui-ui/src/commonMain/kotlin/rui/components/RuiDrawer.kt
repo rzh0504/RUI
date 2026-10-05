@@ -78,8 +78,9 @@ public fun rememberRuiDrawerState(
 ): RuiDrawerState = remember { RuiDrawerState(initialValue) }
 
 /**
- * A navigation drawer, iOS-adjacent and restrained: a start-edge panel of
- * `surface` sliding over the screen with a scrim behind it, presented as a
+ * A navigation drawer, iOS-adjacent and restrained: a start-edge panel in
+ * the page's background color — the same page-tone convention as the bars —
+ * sliding over the screen with a scrim behind it, presented as a
  * modal window so it covers the page's own chrome — bars, tabs, everything.
  * It opens through [RuiDrawerState.open] (a menu button) and closes by
  * panel drag, scrim tap or Back. The panel content sits inside a
@@ -141,11 +142,11 @@ public fun RuiDrawer(
             Viewport(Modifier.fillMaxSize()) {
                 Panel(
                     modifier = Modifier
-                        .widthIn(max = 320.dp)
+                        .widthIn(max = 280.dp)
                         .fillMaxWidth()
                         .fillMaxHeight(),
                 ) {
-                    Box(Modifier.fillMaxSize().background(colors.surface)) {
+                    Box(Modifier.fillMaxSize().background(colors.background)) {
                         Column(
                             modifier = Modifier
                                 .fillMaxSize()
