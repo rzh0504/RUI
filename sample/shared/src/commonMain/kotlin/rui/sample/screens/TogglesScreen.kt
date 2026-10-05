@@ -1,5 +1,6 @@
 package rui.sample.screens
 
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -7,11 +8,14 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import kotlin.math.roundToInt
@@ -19,6 +23,9 @@ import rui.components.RuiCheckbox
 import rui.components.RuiDivider
 import rui.components.RuiListGroup
 import rui.components.RuiListItem
+import rui.components.RuiRadioButton
+import rui.components.RuiRadioGroup
+import rui.components.RuiRadioRow
 import rui.components.RuiSlider
 import rui.components.RuiSwitch
 import rui.foundation.RuiText
@@ -70,6 +77,47 @@ public fun TogglesScreen(contentPadding: PaddingValues = PaddingValues(0.dp)) {
                 title = "Unavailable",
                 trailing = { RuiCheckbox(checked = false, onCheckedChange = {}, enabled = false) },
             )
+        }
+
+        SectionLabel("Radio")
+        var theme by remember { mutableStateOf("system") }
+        RuiRadioGroup(
+            value = theme,
+            onValueChange = { theme = it },
+        ) {
+            RuiListGroup {
+                RuiRadioRow(
+                    value = "system",
+                    title = "Follow system",
+                    subtitle = "Match the device appearance",
+                )
+                RuiDivider(inset = RuiTheme.spacing.lg)
+                RuiRadioRow(value = "light", title = "Light")
+                RuiDivider(inset = RuiTheme.spacing.lg)
+                RuiRadioRow(value = "dark", title = "Dark")
+            }
+        }
+        RuiListGroup {
+            var portion by remember { mutableStateOf("M") }
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = RuiTheme.spacing.lg, vertical = RuiTheme.spacing.md),
+                horizontalArrangement = Arrangement.spacedBy(RuiTheme.spacing.lg),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                RuiText("Portion", style = RuiTheme.typography.titleSm, modifier = Modifier.weight(1f))
+                listOf("S", "M", "L").forEach { size ->
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        RuiRadioButton(
+                            selected = portion == size,
+                            onSelected = { portion = size },
+                        )
+                        Spacer(Modifier.width(RuiTheme.spacing.xs))
+                        RuiText(size, style = RuiTheme.typography.bodyMd)
+                    }
+                }
+            }
         }
 
         SectionLabel("Slider")

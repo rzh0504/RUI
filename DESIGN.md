@@ -70,7 +70,7 @@ The only sanctioned exceptions live with their component: the top app bar's coll
 
 - **State layer** — pressed 10%, hovered 6%, focused 8%, dragged 12% alpha of the *component's content color* (`rememberRuiIndication`, `ColoredIndication` under the hood).
 - **Focus** — 2dp ring in `primary`, drawn outside the shape (`focusRing`), visible only for keyboard focus (`FocusVisibilityProvider` at the app root enables this).
-- **Selection** — checkboxes and switches fill with `primary`; marks animate with short springs.
+- **Selection** — checkboxes and switches fill with `primary`; marks animate with short springs. Radios are circles (ring + dot, `CircleShape` like switches); in grouped lists an exclusive selection shows a `primary` check mark on the selected row (iOS settings style), with the mark's space reserved so rows don't shift.
 
 ## Frosted material
 
