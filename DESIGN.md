@@ -54,7 +54,7 @@ Token values — `sm 6 · md 10 · lg 14 · xl 18 · sheet 14 (top only) · full
 
 ### Motion — `RuiMotion`
 
-Duration tokens: state layers 90ms in / 180ms out, short transitions 120ms, medium 200ms. Spring tokens, one per motion family — components pick a family, never a raw spec:
+Duration tokens: state layers 90ms in / 180ms out, short transitions 120ms, medium 200ms, skeleton pulse 600ms per leg (reversed loop). Spring tokens, one per motion family — components pick a family, never a raw spec:
 
 | Family | Spec | Used for |
 |---|---|---|
@@ -104,6 +104,7 @@ Visual signatures worth keeping consistent:
 - **Pull-to-refresh reuses the progress language** — the pull grows a `RuiCircularProgress` arc past a trigger distance (threshold haptic), release refreshes; coordination adapted from miuix, simplified (no damped physics, no app bar coordination, no labels). The content inside is a plain scrollable without bounce overscroll.
 - **Rows swipe to reveal actions** — a horizontal drag past half the action width settles the row open (a fling opens regardless). The action buttons travel with the row, attached beyond its edges: the container clips them out of sight while closed, so nothing shows through a transparent row. `danger` options get the danger fill, others the muted surface; tapping an action closes the row first; rows sharing a `RuiSwipeGroup` are mutually exclusive, iOS style. No Unstyled primitive exists for this — it sits directly on foundation's anchored drag.
 - **Wheels are the selection drum** — `RuiWheelPicker` snaps the centered row (foundation's snap fling, center position), fades and shrinks rows towards the edges, marks the selection with `outlineSubtle` hairlines, and ticks per row the drum passes. The selected index is hoisted so wrappers clamp one wheel from another (February shortens the day wheel). Time and date pickers are pure wheel compositions; dates are plain `(year, month, day)` records, no calendar dependency.
+- **Skeletons breathe, they don't shimmer** — bones are `surfaceMuted` blocks in the shape of the missing content (typography line heights for text, `CircleShape` for avatars), pulsing with the `pulse` token instead of a gradient sweep. Bones are invisible to accessibility; the container announces loading. One primitive — compositions are the caller's.
 - **Choosing among actions is a bottom action panel** — data-driven `RuiActionOption` rows on the sheet machinery (grabber, centered title, hairline-separated rows, optional explicit cancel); destructive options in `danger`; scrim, back and drag always dismiss. Generalized positioning — not a platform action-sheet clone.
 - **Inset grouped lists** for any index of items (`RuiListGroup` + `RuiListItem` + `RuiDivider(inset = …)`).
 - **App chrome is frosted-capable**: `RuiScaffold` overlays `RuiTopAppBar` / `RuiNavigationBar` on the content; with a backdrop they render frosted, without it they are plain surfaces.

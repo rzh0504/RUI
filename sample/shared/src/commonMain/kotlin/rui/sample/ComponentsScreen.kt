@@ -107,6 +107,13 @@ public fun ComponentsScreen(
                 showChevron = true,
                 onClick = { onOpen(CatalogPage.Progress) },
             )
+            RuiDivider(inset = RuiTheme.spacing.lg)
+            RuiListItem(
+                title = "Skeleton",
+                subtitle = "Breathing placeholders shaped like content",
+                showChevron = true,
+                onClick = { onOpen(CatalogPage.Skeleton) },
+            )
         }
 
         SectionLabel("Feedback")

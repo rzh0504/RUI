@@ -1,8 +1,10 @@
 package rui.theme
 
+import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.FiniteAnimationSpec
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.SpringSpec
+import androidx.compose.animation.core.TweenSpec
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.runtime.Immutable
@@ -23,6 +25,15 @@ public data class RuiMotion(
     public val fast: FiniteAnimationSpec<Float> = tween(durationMillis = 120),
     /** Default medium transition (overlays, indicator moves). */
     public val normal: FiniteAnimationSpec<Float> = tween(durationMillis = 200),
+    /**
+     * One leg of a breathing loop (skeleton bones) — reversed and repeated,
+     * so a full pulse cycle takes twice this. A tween by design: loop
+     * animations need a duration-based spec.
+     */
+    public val pulse: TweenSpec<Float> = tween(
+        durationMillis = 600,
+        easing = FastOutSlowInEasing,
+    ),
 
     /**
      * Gesture tracking: a value follows the finger — stiff, near-critically
