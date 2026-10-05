@@ -186,6 +186,13 @@ public fun ComponentsScreen(
                 showChevron = true,
                 onClick = { onOpen(CatalogPage.Tooltip) },
             )
+            RuiDivider(inset = RuiTheme.spacing.lg)
+            RuiListItem(
+                title = "Drawer",
+                subtitle = "Start-edge navigation panel over a scrim",
+                showChevron = true,
+                onClick = { onOpen(CatalogPage.Drawer) },
+            )
         }
 
         RuiText(

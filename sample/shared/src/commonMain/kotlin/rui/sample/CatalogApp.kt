@@ -31,6 +31,7 @@ import rui.sample.screens.ButtonsScreen
 import rui.sample.screens.BottomSheetScreen
 import rui.sample.screens.DialogScreen
 import rui.sample.screens.DropdownMenuScreen
+import rui.sample.screens.DrawerScreen
 import rui.sample.screens.AvatarScreen
 import rui.sample.screens.DisclosureScreen
 import rui.sample.screens.ProgressScreen
@@ -71,6 +72,7 @@ public sealed interface CatalogPage : RuiNavKey {
     public data object Skeleton : CatalogPage
     public data object EmptyState : CatalogPage
     public data object PageIndicator : CatalogPage
+    public data object Drawer : CatalogPage
 }
 
 private fun CatalogPage.title(): String = when (this) {
@@ -94,6 +96,7 @@ private fun CatalogPage.title(): String = when (this) {
     CatalogPage.Skeleton -> "Skeleton"
     CatalogPage.EmptyState -> "Empty state"
     CatalogPage.PageIndicator -> "Page indicator"
+    CatalogPage.Drawer -> "Drawer"
 }
 
 /**
@@ -227,6 +230,7 @@ public fun CatalogApp() {
                             CatalogPage.Skeleton -> SkeletonScreen(contentPadding = padding)
                             CatalogPage.EmptyState -> EmptyStateScreen(contentPadding = padding)
                             CatalogPage.PageIndicator -> PageIndicatorScreen(contentPadding = padding)
+                            CatalogPage.Drawer -> DrawerScreen(contentPadding = padding)
                         }
                     }
                 }

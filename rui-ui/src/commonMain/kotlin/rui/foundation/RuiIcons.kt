@@ -106,6 +106,17 @@ public object RuiIcons {
         }
     }
 
+    public val Menu: ImageVector by lazy {
+        strokedIcon("RuiMenu") {
+            moveTo(4f, 7f)
+            lineTo(20f, 7f)
+            moveTo(4f, 12f)
+            lineTo(20f, 12f)
+            moveTo(4f, 17f)
+            lineTo(20f, 17f)
+        }
+    }
+
     private fun strokedIcon(name: String, path: PathBuilder.() -> Unit): ImageVector =
         ImageVector.Builder(
             name = name,
