@@ -1,6 +1,7 @@
 package rui.sample.screens
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -17,6 +18,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
 import rui.components.RuiAvatar
 import rui.components.RuiAvatarSize
@@ -96,7 +98,7 @@ public fun SkeletonScreen(contentPadding: PaddingValues = PaddingValues(0.dp)) {
 
         SectionLabel("Paragraph")
         RuiListGroup {
-            // Both states share one line structure — one line per bone at the
+            // Both states share one line structure — one slot per line at the
             // same line heights and spacing — so toggling never shifts the page.
             Column(
                 modifier = Modifier
@@ -105,30 +107,10 @@ public fun SkeletonScreen(contentPadding: PaddingValues = PaddingValues(0.dp)) {
                 verticalArrangement = Arrangement.spacedBy(RuiTheme.spacing.xs),
             ) {
                 if (loading) {
-                    RuiSkeleton(
-                        modifier = Modifier
-                            .fillMaxWidth(0.6f)
-                            .height(with(density) { typography.titleSm.lineHeight.toDp() }),
-                        effect = effect,
-                    )
-                    RuiSkeleton(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(with(density) { typography.bodySm.lineHeight.toDp() }),
-                        effect = effect,
-                    )
-                    RuiSkeleton(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(with(density) { typography.bodySm.lineHeight.toDp() }),
-                        effect = effect,
-                    )
-                    RuiSkeleton(
-                        modifier = Modifier
-                            .fillMaxWidth(0.55f)
-                            .height(with(density) { typography.bodySm.lineHeight.toDp() }),
-                        effect = effect,
-                    )
+                    TextLineSkeleton(typography.titleSm, 0.6f, effect)
+                    TextLineSkeleton(typography.bodySm, 1f, effect)
+                    TextLineSkeleton(typography.bodySm, 1f, effect)
+                    TextLineSkeleton(typography.bodySm, 0.55f, effect)
                 } else {
                     RuiText(text = "Release notes", style = typography.titleSm)
                     RuiText(
@@ -152,11 +134,39 @@ public fun SkeletonScreen(contentPadding: PaddingValues = PaddingValues(0.dp)) {
     }
 }
 
+/**
+ * A text line's skeleton slot: a full-line-height box with a bar of the
+ * font's cap-height mass centered in it. Centered at ~0.74 of the font size,
+ * the bar's top edge lands where the real text's caps do — an equal-height
+ * box keeps the layout identical to the loaded state, so toggling does not
+ * shift the page and the ink does not appear to jump.
+ */
+@Composable
+private fun TextLineSkeleton(
+    style: TextStyle,
+    widthFraction: Float,
+    effect: RuiSkeletonEffect,
+) {
+    val density = LocalDensity.current
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(with(density) { style.lineHeight.toDp() }),
+        contentAlignment = Alignment.CenterStart,
+    ) {
+        RuiSkeleton(
+            modifier = Modifier
+                .fillMaxWidth(widthFraction)
+                .height(with(density) { style.fontSize.toDp() * 0.74f }),
+            effect = effect,
+        )
+    }
+}
+
 /** Skeleton stand-in for one list row: avatar circle, title line, subtitle line. */
 @Composable
 private fun SkeletonRow(effect: RuiSkeletonEffect) {
     val typography = RuiTheme.typography
-    val density = LocalDensity.current
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -169,18 +179,8 @@ private fun SkeletonRow(effect: RuiSkeletonEffect) {
             modifier = Modifier.weight(1f),
             verticalArrangement = Arrangement.spacedBy(RuiTheme.spacing.xs),
         ) {
-            RuiSkeleton(
-                modifier = Modifier
-                    .fillMaxWidth(0.55f)
-                    .height(with(density) { typography.titleSm.lineHeight.toDp() }),
-                effect = effect,
-            )
-            RuiSkeleton(
-                modifier = Modifier
-                    .fillMaxWidth(0.8f)
-                    .height(with(density) { typography.bodySm.lineHeight.toDp() }),
-                effect = effect,
-            )
+            TextLineSkeleton(typography.titleSm, 0.55f, effect)
+            TextLineSkeleton(typography.bodySm, 0.8f, effect)
         }
     }
 }
