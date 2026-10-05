@@ -23,7 +23,10 @@ import rui.components.RuiAvatarSize
 import rui.components.RuiDivider
 import rui.components.RuiListGroup
 import rui.components.RuiListItem
+import rui.components.RuiRadioGroup
+import rui.components.RuiRadioRow
 import rui.components.RuiSkeleton
+import rui.components.RuiSkeletonEffect
 import rui.components.RuiSwitch
 import rui.foundation.RuiText
 import rui.sample.ui.ContentColumn
@@ -33,13 +36,15 @@ import rui.theme.RuiTheme
 @Composable
 public fun SkeletonScreen(contentPadding: PaddingValues = PaddingValues(0.dp)) {
     var loading by rememberSaveable { mutableStateOf(true) }
+    var effect by rememberSaveable { mutableStateOf(RuiSkeletonEffect.Pulse) }
     val typography = RuiTheme.typography
     val density = LocalDensity.current
 
     ContentColumn(contentPadding = contentPadding) {
         RuiText(
-            text = "Bones breathe in the muted surface color, shaped like the " +
-                "content they replace. Flip the switch to see what arrives.",
+            text = "Bones stand in for content that is loading — shaped like what " +
+                "they replace, animated by a breathing pulse or a highlight " +
+                "sweeping left to right. Flip the switch to see what arrives.",
             style = typography.bodySm,
             color = RuiTheme.colors.contentMuted,
             modifier = Modifier.fillMaxWidth(),
@@ -52,13 +57,30 @@ public fun SkeletonScreen(contentPadding: PaddingValues = PaddingValues(0.dp)) {
                     RuiSwitch(checked = loading, onCheckedChange = { loading = it })
                 },
             )
+            RuiDivider(inset = RuiTheme.spacing.lg)
+            RuiRadioGroup(
+                value = effect,
+                onValueChange = { effect = it },
+            ) {
+                RuiRadioRow(
+                    value = RuiSkeletonEffect.Pulse,
+                    title = "Breathing",
+                    subtitle = "The whole bone pulses",
+                )
+                RuiDivider(inset = RuiTheme.spacing.lg)
+                RuiRadioRow(
+                    value = RuiSkeletonEffect.Sweep,
+                    title = "Sweep",
+                    subtitle = "A highlight travels left to right",
+                )
+            }
         }
 
         SectionLabel("List rows")
         RuiListGroup {
             if (loading) {
                 repeat(3) { index ->
-                    SkeletonRow()
+                    SkeletonRow(effect)
                     if (index < 2) RuiDivider(inset = RuiTheme.spacing.lg)
                 }
             } else {
@@ -79,10 +101,10 @@ public fun SkeletonScreen(contentPadding: PaddingValues = PaddingValues(0.dp)) {
                         .padding(horizontal = RuiTheme.spacing.lg, vertical = RuiTheme.spacing.md),
                     verticalArrangement = Arrangement.spacedBy(RuiTheme.spacing.sm),
                 ) {
-                    RuiSkeleton(modifier = Modifier.fillMaxWidth())
-                    RuiSkeleton(modifier = Modifier.fillMaxWidth())
-                    RuiSkeleton(modifier = Modifier.fillMaxWidth(0.9f))
-                    RuiSkeleton(modifier = Modifier.fillMaxWidth(0.55f))
+                    RuiSkeleton(modifier = Modifier.fillMaxWidth(), effect = effect)
+                    RuiSkeleton(modifier = Modifier.fillMaxWidth(), effect = effect)
+                    RuiSkeleton(modifier = Modifier.fillMaxWidth(0.9f), effect = effect)
+                    RuiSkeleton(modifier = Modifier.fillMaxWidth(0.55f), effect = effect)
                 }
             } else {
                 RuiListItem(
@@ -98,7 +120,7 @@ public fun SkeletonScreen(contentPadding: PaddingValues = PaddingValues(0.dp)) {
 
 /** Skeleton stand-in for one list row: avatar circle, title line, subtitle line. */
 @Composable
-private fun SkeletonRow() {
+private fun SkeletonRow(effect: RuiSkeletonEffect) {
     val typography = RuiTheme.typography
     val density = LocalDensity.current
     Row(
@@ -108,7 +130,7 @@ private fun SkeletonRow() {
         horizontalArrangement = Arrangement.spacedBy(RuiTheme.spacing.md),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        RuiSkeleton(modifier = Modifier.size(40.dp), shape = CircleShape)
+        RuiSkeleton(modifier = Modifier.size(40.dp), shape = CircleShape, effect = effect)
         Column(
             modifier = Modifier.weight(1f),
             verticalArrangement = Arrangement.spacedBy(RuiTheme.spacing.xs),
@@ -117,11 +139,13 @@ private fun SkeletonRow() {
                 modifier = Modifier
                     .fillMaxWidth(0.55f)
                     .height(with(density) { typography.titleSm.lineHeight.toDp() }),
+                effect = effect,
             )
             RuiSkeleton(
                 modifier = Modifier
                     .fillMaxWidth(0.8f)
                     .height(with(density) { typography.bodySm.lineHeight.toDp() }),
+                effect = effect,
             )
         }
     }

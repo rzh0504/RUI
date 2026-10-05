@@ -2,6 +2,7 @@ package rui.theme
 
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.FiniteAnimationSpec
+import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.SpringSpec
 import androidx.compose.animation.core.TweenSpec
@@ -33,6 +34,14 @@ public data class RuiMotion(
     public val pulse: TweenSpec<Float> = tween(
         durationMillis = 600,
         easing = FastOutSlowInEasing,
+    ),
+    /**
+     * One pass of a sweeping highlight (skeleton bones) — linear, restarted
+     * from the start edge each cycle.
+     */
+    public val sweep: TweenSpec<Float> = tween(
+        durationMillis = 1200,
+        easing = LinearEasing,
     ),
 
     /**
