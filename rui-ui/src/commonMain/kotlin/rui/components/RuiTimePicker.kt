@@ -41,6 +41,7 @@ public fun RuiTimePicker(
     val spacing = RuiTheme.spacing
 
     val hourItems = if (is24Hour) (0..23).toList() else (1..12).toList()
+    val minuteItems = (0..59).toList()
     val isPm = value.hour >= 12
     val displayedHour = if (is24Hour) {
         value.hour
@@ -61,18 +62,18 @@ public fun RuiTimePicker(
         RuiWheelPicker(
             items = hourItems,
             selectedIndex = hourItems.indexOf(displayedHour),
-            onSelectedIndexChange = { hour ->
-                onValueChange(RuiTimeOfDay(hour24(hour), value.minute))
+            onSelectedIndexChange = { index ->
+                onValueChange(RuiTimeOfDay(hour24(hourItems[index]), value.minute))
             },
             modifier = Modifier.weight(1f),
         ) { hour ->
             RuiText(text = hour.toString(), style = typography.bodyLg)
         }
         RuiWheelPicker(
-            items = (0..59).toList(),
+            items = minuteItems,
             selectedIndex = value.minute,
-            onSelectedIndexChange = { minute ->
-                onValueChange(RuiTimeOfDay(value.hour, minute))
+            onSelectedIndexChange = { index ->
+                onValueChange(RuiTimeOfDay(value.hour, minuteItems[index]))
             },
             modifier = Modifier.weight(1f),
         ) { minute ->

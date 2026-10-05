@@ -2,6 +2,7 @@ package rui.components
 
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
+import androidx.compose.foundation.gestures.Orientation
 import androidx.compose.foundation.gestures.snapping.SnapPosition
 import androidx.compose.foundation.gestures.snapping.rememberSnapFlingBehavior
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -10,6 +11,7 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListItemInfo
 import androidx.compose.foundation.lazy.LazyListLayoutInfo
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
@@ -93,20 +95,34 @@ public fun <T> RuiWheelPicker(
     // rows the drum passes on the way are not committed as new values.
     var correcting by remember { mutableStateOf(false) }
 
+    // The center snap (SnapPosition.Center) rests an item at exactly
+    // (viewportSize − beforeContentPadding − afterContentPadding) / 2 − size / 2
+    // in item-offset coordinates (verified against foundation's bytecode).
+    // Detecting the centered row with the same formula keeps the committed
+    // value and the snap landing in exact agreement — an independent
+    // geometric guess is how the drum and the value drifted apart.
+    fun centerDistance(info: LazyListItemInfo): Float {
+        val layout = listState.layoutInfo
+        val container = if (layout.orientation == Orientation.Vertical) {
+            layout.viewportSize.height
+        } else {
+            layout.viewportSize.width
+        }
+        val desired = (container - layout.beforeContentPadding - layout.afterContentPadding) / 2f -
+            info.size / 2f
+        return abs(info.offset - desired)
+    }
+
     fun centeredIndex(): Int {
         val layout = listState.layoutInfo
         if (layout.visibleItemsInfo.isEmpty()) return -1
-        val viewportCenter = (layout.viewportStartOffset + layout.viewportEndOffset) / 2f
-        return layout.visibleItemsInfo
-            .minBy { abs(it.offset + it.size / 2f - viewportCenter) }
-            .index
+        return layout.visibleItemsInfo.minBy { centerDistance(it) }.index
     }
 
     fun isPerfectlyCentered(index: Int): Boolean {
-        val layout = listState.layoutInfo
-        val info = layout.visibleItemsInfo.firstOrNull { it.index == index } ?: return true
-        val viewportCenter = (layout.viewportStartOffset + layout.viewportEndOffset) / 2f
-        return abs(info.offset + info.size / 2f - viewportCenter) < 1f
+        val info = listState.layoutInfo.visibleItemsInfo.firstOrNull { it.index == index }
+            ?: return true
+        return centerDistance(info) < 1f
     }
 
     // External value changes (the initial position, programmatic sets, a
