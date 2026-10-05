@@ -14,7 +14,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -31,7 +30,6 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.Velocity
 import androidx.compose.ui.unit.dp
 import rui.theme.RuiTheme
-import kotlinx.coroutines.launch
 
 public object RuiPullToRefreshDefaults {
 
@@ -75,7 +73,6 @@ public fun RuiPullToRefresh(
 ) {
     val density = LocalDensity.current
     val triggerPx = with(density) { RuiPullToRefreshDefaults.TriggerDistance.toPx() }
-    val scope = rememberCoroutineScope()
     val haptics = LocalHapticFeedback.current
     val currentOnRefresh by rememberUpdatedState(onRefresh)
     val isRefreshingNow by rememberUpdatedState(isRefreshing)
@@ -83,16 +80,22 @@ public fun RuiPullToRefresh(
     var dragOffset by remember { mutableFloatStateOf(0f) }
     var showing by remember { mutableStateOf(false) }
     var thresholdArmed by remember { mutableStateOf(true) }
+    var settling by remember { mutableStateOf(false) }
     val offsetAnim = remember { Animatable(0f) }
 
-    // Single writer to dragOffset: gestures snap the animatable; programmatic
-    // moves animate it and mirror each frame back.
+    // While a settle animation runs it owns dragOffset exclusively — stale
+    // drag-frame writes would snap the animatable back and jitter the card.
     suspend fun settleTo(target: Float) {
-        offsetAnim.snapTo(dragOffset)
-        offsetAnim.animateTo(target, spring(dampingRatio = 1f, stiffness = 350f)) {
-            dragOffset = value
+        settling = true
+        try {
+            offsetAnim.snapTo(dragOffset)
+            offsetAnim.animateTo(target, spring(dampingRatio = 1f, stiffness = 350f)) {
+                dragOffset = value
+            }
+            dragOffset = target
+        } finally {
+            settling = false
         }
-        dragOffset = target
     }
 
     // Two-way sync with the hoisted isRefreshing.
@@ -124,23 +127,25 @@ public fun RuiPullToRefresh(
                 if (showing) {
                     return available
                 }
+                if (settling) {
+                    return Offset.Zero
+                }
                 // Mid-pull, upward scroll retracts the indicator before the
                 // content scrolls.
                 if (available.y < 0f && dragOffset > 0f) {
                     val consumed = available.y.coerceAtLeast(-dragOffset)
                     dragOffset += consumed
-                    scope.launch { offsetAnim.snapTo(dragOffset) }
                     return Offset(0f, consumed)
                 }
                 return Offset.Zero
             }
 
             override fun onPostScroll(
-                consumed: androidx.compose.ui.geometry.Offset,
-                available: androidx.compose.ui.geometry.Offset,
+                consumed: Offset,
+                available: Offset,
                 source: NestedScrollSource,
-            ): androidx.compose.ui.geometry.Offset {
-                if (source != NestedScrollSource.UserInput || showing) {
+            ): Offset {
+                if (source != NestedScrollSource.UserInput || showing || settling) {
                     return Offset.Zero
                 }
                 if (available.y > 0f) {
@@ -152,7 +157,6 @@ public fun RuiPullToRefresh(
                     if (dragOffset < triggerPx) {
                         thresholdArmed = true
                     }
-                    scope.launch { offsetAnim.snapTo(dragOffset) }
                     return Offset(0f, available.y)
                 }
                 return Offset.Zero
