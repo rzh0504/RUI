@@ -20,6 +20,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import kotlin.math.roundToInt
 import rui.components.RuiCheckbox
+import rui.components.RuiCheckboxState
+import rui.components.RuiTriStateCheckbox
 import rui.components.RuiDivider
 import rui.components.RuiListGroup
 import rui.components.RuiListItem
@@ -63,6 +65,26 @@ public fun TogglesScreen(contentPadding: PaddingValues = PaddingValues(0.dp)) {
 
         SectionLabel("Checkbox")
         RuiListGroup {
+            // The parent governs the two enabled rows below; the unavailable
+            // row stays out of the aggregation.
+            RuiListItem(
+                title = "Select all",
+                trailing = {
+                    RuiTriStateCheckbox(
+                        value = when {
+                            sync && stats -> RuiCheckboxState.On
+                            !sync && !stats -> RuiCheckboxState.Off
+                            else -> RuiCheckboxState.Indeterminate
+                        },
+                        onValueChange = { next ->
+                            val all = next == RuiCheckboxState.On
+                            sync = all
+                            stats = all
+                        },
+                    )
+                },
+            )
+            RuiDivider(inset = RuiTheme.spacing.lg)
             RuiListItem(
                 title = "Sync on Wi-Fi only",
                 trailing = { RuiCheckbox(checked = sync, onCheckedChange = { sync = it }) },

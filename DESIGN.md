@@ -110,6 +110,7 @@ Visual signatures worth keeping consistent:
 - **Inset grouped lists** for any index of items (`RuiListGroup` + `RuiListItem` + `RuiDivider(inset = …)`).
 - **App chrome is frosted-capable**: `RuiScaffold` overlays `RuiTopAppBar` / `RuiNavigationBar` on the content; with a backdrop they render frosted, without it they are plain surfaces.
 - **Switches and avatars stay circular**: the switch track, thumb and avatars use pure `CircleShape`, exempt from corner smoothing — circles read as circles.
+- **Checkboxes are token-radius squares** — 20dp in `shapes.sm`, primary fill with a pop-animated check; the tri-state parent adds a dash for partial selection and cycles indeterminate → all → none, announcing "partially checked" to screen readers.
 - **List item titles sit at the title level** (`titleSm`), matching how real apps treat settings rows as section headlines; subtitles stay `bodySm`.
 
 Every component in `rui.components`:

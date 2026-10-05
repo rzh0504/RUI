@@ -18,8 +18,8 @@ compose-unstyled          behavior, state, keyboard, a11y (zero visuals)
 │  │              utils: bounce overscroll · haptics │
 │  └─ components  Scaffold · TopAppBar · NavBar ·    │
 │                 Button · TextField · SearchBar ·   │
-│                 Switch ·                           │
-│                 Checkbox · Radio · Slider ·        │
+│                 Switch · Checkbox · TriState ·     │
+│                 Radio · Slider ·                   │
 │                 DropdownMenu · BottomSheet ·       │
 │                 ActionPanel · Progress · Avatar ·  │
 │                 Tooltip · Disclosure · Snackbar ·  │
