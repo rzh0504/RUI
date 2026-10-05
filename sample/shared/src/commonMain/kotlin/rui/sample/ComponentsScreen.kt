@@ -121,6 +121,13 @@ public fun ComponentsScreen(
                 showChevron = true,
                 onClick = { onOpen(CatalogPage.EmptyState) },
             )
+            RuiDivider(inset = RuiTheme.spacing.lg)
+            RuiListItem(
+                title = "Page indicator",
+                subtitle = "Dots for paged content, current page as pill",
+                showChevron = true,
+                onClick = { onOpen(CatalogPage.PageIndicator) },
+            )
         }
 
         SectionLabel("Feedback")
