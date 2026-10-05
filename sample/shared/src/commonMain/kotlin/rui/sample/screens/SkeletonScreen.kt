@@ -96,25 +96,57 @@ public fun SkeletonScreen(contentPadding: PaddingValues = PaddingValues(0.dp)) {
 
         SectionLabel("Paragraph")
         RuiListGroup {
-            if (loading) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = RuiTheme.spacing.lg, vertical = RuiTheme.spacing.md),
-                    verticalArrangement = Arrangement.spacedBy(RuiTheme.spacing.sm),
-                ) {
-                    RuiSkeleton(modifier = Modifier.fillMaxWidth(), effect = effect)
-                    RuiSkeleton(modifier = Modifier.fillMaxWidth(), effect = effect)
-                    RuiSkeleton(modifier = Modifier.fillMaxWidth(0.9f), effect = effect)
-                    RuiSkeleton(modifier = Modifier.fillMaxWidth(0.55f), effect = effect)
+            // Both states share one line structure — one line per bone at the
+            // same line heights and spacing — so toggling never shifts the page.
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = RuiTheme.spacing.lg, vertical = RuiTheme.spacing.md),
+                verticalArrangement = Arrangement.spacedBy(RuiTheme.spacing.xs),
+            ) {
+                if (loading) {
+                    RuiSkeleton(
+                        modifier = Modifier
+                            .fillMaxWidth(0.6f)
+                            .height(with(density) { typography.titleSm.lineHeight.toDp() }),
+                        effect = effect,
+                    )
+                    RuiSkeleton(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(with(density) { typography.bodySm.lineHeight.toDp() }),
+                        effect = effect,
+                    )
+                    RuiSkeleton(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(with(density) { typography.bodySm.lineHeight.toDp() }),
+                        effect = effect,
+                    )
+                    RuiSkeleton(
+                        modifier = Modifier
+                            .fillMaxWidth(0.55f)
+                            .height(with(density) { typography.bodySm.lineHeight.toDp() }),
+                        effect = effect,
+                    )
+                } else {
+                    RuiText(text = "Release notes", style = typography.titleSm)
+                    RuiText(
+                        text = "The picker drums ship in this release.",
+                        style = typography.bodySm,
+                        color = RuiTheme.colors.contentMuted,
+                    )
+                    RuiText(
+                        text = "Swipe actions land on every list row.",
+                        style = typography.bodySm,
+                        color = RuiTheme.colors.contentMuted,
+                    )
+                    RuiText(
+                        text = "More in the repository changelog.",
+                        style = typography.bodySm,
+                        color = RuiTheme.colors.contentMuted,
+                    )
                 }
-            } else {
-                RuiListItem(
-                    title = "Release notes",
-                    subtitle = "Version 2.0 ships the new picker drums, swipe " +
-                        "actions and the frosted materials. The full changelog " +
-                        "lives with the repository.",
-                )
             }
         }
     }
