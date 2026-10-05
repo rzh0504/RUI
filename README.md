@@ -21,7 +21,8 @@ compose-unstyled          behavior, state, keyboard, a11y (zero visuals)
 │                 Checkbox · Radio · Slider ·        │
 │                 DropdownMenu · BottomSheet ·       │
 │                 Progress · Avatar · Tooltip ·      │
-│                 Disclosure · Dialog · Tabs · List  │
+│                 Disclosure · Snackbar · Dialog ·   │
+│                 Tabs · List                        │
 └───────┬────────────────────────────────────────────┘
         │
   sample/          catalog app: shared UI + androidApp + iosApp

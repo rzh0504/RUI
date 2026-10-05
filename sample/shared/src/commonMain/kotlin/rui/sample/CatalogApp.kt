@@ -34,6 +34,7 @@ import rui.sample.screens.DropdownMenuScreen
 import rui.sample.screens.AvatarScreen
 import rui.sample.screens.DisclosureScreen
 import rui.sample.screens.ProgressScreen
+import rui.sample.screens.SnackbarScreen
 import rui.sample.screens.TooltipScreen
 import rui.sample.screens.TabsScreen
 import rui.sample.screens.TextFieldScreen
@@ -55,6 +56,7 @@ public sealed interface CatalogPage : RuiNavKey {
     public data object Avatar : CatalogPage
     public data object Tooltip : CatalogPage
     public data object Disclosure : CatalogPage
+    public data object Snackbar : CatalogPage
 }
 
 private fun CatalogPage.title(): String = when (this) {
@@ -70,6 +72,7 @@ private fun CatalogPage.title(): String = when (this) {
     CatalogPage.Avatar -> "Avatar"
     CatalogPage.Tooltip -> "Tooltip"
     CatalogPage.Disclosure -> "Disclosure"
+    CatalogPage.Snackbar -> "Snackbar"
 }
 
 /**
@@ -87,6 +90,10 @@ public fun CatalogApp() {
     var tab by remember { mutableStateOf(0) }
     val backStack = rememberRuiNavBackStack<CatalogPage>(CatalogPage.Root)
     val nav = remember { RuiNavController(backStack) }
+    // App-level transient feedback: every page's scaffold hosts the same
+    // state, so a snackbar shown on any page survives navigation within its
+    // lifetime.
+    val snackbarHostState = rui.components.rememberRuiSnackbarHostState()
 
     RuiTheme(darkTheme = darkTheme) {
         // In-app theme toggle: push the appearance to the system bars in the
@@ -115,6 +122,7 @@ public fun CatalogApp() {
                 }
                 RuiScaffold(
                     backdrop = backdrop,
+                    snackbarHost = { rui.components.RuiSnackbarHost(snackbarHostState) },
                     topBar = {
                         if (atRoot) {
                             RuiTopAppBar(
@@ -187,6 +195,10 @@ public fun CatalogApp() {
                             CatalogPage.Avatar -> AvatarScreen(contentPadding = padding)
                             CatalogPage.Tooltip -> TooltipScreen(contentPadding = padding)
                             CatalogPage.Disclosure -> DisclosureScreen(contentPadding = padding)
+                            CatalogPage.Snackbar -> SnackbarScreen(
+                                hostState = snackbarHostState,
+                                contentPadding = padding,
+                            )
                         }
                     }
                 }

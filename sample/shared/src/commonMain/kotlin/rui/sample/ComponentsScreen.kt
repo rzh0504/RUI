@@ -95,6 +95,16 @@ public fun ComponentsScreen(
             )
         }
 
+        SectionLabel("Feedback")
+        RuiListGroup {
+            RuiListItem(
+                title = "Snackbar",
+                subtitle = "Queued transient messages, optional action",
+                showChevron = true,
+                onClick = { onOpen(CatalogPage.Snackbar) },
+            )
+        }
+
         SectionLabel("Overlays")
         RuiListGroup {
             RuiListItem(

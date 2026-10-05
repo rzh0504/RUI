@@ -48,6 +48,7 @@ public fun RuiScaffold(
     contentWindowInsets: WindowInsets = WindowInsets.systemBars.union(WindowInsets.displayCutout),
     topBar: @Composable () -> Unit = {},
     bottomBar: @Composable () -> Unit = {},
+    snackbarHost: @Composable () -> Unit = {},
     content: @Composable (PaddingValues) -> Unit,
 ) {
     val navAnimating = rui.foundation.LocalRuiTransitionActive.current
@@ -97,12 +98,15 @@ public fun RuiScaffold(
                 .map { it.measure(loose) }
             val bottomBarPlaceables = subcompose(RuiScaffoldSections.BottomBar, bottomBar)
                 .map { it.measure(loose) }
+            val snackbarPlaceables = subcompose(RuiScaffoldSections.SnackbarHost, snackbarHost)
+                .map { it.measure(loose) }
             val topBarHeight = topBarPlaceables.maxOfOrNull { it.height } ?: 0
             val bottomBarHeight = bottomBarPlaceables.maxOfOrNull { it.height } ?: 0
+            val bottomInsetPx = contentWindowInsets.getBottom(this)
 
             contentPadding.paddingHolder = PaddingValues(
                 top = max(topBarHeight, contentWindowInsets.getTop(this)).toDp(),
-                bottom = max(bottomBarHeight, contentWindowInsets.getBottom(this)).toDp(),
+                bottom = max(bottomBarHeight, bottomInsetPx).toDp(),
                 start = contentWindowInsets.getLeft(this, layoutDirection).toDp(),
                 end = contentWindowInsets.getRight(this, layoutDirection).toDp(),
             )
@@ -114,9 +118,13 @@ public fun RuiScaffold(
                 bodyPlaceables.forEach { it.place(0, 0) }
                 topBarPlaceables.forEach { it.place(0, 0) }
                 bottomBarPlaceables.forEach { it.place(0, layoutHeight - it.height) }
+                // The snackbar floats above the bottom bar (or the bottom
+                // inset when there is no bar).
+                val snackbarBottom = max(bottomBarHeight, bottomInsetPx)
+                snackbarPlaceables.forEach { it.place(0, layoutHeight - snackbarBottom - it.height) }
             }
         }
     }
 }
 
-private enum class RuiScaffoldSections { TopBar, BottomBar, Content }
+private enum class RuiScaffoldSections { TopBar, BottomBar, SnackbarHost, Content }
