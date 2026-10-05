@@ -1,18 +1,31 @@
 package rui.components
 
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.togetherWith
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.Immutable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -25,9 +38,13 @@ import androidx.compose.ui.unit.dp
 import com.composeunstyled.LocalContentColor
 import com.composeunstyled.UnstyledButton
 import com.composeunstyled.theme.ColoredIndication
+import kotlinx.coroutines.delay
+import rui.foundation.RuiIcon
+import rui.foundation.RuiIcons
 import rui.foundation.ruiFocusRing
 import rui.theme.RuiTheme
 import rui.theme.StateLayerAlphas
+
 
 /** Visual weight of a [RuiButton]. */
 public enum class RuiButtonVariant {
@@ -162,9 +179,13 @@ public fun RuiButton(
 }
 
 /**
- * A [RuiButton] with a loading state: while [isLoading] the button is
- * disabled and an indeterminate spinner replaces the leading slot, tinted
- * with the variant's content color. The label stays visible.
+ * A [RuiButton] with loading and completion feedback: while [isLoading] the
+ * button is disabled and an indeterminate spinner replaces the leading slot;
+ * when loading finishes a check mark pops in briefly before the button
+ * returns to normal. The label stays visible; width changes are animated.
+ *
+ * Note the completion beat plays for any loading-to-idle transition — model
+ * failures should return to idle without going through [isLoading] = true.
  */
 @Composable
 public fun RuiLoadingButton(
@@ -180,27 +201,61 @@ public fun RuiLoadingButton(
     contentPadding: PaddingValues = RuiButtonDefaults.contentPadding(size),
     content: @Composable RowScope.() -> Unit,
 ) {
+    val motion = RuiTheme.motion
+    var state by remember { mutableStateOf(LoadingButtonState.Normal) }
+
+    LaunchedEffect(isLoading) {
+        when {
+            isLoading -> state = LoadingButtonState.Loading
+            state == LoadingButtonState.Loading -> {
+                state = LoadingButtonState.Success
+                delay(1500)
+                state = LoadingButtonState.Normal
+            }
+        }
+    }
+
     RuiButton(
         onClick = onClick,
-        modifier = modifier,
+        modifier = modifier.animateContentSize(
+            animationSpec = spring(dampingRatio = Spring.DampingRatioNoBouncy, stiffness = 550f),
+        ),
         variant = variant,
         size = size,
-        enabled = enabled && !isLoading,
+        enabled = enabled && state == LoadingButtonState.Normal,
         shape = shape,
         colors = colors,
         interactionSource = interactionSource,
         contentPadding = contentPadding,
         leading = {
-            if (isLoading) {
-                RuiCircularProgress(
-                    colors = RuiProgressColors(
-                        fill = colors.content,
-                        track = Color.Transparent,
-                        disabledFill = colors.content,
-                        disabledTrack = Color.Transparent,
-                    ),
-                    modifier = Modifier.size(spinnerSize(size)),
-                )
+            AnimatedContent(
+                targetState = state,
+                transitionSpec = {
+                    (
+                        fadeIn(motion.fast) +
+                            scaleIn(initialScale = 0.6f, animationSpec = motion.pop)
+                        ).togetherWith(fadeOut(motion.fast))
+                },
+                label = "RuiLoadingButtonLeading",
+            ) { leadingState ->
+                when (leadingState) {
+                    LoadingButtonState.Normal -> Box(modifier = Modifier.size(0.dp))
+                    LoadingButtonState.Loading -> RuiCircularProgress(
+                        colors = RuiProgressColors(
+                            fill = colors.content,
+                            track = Color.Transparent,
+                            disabledFill = colors.content,
+                            disabledTrack = Color.Transparent,
+                        ),
+                        modifier = Modifier.size(spinnerSize(size)),
+                    )
+                    LoadingButtonState.Success -> RuiIcon(
+                        imageVector = RuiIcons.Check,
+                        contentDescription = null,
+                        size = spinnerSize(size),
+                        tint = colors.content,
+                    )
+                }
             }
         },
         content = content,
@@ -213,3 +268,6 @@ private fun spinnerSize(size: RuiButtonSize): Dp = when (size) {
     RuiButtonSize.Md -> 18.dp
     RuiButtonSize.Lg -> 20.dp
 }
+
+/** Visual state of [RuiLoadingButton]'s leading slot. */
+private enum class LoadingButtonState { Normal, Loading, Success }

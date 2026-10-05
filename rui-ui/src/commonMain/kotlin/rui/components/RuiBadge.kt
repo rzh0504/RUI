@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
 import androidx.compose.ui.Alignment
@@ -48,7 +49,8 @@ public object RuiBadgeDefaults {
 /**
  * A small count or status marker: a dot when [text] is null, otherwise a
  * pill. Position it over the anchored element (icon button, avatar) with a
- * `Box` + `align` — see the buttons page of the catalog.
+ * `Box` + `align` — see the buttons page of the catalog. The pill uses a
+ * plain (unsmoothed) stadium: at this size corner smoothing is illegible.
  *
  * @param text The count or short label; `null` renders the dot.
  */
@@ -58,7 +60,7 @@ public fun RuiBadge(
     modifier: Modifier = Modifier,
     colors: RuiBadgeColors = RuiBadgeDefaults.colors(),
 ) {
-    val shape = if (text == null) CircleShape else RuiTheme.shapes.full
+    val shape = if (text == null) CircleShape else RoundedCornerShape(percent = 50)
 
     Box(
         modifier = modifier

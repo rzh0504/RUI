@@ -162,29 +162,32 @@ public fun ButtonsScreen(contentPadding: PaddingValues = PaddingValues(0.dp)) {
                     RuiIconButton(onClick = {}) {
                         RuiIcon(imageVector = RuiIcons.Grid, contentDescription = "Inbox")
                     }
+                    // Overlap the anchor's top-end corner with the pill.
                     RuiBadge(
                         text = "3",
                         modifier = Modifier
                             .align(Alignment.TopEnd)
-                            .offset(x = 4.dp, y = (-4).dp),
+                            .offset(x = 6.dp, y = (-10).dp),
                     )
                 }
                 Box {
                     RuiIconButton(onClick = {}) {
                         RuiIcon(imageVector = RuiIcons.Close, contentDescription = "Alerts")
                     }
+                    // Center the dot on the anchor's top-end corner.
                     RuiBadge(
                         modifier = Modifier
                             .align(Alignment.TopEnd)
-                            .offset(x = 3.dp, y = 3.dp),
+                            .offset(x = 4.dp, y = (-4).dp),
                     )
                 }
                 Box {
                     RuiAvatar(initials = "ZR", size = RuiAvatarSize.Md)
+                    // Center the dot on the avatar's bottom-end corner.
                     RuiBadge(
                         modifier = Modifier
                             .align(Alignment.BottomEnd)
-                            .offset(x = 2.dp, y = 2.dp),
+                            .offset(x = 4.dp, y = 4.dp),
                     )
                 }
             }

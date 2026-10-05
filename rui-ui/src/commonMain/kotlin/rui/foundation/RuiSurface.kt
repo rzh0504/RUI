@@ -4,6 +4,7 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Modifier
@@ -15,6 +16,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.composeunstyled.LocalContentColor
 import rui.theme.RuiTheme
+import rui.theme.SmoothCornerShape
 
 /**
  * The base container of the design system: a token-colored, shaped box that
@@ -35,10 +37,19 @@ public fun RuiSurface(
     elevation: Dp = 0.dp,
     content: @Composable () -> Unit,
 ) {
+    // HWUI cannot render elevation shadows from arbitrary paths (the
+    // squircle's Outline.Generic) and falls back to a rectangular shadow.
+    // Give the SHADOW a plain rounded outline of the same radius — a shadow
+    // is a blur where smoothing is imperceptible — while the visual stays
+    // squircle.
+    val shadowShape = (shape as? SmoothCornerShape)
+        ?.let { RoundedCornerShape(it.radius) }
+        ?: shape
+
     CompositionLocalProvider(LocalContentColor provides contentColor) {
         Box(
             modifier = modifier
-                .then(if (elevation > 0.dp) Modifier.shadow(elevation, shape) else Modifier)
+                .then(if (elevation > 0.dp) Modifier.shadow(elevation, shadowShape) else Modifier)
                 .clip(shape)
                 .background(color, shape)
                 .then(if (border != null) Modifier.border(border, shape) else Modifier),
