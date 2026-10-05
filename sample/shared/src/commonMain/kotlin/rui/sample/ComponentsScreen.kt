@@ -68,6 +68,13 @@ public fun ComponentsScreen(
             )
             RuiDivider(inset = RuiTheme.spacing.lg)
             RuiListItem(
+                title = "Pickers",
+                subtitle = "Wheel drums for time and date",
+                showChevron = true,
+                onClick = { onOpen(CatalogPage.Pickers) },
+            )
+            RuiDivider(inset = RuiTheme.spacing.lg)
+            RuiListItem(
                 title = "Segmented tabs",
                 subtitle = "Roving focus, keyboard navigation",
                 showChevron = true,

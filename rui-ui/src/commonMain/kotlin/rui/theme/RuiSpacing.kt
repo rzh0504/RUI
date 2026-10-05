@@ -23,4 +23,6 @@ public data class RuiDimens(
     public val borderWidth: Dp = 1.dp,
     public val focusRingWidth: Dp = 2.dp,
     public val iconSize: Dp = 20.dp,
+    /** Height of one row in a wheel picker drum, iOS HIG proportion. */
+    public val pickerRowHeight: Dp = 36.dp,
 )
