@@ -306,14 +306,13 @@ public class RuiPullToRefreshState internal constructor(
     internal suspend fun startRefreshing(onRefresh: () -> Unit, isRefreshingNow: () -> Boolean) {
         if (!isRefreshing) {
             isRefreshing = true
-            // Flip the visual to the spinning state immediately — the settle
-            // to the resting offset happens while loading is already visible,
-            // not after a fully-drawn ring sits still.
-            internalRefreshState = RuiRefreshState.Refreshing
             try {
                 animateToSpring(refreshThresholdOffset)
             } finally {
                 if (!isTouching) {
+                    // Refreshing must be written before onRefresh(): the sync
+                    // effect keys on this change to re-sample the level.
+                    internalRefreshState = RuiRefreshState.Refreshing
                     if (!isRefreshingNow()) onRefresh()
                 } else {
                     isRefreshing = false
@@ -519,10 +518,15 @@ private fun RefreshHeader(
             .height(headerHeight),
         contentAlignment = Alignment.BottomCenter,
     ) {
+        // Below the threshold the arc grows with the pull; at the threshold
+        // (and while refreshing) the ring is full, so the switch to the
+        // indeterminate spinner is invisible — loading reads as starting
+        // immediately without touching the state machine's timing.
         val progress: Float? = when (state.refreshState) {
             RuiRefreshState.Idle -> null
-            RuiRefreshState.Refreshing -> null
-            else -> state.visualProgress
+            RuiRefreshState.Pulling -> state.visualProgress
+            RuiRefreshState.ThresholdReached, RuiRefreshState.Refreshing -> null
+            RuiRefreshState.RefreshComplete -> 1f
         }
         val alpha: Float = when (state.refreshState) {
             RuiRefreshState.Idle -> 0f
