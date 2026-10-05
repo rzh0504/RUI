@@ -148,7 +148,7 @@ public fun TogglesScreen(contentPadding: PaddingValues = PaddingValues(0.dp)) {
         RuiListGroup {
             RuiListItem(
                 title = "Guests",
-                subtitle = "Between 1 and 6 — the segments disable at the bounds",
+                subtitle = "The value reads in the middle; segments disable at the bounds",
                 trailing = {
                     RuiStepper(
                         value = guests,

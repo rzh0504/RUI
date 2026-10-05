@@ -19,6 +19,7 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
 import rui.foundation.RuiIcon
 import rui.foundation.RuiIcons
+import rui.foundation.RuiText
 import rui.foundation.rememberRuiIndication
 import rui.theme.RuiTheme
 
@@ -28,15 +29,21 @@ private val StepperHeight = 32.dp
 /** Width of one stepper segment. */
 private val StepperSegmentWidth = 40.dp
 
+/** Width of the middle value readout; fits up to three digits. */
+private val StepperValueWidth = 48.dp
+
 /**
- * The compact − / + counter, iOS style: a muted stadium split into two
- * segments by a hairline. The segments disable themselves at the bounds of
- * [range], so the value always stays inside it — the caller never clamps.
+ * The compact counter: a muted stadium of `− | value | +` segments split by
+ * hairlines, the current value readable in the middle. The − and + segments
+ * disable themselves at the bounds of [range], so the value always stays
+ * inside it — the caller never clamps.
  *
  * Tapping steps by one; there is no hold-to-repeat.
  *
  * @param value The hoisted count.
  * @param range The inclusive bounds the value is kept within.
+ * @param showValue Renders the current value between the segments; without
+ *   it the stepper is the bare − / + pair and the value lives elsewhere.
  */
 @Composable
 public fun RuiStepper(
@@ -45,9 +52,11 @@ public fun RuiStepper(
     modifier: Modifier = Modifier,
     range: IntRange = 0..Int.MAX_VALUE,
     enabled: Boolean = true,
+    showValue: Boolean = true,
 ) {
     val colors = RuiTheme.colors
     val dimens = RuiTheme.dimens
+    val typography = RuiTheme.typography
 
     Row(
         modifier = modifier
@@ -64,12 +73,27 @@ public fun RuiStepper(
                 .width(StepperSegmentWidth)
                 .fillMaxHeight(),
         )
-        Box(
-            modifier = Modifier
-                .width(dimens.borderWidth)
-                .fillMaxHeight()
-                .background(colors.outlineSubtle),
-        )
+        if (showValue) {
+            Box(
+                modifier = Modifier
+                    .width(StepperValueWidth)
+                    .fillMaxHeight(),
+                contentAlignment = Alignment.Center,
+            ) {
+                RuiText(
+                    text = value.toString(),
+                    style = typography.bodyLg,
+                    color = if (enabled) colors.content else colors.contentDisabled,
+                    maxLines = 1,
+                )
+            }
+            Box(
+                modifier = Modifier
+                    .width(dimens.borderWidth)
+                    .fillMaxHeight()
+                    .background(colors.outlineSubtle),
+            )
+        }
         StepperSegment(
             icon = RuiIcons.Plus,
             enabled = enabled && value < range.last,

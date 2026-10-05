@@ -112,7 +112,7 @@ Visual signatures worth keeping consistent:
 - **App chrome is frosted-capable**: `RuiScaffold` overlays `RuiTopAppBar` / `RuiNavigationBar` on the content; with a backdrop they render frosted, without it they are plain surfaces.
 - **Switches and avatars stay circular**: the switch track, thumb and avatars use pure `CircleShape`, exempt from corner smoothing — circles read as circles.
 - **Checkboxes are token-radius squares** — 20dp in `shapes.sm`, primary fill with a pop-animated check; the tri-state parent adds a dash for partial selection and cycles indeterminate → all → none, announcing "partially checked" to screen readers.
-- **Steppers are a muted − / + stadium** — two segments split by a hairline, each disabling itself at the range bounds so the value never escapes; tapping steps by one, no hold-to-repeat.
+- **Steppers are a muted − value + stadium** — three segments split by hairlines, the current count readable in the middle (or the bare − / + pair with `showValue = false`); the − and + segments disable themselves at the range bounds so the value never escapes; tapping steps by one, no hold-to-repeat.
 - **List item titles sit at the title level** (`titleSm`), matching how real apps treat settings rows as section headlines; subtitles stay `bodySm`.
 
 Every component in `rui.components`:
