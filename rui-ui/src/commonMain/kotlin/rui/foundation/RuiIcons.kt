@@ -90,6 +90,22 @@ public object RuiIcons {
         }
     }
 
+    public val Plus: ImageVector by lazy {
+        strokedIcon("RuiPlus") {
+            moveTo(12f, 5f)
+            lineTo(12f, 19f)
+            moveTo(5f, 12f)
+            lineTo(19f, 12f)
+        }
+    }
+
+    public val Minus: ImageVector by lazy {
+        strokedIcon("RuiMinus") {
+            moveTo(5f, 12f)
+            lineTo(19f, 12f)
+        }
+    }
+
     private fun strokedIcon(name: String, path: PathBuilder.() -> Unit): ImageVector =
         ImageVector.Builder(
             name = name,

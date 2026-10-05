@@ -19,7 +19,7 @@ compose-unstyled          behavior, state, keyboard, a11y (zero visuals)
 │  └─ components  Scaffold · TopAppBar · NavBar ·    │
 │                 Button · TextField · SearchBar ·   │
 │                 Switch · Checkbox · TriState ·     │
-│                 Radio · Slider ·                   │
+│                 Radio · Slider · Stepper ·         │
 │                 DropdownMenu · BottomSheet ·       │
 │                 ActionPanel · Progress · Avatar ·  │
 │                 Tooltip · Disclosure · Snackbar ·  │

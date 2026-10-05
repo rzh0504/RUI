@@ -29,6 +29,7 @@ import rui.components.RuiRadioButton
 import rui.components.RuiRadioGroup
 import rui.components.RuiRadioRow
 import rui.components.RuiSlider
+import rui.components.RuiStepper
 import rui.components.RuiSwitch
 import rui.foundation.RuiText
 import rui.sample.ui.ContentColumn
@@ -43,6 +44,7 @@ public fun TogglesScreen(contentPadding: PaddingValues = PaddingValues(0.dp)) {
     var stats by remember { mutableStateOf(false) }
     var volume by remember { mutableStateOf(0.6f) }
     var brightness by remember { mutableStateOf(0.25f) }
+    var guests by rememberSaveable { mutableStateOf(2) }
 
     ContentColumn(contentPadding = contentPadding) {
         SectionLabel("Switch")
@@ -140,6 +142,21 @@ public fun TogglesScreen(contentPadding: PaddingValues = PaddingValues(0.dp)) {
                     }
                 }
             }
+        }
+
+        SectionLabel("Stepper")
+        RuiListGroup {
+            RuiListItem(
+                title = "Guests",
+                subtitle = "Between 1 and 6 — the segments disable at the bounds",
+                trailing = {
+                    RuiStepper(
+                        value = guests,
+                        onValueChange = { guests = it },
+                        range = 1..6,
+                    )
+                },
+            )
         }
 
         SectionLabel("Slider")
