@@ -105,6 +105,16 @@ public fun ComponentsScreen(
             )
         }
 
+        SectionLabel("Gestures")
+        RuiListGroup {
+            RuiListItem(
+                title = "Pull to refresh",
+                subtitle = "Overscroll gesture on a scrollable",
+                showChevron = true,
+                onClick = { onOpen(CatalogPage.PullToRefresh) },
+            )
+        }
+
         SectionLabel("Overlays")
         RuiListGroup {
             RuiListItem(

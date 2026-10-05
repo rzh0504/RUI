@@ -45,6 +45,13 @@ License, Version 2.0.
       marks; iOS UISlider visuals (jump to touch, white thumb with shadow)
       on Rui's token system.
 
+  rui-ui/src/commonMain/kotlin/rui/components/RuiPullToRefresh.kt
+    - Pull-to-refresh nested-scroll coordination and the threshold haptic
+      adapted from miuix's basic/PullToRefresh.kt.
+    - Modified: simplified state machine — no damped-drag physics, no top
+      app bar coordination, no text labels; the indicator reuses
+      RuiCircularProgress instead of a custom orbiting-dot canvas.
+
   rui-ui/src/commonMain/kotlin/rui/components/RuiProgress.kt
     - Indeterminate circular mechanics (rotating arc with keyframed sweep)
       adapted from miuix's basic/ProgressIndicator.kt.

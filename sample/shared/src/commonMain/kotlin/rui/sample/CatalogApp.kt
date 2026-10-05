@@ -34,6 +34,7 @@ import rui.sample.screens.DropdownMenuScreen
 import rui.sample.screens.AvatarScreen
 import rui.sample.screens.DisclosureScreen
 import rui.sample.screens.ProgressScreen
+import rui.sample.screens.PullToRefreshScreen
 import rui.sample.screens.SnackbarScreen
 import rui.sample.screens.TooltipScreen
 import rui.sample.screens.TabsScreen
@@ -57,6 +58,7 @@ public sealed interface CatalogPage : RuiNavKey {
     public data object Tooltip : CatalogPage
     public data object Disclosure : CatalogPage
     public data object Snackbar : CatalogPage
+    public data object PullToRefresh : CatalogPage
 }
 
 private fun CatalogPage.title(): String = when (this) {
@@ -73,6 +75,7 @@ private fun CatalogPage.title(): String = when (this) {
     CatalogPage.Tooltip -> "Tooltip"
     CatalogPage.Disclosure -> "Disclosure"
     CatalogPage.Snackbar -> "Snackbar"
+    CatalogPage.PullToRefresh -> "Pull to refresh"
 }
 
 /**
@@ -199,6 +202,7 @@ public fun CatalogApp() {
                                 hostState = snackbarHostState,
                                 contentPadding = padding,
                             )
+                            CatalogPage.PullToRefresh -> PullToRefreshScreen(contentPadding = padding)
                         }
                     }
                 }
