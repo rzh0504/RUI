@@ -18,7 +18,9 @@ import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.remember
+import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.backhandler.BackHandler
 import androidx.compose.ui.unit.dp
 import com.composeunstyled.DrawerPlacement
 import com.composeunstyled.DrawerPresentation
@@ -80,18 +82,21 @@ public fun rememberRuiDrawerState(
  * `surface` sliding over the screen with a scrim behind it, presented as a
  * modal window so it covers the page's own chrome — bars, tabs, everything.
  * It opens through [RuiDrawerState.open] (a menu button) and closes by
- * panel drag, scrim tap, Back or Escape. The panel content sits inside a
+ * panel drag, scrim tap or Back. The panel content sits inside a
  * safe-drawing-padded column — rows typically close the drawer through
  * [RuiDrawerState.close] after acting.
  *
  * The modal presentation does not support opening by edge swipe; overlays
  * that must open from a swipe stay within their host and cannot cover the
- * chrome around them.
+ * chrome around them. Back handling is wired by Rui (Unstyled's predictive
+ * back registration crashes inside its modal window), so [gesturesEnabled]
+ * covers the drag only.
  *
  * @param state The hoisted drawer state.
  * @param drawerContent The panel's content, arranged in a column.
  * @param content The screen the drawer slides over.
  */
+@OptIn(ExperimentalComposeUiApi::class)
 @Composable
 public fun RuiDrawer(
     state: RuiDrawerState,
@@ -102,6 +107,13 @@ public fun RuiDrawer(
 ) {
     val colors = RuiTheme.colors
     val motion = RuiTheme.motion
+
+    // Back dismissal is wired here instead of Unstyled's predictive back:
+    // its registration reads a composition local that is not resolvable in
+    // the modal window's composition and crashes on open.
+    if (state.currentValue == RuiDrawerValue.Open) {
+        BackHandler(onBack = { state.close() })
+    }
 
     Box(modifier) {
         content()
@@ -115,6 +127,7 @@ public fun RuiDrawer(
             // only within its host.
             presentation = DrawerPresentation.Modal,
             gesturesEnabled = gesturesEnabled,
+            dismissOnNavigateBack = false,
             overlay = {
                 Overlay(
                     modifier = Modifier
