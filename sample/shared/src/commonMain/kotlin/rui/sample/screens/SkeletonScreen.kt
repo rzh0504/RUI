@@ -57,11 +57,13 @@ public fun SkeletonScreen(contentPadding: PaddingValues = PaddingValues(0.dp)) {
                     RuiSwitch(checked = loading, onCheckedChange = { loading = it })
                 },
             )
-            RuiDivider(inset = RuiTheme.spacing.lg)
-            RuiRadioGroup(
-                value = effect,
-                onValueChange = { effect = it },
-            ) {
+        }
+
+        RuiRadioGroup(
+            value = effect,
+            onValueChange = { effect = it },
+        ) {
+            RuiListGroup {
                 RuiRadioRow(
                     value = RuiSkeletonEffect.Pulse,
                     title = "Breathing",
