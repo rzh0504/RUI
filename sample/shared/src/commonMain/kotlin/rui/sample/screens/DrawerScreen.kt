@@ -77,12 +77,12 @@ public fun DrawerScreen(contentPadding: PaddingValues = PaddingValues(0.dp)) {
                             }
                         },
                         title = selected,
-                        subtitle = "Menu button or edge swipe opens the drawer",
+                        subtitle = "The menu button opens the drawer",
                     )
                     RuiDivider(inset = RuiTheme.spacing.lg)
                     RuiListItem(
-                        title = "Panel drag",
-                        subtitle = "Drag the panel back, tap the scrim, or press Back to close",
+                        title = "Closing it",
+                        subtitle = "Drag the panel, tap the scrim, or press Back",
                     )
                 }
             }
