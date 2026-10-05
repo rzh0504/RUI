@@ -9,6 +9,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import rui.components.RuiActionOption
+import rui.components.RuiActionPanel
 import rui.components.RuiBottomSheet
 import rui.components.RuiListGroup
 import rui.components.RuiListItem
@@ -25,6 +27,7 @@ public fun BottomSheetScreen(
 ) {
     var standardSheet by remember { mutableStateOf(false) }
     var frostedSheet by remember { mutableStateOf(false) }
+    var actionPanel by remember { mutableStateOf(false) }
 
     ContentColumn(contentPadding = contentPadding) {
         RuiText(
@@ -49,7 +52,30 @@ public fun BottomSheetScreen(
                 onClick = { frostedSheet = true },
             )
         }
+
+        SectionLabel("Action panel")
+        RuiListGroup {
+            RuiListItem(
+                title = "Open action panel",
+                subtitle = "Options, destructive action, explicit cancel",
+                showChevron = true,
+                onClick = { actionPanel = true },
+            )
+        }
     }
+
+    RuiActionPanel(
+        visible = actionPanel,
+        onDismiss = { actionPanel = false },
+        title = "Move to trash?",
+        message = "The draft will be removed from every device signed in.",
+        actions = listOf(
+            RuiActionOption(label = "Archive") { },
+            RuiActionOption(label = "Move to trash", danger = true) { },
+        ),
+        cancelLabel = "Cancel",
+        backdrop = backdrop,
+    )
 
     RuiBottomSheet(
         visible = standardSheet,

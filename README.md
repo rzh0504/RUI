@@ -20,9 +20,9 @@ compose-unstyled          behavior, state, keyboard, a11y (zero visuals)
 │                 Button · TextField · Switch ·      │
 │                 Checkbox · Radio · Slider ·        │
 │                 DropdownMenu · BottomSheet ·       │
-│                 Progress · Avatar · Tooltip ·      │
-│                 Disclosure · Snackbar · Dialog ·   │
-│                 Tabs · List                        │
+│                 ActionPanel · Progress · Avatar ·  │
+│                 Tooltip · Disclosure · Snackbar ·  │
+│                 Dialog · Tabs · List               │
 └───────┬────────────────────────────────────────────┘
         │
   sample/          catalog app: shared UI + androidApp + iosApp
