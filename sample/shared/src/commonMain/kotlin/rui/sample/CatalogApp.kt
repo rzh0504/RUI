@@ -33,6 +33,7 @@ import rui.sample.screens.DialogScreen
 import rui.sample.screens.DropdownMenuScreen
 import rui.sample.screens.DrawerScreen
 import rui.sample.screens.AvatarScreen
+import rui.sample.screens.ImageScreen
 import rui.sample.screens.DisclosureScreen
 import rui.sample.screens.ProgressScreen
 import rui.sample.screens.PullToRefreshScreen
@@ -65,6 +66,7 @@ public sealed interface CatalogPage : RuiNavKey {
     public data object BottomSheet : CatalogPage
     public data object Progress : CatalogPage
     public data object Avatar : CatalogPage
+    public data object AsyncImage : CatalogPage
     public data object Tooltip : CatalogPage
     public data object Disclosure : CatalogPage
     public data object Snackbar : CatalogPage
@@ -92,6 +94,7 @@ private fun CatalogPage.title(): String = when (this) {
     CatalogPage.BottomSheet -> "Bottom sheet"
     CatalogPage.Progress -> "Progress"
     CatalogPage.Avatar -> "Avatar"
+    CatalogPage.AsyncImage -> "Async image"
     CatalogPage.Tooltip -> "Tooltip"
     CatalogPage.Disclosure -> "Disclosure"
     CatalogPage.Snackbar -> "Snackbar"
@@ -227,6 +230,7 @@ public fun CatalogApp() {
                             )
                             CatalogPage.Progress -> ProgressScreen(contentPadding = padding)
                             CatalogPage.Avatar -> AvatarScreen(contentPadding = padding)
+                            CatalogPage.AsyncImage -> ImageScreen(contentPadding = padding)
                             CatalogPage.Tooltip -> TooltipScreen(contentPadding = padding)
                             CatalogPage.Disclosure -> DisclosureScreen(contentPadding = padding)
                             CatalogPage.Snackbar -> SnackbarScreen(

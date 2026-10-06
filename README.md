@@ -27,7 +27,7 @@ compose-unstyled          behavior, state, keyboard, a11y (zero visuals)
 │                 WheelPicker · Date/TimePicker ·    │
 │                 Skeleton · EmptyState · Dialog ·   │
 │                 Drawer · Tabs · PageIndicator ·    │
-│                 List                               │
+│                 List · AsyncImage                  │
 └───────┬────────────────────────────────────────────┘
         │
   sample/          catalog app: shared UI + androidApp + iosApp
@@ -35,7 +35,7 @@ compose-unstyled          behavior, state, keyboard, a11y (zero visuals)
 
 Rules that keep it neutral and extensible:
 
-- `rui-ui` depends only on Compose (ui/foundation/runtime) + Compose Unstyled — **no `material3`, ever**.
+- `rui-ui` depends only on Compose (ui/foundation/runtime), Compose Unstyled and Coil (image loading) — **no `material3`, ever**.
 - Components are slot-based and hoist state; every visual slot can be overridden by the caller.
 - `expect/actual` is limited to a tiny capability surface (`isBlurSupported`), so adding a target later touches only build files.
 

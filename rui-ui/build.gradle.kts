@@ -26,6 +26,14 @@ kotlin {
             api(libs.composeunstyled)
             implementation(libs.compose.ui.backhandler)
             implementation(libs.composeunstyled.colored.indication)
+            implementation(libs.coil.compose)
+            implementation(libs.coil.network.ktor3)
+        }
+        androidMain.dependencies {
+            implementation(libs.ktor.client.okhttp)
+        }
+        iosMain.dependencies {
+            implementation(libs.ktor.client.darwin)
         }
         commonTest.dependencies {
             implementation(kotlin("test"))

@@ -111,6 +111,13 @@ public fun ComponentsScreen(
                 showChevron = true,
                 onClick = { onOpen(CatalogPage.Avatar) },
             )
+            RuiDivider(inset = RuiTheme.spacing.lg)
+            RuiListItem(
+                title = "Async image",
+                subtitle = "Network loading with skeleton and error slots",
+                showChevron = true,
+                onClick = { onOpen(CatalogPage.AsyncImage) },
+            )
         }
 
         SectionLabel("Indicators")
