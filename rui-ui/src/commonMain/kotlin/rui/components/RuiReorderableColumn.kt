@@ -25,6 +25,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.geometry.CornerRadius
+import androidx.compose.ui.graphics.Outline
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.hapticfeedback.HapticFeedback
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
@@ -158,9 +161,9 @@ public fun <T : Any> RuiReorderableColumn(
                     val dt = ((now - previous) / 1_000_000_000f).coerceIn(0f, 0.1f)
                     previous = now
 
+                    val center = state.draggedCenter() ?: continue
                     val top = maxOf(state.containerTopInWindow, 0f)
                     val bottom = minOf(state.containerBottomInWindow, state.windowHeight)
-                    val center = state.draggedCenterInWindow
                     val overshoot = when {
                         center < top + edge -> center - (top + edge)
                         center > bottom - edge -> center - (bottom - edge)
@@ -263,6 +266,7 @@ private fun ReorderItem(
 ) {
     val displacement = remember { Animatable(0f) }
     val liftShape = RuiTheme.shapes.md
+    val liftColor = RuiTheme.colors.surface
 
     // When the item's slot changes under a live move, its home jumps by the
     // recorded shift; re-base the visual offset from the animated value and
@@ -296,11 +300,25 @@ private fun ReorderItem(
                     shadowElevation = lift * LiftShadow.toPx()
                 }
             }
-            .onGloballyPositioned { coords ->
-                if (dragging) {
-                    state.draggedCenterInWindow =
-                        coords.positionInWindow().y + coords.size.height / 2f
+            // The row is transparent at rest; lifted, it becomes an opaque
+            // card — without a fill, the shadow above bleeds through and
+            // reads as a grey slab. The shape may be a squircle, so draw its
+            // outline as a path rather than assuming rounded corners.
+            .drawBehind {
+                if (lift > 0f) {
+                    when (val outline = liftShape.createOutline(size, layoutDirection, this)) {
+                        is Outline.Rounded -> drawRoundRect(
+                            color = liftColor,
+                            cornerRadius = CornerRadius(outline.roundRect.topLeftCornerRadius.x),
+                            alpha = lift,
+                        )
+                        is Outline.Generic -> drawPath(outline.path, liftColor, alpha = lift)
+                        is Outline.Rectangle -> drawRect(liftColor, alpha = lift)
+                    }
                 }
+            }
+            .onGloballyPositioned { coords ->
+                state.reportCenter(key, coords.positionInWindow().y + coords.size.height / 2f)
             },
     ) {
         content()
@@ -335,7 +353,8 @@ private class ReorderState(
     var dragOffset by mutableFloatStateOf(0f)
         private set
 
-    var draggedCenterInWindow by mutableFloatStateOf(0f)
+    /** Latest window-space vertical center per item, reported on layout. */
+    private val centersByItem = mutableMapOf<Any, Float>()
 
     var containerTopInWindow by mutableFloatStateOf(0f)
     var containerBottomInWindow by mutableFloatStateOf(0f)
@@ -348,12 +367,23 @@ private class ReorderState(
 
     fun syncOrder(newKeys: List<Any>) {
         // During a drag the mirror is advanced by move(); only sync at rest.
-        if (!isDragging) keys = newKeys
+        if (!isDragging) {
+            keys = newKeys
+            centersByItem.keys.retainAll(newKeys.toSet())
+        }
     }
 
     fun reportHeight(key: Any, height: Int) {
         heightsByItem[key] = height
     }
+
+    fun reportCenter(key: Any, centerInWindow: Float) {
+        centersByItem[key] = centerInWindow
+    }
+
+    /** Window-space vertical center of the dragged item, or null before its
+     *  first layout — always a real measurement, never a stale one. */
+    fun draggedCenter(): Float? = draggedKey?.let { centersByItem[it] }
 
     fun takeHomeShift(key: Any): Float = homeShifts.remove(key) ?: 0f
 
