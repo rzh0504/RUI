@@ -2,8 +2,6 @@ package rui.components
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.Animatable
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.gestures.detectHorizontalDragGestures
@@ -24,6 +22,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
 import rui.foundation.RuiSurface
@@ -128,7 +127,9 @@ public fun rememberRuiSnackbarHostState(): RuiSnackbarHostState = remember { Rui
  * Renders the current snackbar of [hostState] at the bottom of its container —
  * place the host through [RuiScaffold]'s `snackbarHost` slot so it sits above
  * the bottom bar. Android's interaction model (queued, timed, swipe-to-
- * dismiss, optional action) with Rui's floating card visual.
+ * dismiss, optional action) with Rui's floating card visual. The leaving
+ * snackbar stays composed through the exit slide (its show call has already
+ * resumed), so timeouts animate out instead of vanishing.
  */
 @Composable
 public fun RuiSnackbarHost(
@@ -137,6 +138,11 @@ public fun RuiSnackbarHost(
 ) {
     val current = hostState.currentSnackbarData
     val spacing = RuiTheme.spacing
+
+    var leaving by remember { mutableStateOf<RuiSnackbarData?>(null) }
+    if (current != null) {
+        leaving = current
+    }
 
     LaunchedEffect(current) {
         if (current != null) {
@@ -158,11 +164,13 @@ public fun RuiSnackbarHost(
     ) {
         AnimatedVisibility(
             visible = current != null,
-            enter = slideInVertically(initialOffsetY = { it }) + fadeIn(RuiTheme.motion.fast),
-            exit = slideOutVertically(targetOffsetY = { it }) + fadeOut(RuiTheme.motion.fast),
+            enter = slideInVertically(initialOffsetY = { it }),
+            // Two heights down, so the card fully clears the bottom inset it
+            // is docked above — one height can leave it on screen at removal.
+            exit = slideOutVertically(targetOffsetY = { it * 2 }),
         ) {
-            key(current) {
-                current?.let { data ->
+            key(leaving) {
+                leaving?.let { data ->
                     RuiSnackbar(data = data)
                 }
             }
@@ -172,7 +180,12 @@ public fun RuiSnackbarHost(
 
 /**
  * The snackbar card: message, optional action button, swipe horizontally to
- * dismiss. Shown by [RuiSnackbarHost]; don't compose it directly.
+ * dismiss — the card follows the finger and is thrown out the side it was
+ * dragged toward on release. The card slides only and never fades: any alpha
+ * below 1 makes HWUI composite the layer offscreen, which crops the elevation
+ * shadow to the layer's bounding rectangle — a square-cornered shadow card
+ * peeks out behind the rounded corners while swiping. Shown by
+ * [RuiSnackbarHost]; don't compose it directly.
  */
 @Composable
 public fun RuiSnackbar(
@@ -182,16 +195,18 @@ public fun RuiSnackbar(
     val colors = RuiTheme.colors
     val spacing = RuiTheme.spacing
     val density = LocalDensity.current
+    val motion = RuiTheme.motion
     val scope = rememberCoroutineScope()
     val offsetX = remember { Animatable(0f) }
     val swipeThresholdPx = with(density) { 120.dp.toPx() }
+    var cardWidthPx by remember { mutableStateOf(0) }
 
     RuiSurface(
         modifier = modifier
             .fillMaxWidth()
+            .onSizeChanged { cardWidthPx = it.width }
             .graphicsLayer {
                 translationX = offsetX.value
-                alpha = 1f - (abs(offsetX.value) / swipeThresholdPx).coerceIn(0f, 0.8f)
             }
             .pointerInput(data) {
                 detectHorizontalDragGestures(
@@ -201,15 +216,21 @@ public fun RuiSnackbar(
                     },
                     onDragEnd = {
                         scope.launch {
-                            if (abs(offsetX.value) > swipeThresholdPx) {
+                            val traveled = offsetX.value
+                            if (abs(traveled) > swipeThresholdPx) {
+                                offsetX.animateTo(
+                                    targetValue = (if (traveled > 0f) 1f else -1f) *
+                                        (cardWidthPx + swipeThresholdPx),
+                                    animationSpec = motion.tracking,
+                                )
                                 data.dismiss()
                             } else {
-                                offsetX.animateTo(0f)
+                                offsetX.animateTo(0f, motion.settle)
                             }
                         }
                     },
                     onDragCancel = {
-                        scope.launch { offsetX.animateTo(0f) }
+                        scope.launch { offsetX.animateTo(0f, motion.settle) }
                     },
                 )
             },
