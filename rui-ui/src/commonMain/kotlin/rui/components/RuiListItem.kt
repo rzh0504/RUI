@@ -24,8 +24,9 @@ import rui.theme.RuiTheme
 
 /**
  * A row of an inset grouped list: optional leading view (icon, avatar), title
- * (and optional subtitle), trailing control, optional chevron. Rows with
- * [onClick] get the state layer and are pressed as one.
+ * (and optional subtitle), the row's current value, trailing control,
+ * optional chevron. Rows with [onClick] get the state layer and are pressed
+ * as one.
  */
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
@@ -33,6 +34,7 @@ public fun RuiListItem(
     title: String,
     modifier: Modifier = Modifier,
     subtitle: String? = null,
+    value: String? = null,
     leading: (@Composable RowScope.() -> Unit)? = null,
     showChevron: Boolean = false,
     onClick: (() -> Unit)? = null,
@@ -71,6 +73,13 @@ public fun RuiListItem(
                     color = colors.contentMuted,
                 )
             }
+        }
+        if (value != null) {
+            RuiText(
+                text = value,
+                style = RuiTheme.typography.bodyMd,
+                color = colors.contentMuted,
+            )
         }
         trailing?.invoke(this)
         if (showChevron) {
