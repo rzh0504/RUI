@@ -25,7 +25,7 @@ public fun daysInMonth(year: Int, month: Int): Int = when (month) {
     else -> 31
 }
 
-private val DefaultMonthNames = listOf(
+internal val DefaultMonthNames = listOf(
     "January", "February", "March", "April", "May", "June",
     "July", "August", "September", "October", "November", "December",
 )

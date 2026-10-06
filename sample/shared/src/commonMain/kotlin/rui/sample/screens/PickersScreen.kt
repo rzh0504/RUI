@@ -10,6 +10,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import rui.components.RuiCalendarPicker
 import rui.components.RuiDatePicker
 import rui.components.RuiDate
 import rui.components.RuiDivider
@@ -33,6 +34,7 @@ public fun PickersScreen(contentPadding: PaddingValues = PaddingValues(0.dp)) {
     var time12 by remember { mutableStateOf(RuiTimeOfDay(9, 41)) }
     var time24 by remember { mutableStateOf(RuiTimeOfDay(21, 7)) }
     var date by remember { mutableStateOf(RuiDate(2026, 10, 6)) }
+    var calendarDate by remember { mutableStateOf<RuiDate?>(RuiDate(2026, 10, 6)) }
 
     ContentColumn(contentPadding = contentPadding) {
         RuiText(
@@ -92,6 +94,33 @@ public fun PickersScreen(contentPadding: PaddingValues = PaddingValues(0.dp)) {
             RuiListItem(
                 title = "Selected date",
                 subtitle = "${MonthNames[date.month - 1]} ${date.day}, ${date.year}",
+            )
+        }
+
+        SectionLabel("Calendar")
+        RuiText(
+            text = "The month grid for scanning rather than spinning. Weeks " +
+                "start on Monday; edge days belong to the neighboring months " +
+                "and are still tappable.",
+            style = RuiTheme.typography.bodySm,
+            color = RuiTheme.colors.contentMuted,
+            modifier = Modifier.fillMaxWidth(),
+        )
+        RuiSurface {
+            RuiCalendarPicker(
+                value = calendarDate,
+                onValueChange = { calendarDate = it },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = RuiTheme.spacing.xs),
+            )
+        }
+        RuiListGroup {
+            RuiListItem(
+                title = "Calendar selection",
+                subtitle = calendarDate?.let {
+                    "${MonthNames[it.month - 1]} ${it.day}, ${it.year}"
+                } ?: "None",
             )
         }
     }
