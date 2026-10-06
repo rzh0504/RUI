@@ -87,6 +87,13 @@ public fun ComponentsScreen(
                 showChevron = true,
                 onClick = { onOpen(CatalogPage.Disclosure) },
             )
+            RuiDivider(inset = RuiTheme.spacing.lg)
+            RuiListItem(
+                title = "Lists",
+                subtitle = "Sections framing grouped rows",
+                showChevron = true,
+                onClick = { onOpen(CatalogPage.Lists) },
+            )
         }
 
         SectionLabel("Identity")
