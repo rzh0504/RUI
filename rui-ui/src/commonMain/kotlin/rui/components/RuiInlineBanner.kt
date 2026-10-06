@@ -137,6 +137,7 @@ public fun RuiInlineBanner(
 @Composable
 private fun DismissButton(onClick: () -> Unit) {
     val interactionSource = remember { MutableInteractionSource() }
+    val dismissLabel = RuiTheme.strings.dismiss
     Box(
         modifier = Modifier
             .size(RuiTheme.dimens.iconSize)
@@ -144,7 +145,7 @@ private fun DismissButton(onClick: () -> Unit) {
             .clickable(
                 interactionSource = interactionSource,
                 indication = rememberRuiIndication(),
-                onClickLabel = "Dismiss",
+                onClickLabel = dismissLabel,
                 role = Role.Button,
                 onClick = onClick,
             ),
@@ -152,7 +153,7 @@ private fun DismissButton(onClick: () -> Unit) {
     ) {
         RuiIcon(
             imageVector = RuiIcons.Close,
-            contentDescription = "Dismiss",
+            contentDescription = dismissLabel,
         )
     }
 }

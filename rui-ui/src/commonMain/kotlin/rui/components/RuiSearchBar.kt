@@ -101,6 +101,7 @@ public fun RuiSearchBar(
 @Composable
 private fun ClearButton(onClick: () -> Unit) {
     val interactionSource = remember { MutableInteractionSource() }
+    val clearLabel = RuiTheme.strings.clear
     Box(
         modifier = Modifier
             .size(RuiTheme.dimens.iconSize)
@@ -108,7 +109,7 @@ private fun ClearButton(onClick: () -> Unit) {
             .clickable(
                 interactionSource = interactionSource,
                 indication = rememberRuiIndication(),
-                onClickLabel = "Clear",
+                onClickLabel = clearLabel,
                 role = Role.Button,
                 onClick = onClick,
             ),
@@ -116,7 +117,7 @@ private fun ClearButton(onClick: () -> Unit) {
     ) {
         RuiIcon(
             imageVector = RuiIcons.Close,
-            contentDescription = "Clear",
+            contentDescription = clearLabel,
             tint = RuiTheme.colors.contentMuted,
         )
     }

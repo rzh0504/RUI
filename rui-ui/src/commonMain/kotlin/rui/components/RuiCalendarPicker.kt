@@ -28,8 +28,6 @@ import rui.foundation.RuiText
 import rui.foundation.rememberRuiIndication
 import rui.theme.RuiTheme
 
-private val DefaultWeekdayNames = listOf("Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun")
-
 /** One rendered day of the six-week grid; adjacent-month days fill the edges. */
 internal data class DayCell(val date: RuiDate, val inMonth: Boolean)
 
@@ -46,9 +44,11 @@ internal data class DayCell(val date: RuiDate, val inMonth: Boolean)
  * @param value The selected date; `null` shows no selection. Picking a day
  *   reports through [onValueChange]; the view follows external value changes.
  * @param today The real current date, or `null` for no marker.
- * @param monthNames Twelve month labels for the header, localizable by the
- *   caller (shared with [RuiDatePicker]).
- * @param weekdayNames Seven weekday labels, Monday first.
+ * @param monthNames Twelve month labels for the header. Defaults to
+ *   [RuiTheme.strings]'s month names and header format; passing this
+ *   explicitly composes the header as `"<name> <year>"` from the given names.
+ * @param weekdayNames Seven weekday labels, Monday first, overriding
+ *   [RuiTheme.strings]'s `weekdayNames`.
  * @param yearRange Months outside the range are unreachable — the chevrons
  *   disable at the bounds, the caller never clamps.
  */
@@ -59,14 +59,17 @@ public fun RuiCalendarPicker(
     modifier: Modifier = Modifier,
     today: RuiDate? = null,
     yearRange: IntRange = 1900..2100,
-    monthNames: List<String> = DefaultMonthNames,
-    weekdayNames: List<String> = DefaultWeekdayNames,
+    monthNames: List<String>? = null,
+    weekdayNames: List<String>? = null,
 ) {
     val colors = RuiTheme.colors
     val spacing = RuiTheme.spacing
+    val strings = RuiTheme.strings
 
-    check(monthNames.size == 12) { "monthNames must have 12 entries, was ${monthNames.size}" }
-    check(weekdayNames.size == 7) { "weekdayNames must have 7 entries (Monday first), was ${weekdayNames.size}" }
+    val names = monthNames ?: strings.monthNames
+    val weekdays = weekdayNames ?: strings.weekdayNames
+    check(names.size == 12) { "monthNames must have 12 entries, was ${names.size}" }
+    check(weekdays.size == 7) { "weekdayNames must have 7 entries (Monday first), was ${weekdays.size}" }
     check(!yearRange.isEmpty()) { "yearRange must not be empty" }
 
     val anchor = value ?: today ?: RuiDate(yearRange.first, 1, 1)
@@ -95,14 +98,18 @@ public fun RuiCalendarPicker(
                 variant = RuiButtonVariant.Plain,
                 size = RuiButtonSize.Sm,
             ) {
-                RuiIcon(imageVector = RuiIcons.ChevronLeft, contentDescription = "Previous month")
+                RuiIcon(imageVector = RuiIcons.ChevronLeft, contentDescription = strings.previousMonth)
             }
             Box(
                 modifier = Modifier.weight(1f),
                 contentAlignment = Alignment.Center,
             ) {
                 RuiText(
-                    text = "${monthNames[cursor.month - 1]} ${cursor.year}",
+                    text = if (monthNames == null) {
+                        strings.monthHeader(cursor.year, cursor.month)
+                    } else {
+                        "${names[cursor.month - 1]} ${cursor.year}"
+                    },
                     style = RuiTheme.typography.titleMd,
                     color = colors.content,
                 )
@@ -113,7 +120,7 @@ public fun RuiCalendarPicker(
                 variant = RuiButtonVariant.Plain,
                 size = RuiButtonSize.Sm,
             ) {
-                RuiIcon(imageVector = RuiIcons.ChevronRight, contentDescription = "Next month")
+                RuiIcon(imageVector = RuiIcons.ChevronRight, contentDescription = strings.nextMonth)
             }
         }
 
@@ -122,7 +129,7 @@ public fun RuiCalendarPicker(
                 .fillMaxWidth()
                 .padding(top = spacing.sm, bottom = spacing.xs),
         ) {
-            weekdayNames.forEach { label ->
+            weekdays.forEach { label ->
                 Box(modifier = Modifier.weight(1f), contentAlignment = Alignment.Center) {
                     RuiText(
                         text = label,

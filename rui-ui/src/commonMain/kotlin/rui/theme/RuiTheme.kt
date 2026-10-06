@@ -30,6 +30,7 @@ public object RuiTheme {
         colorScheme: RuiColorScheme = if (darkTheme) RuiColorScheme.dark() else RuiColorScheme.light(),
         typography: RuiTypography = ruiTypography(),
         shapes: RuiShapes = ruiShapes(),
+        strings: RuiStrings = RuiStringsDefaults.English,
         content: @Composable () -> Unit,
     ) {
         val unstyledTheme = buildThemeV2 {
@@ -54,6 +55,7 @@ public object RuiTheme {
             LocalRuiColorScheme provides colorScheme,
             LocalRuiTypography provides typography,
             LocalRuiShapes provides shapes,
+            LocalRuiStrings provides strings,
             LocalRuiSpacing provides RuiSpacing(),
             LocalRuiDimens provides RuiDimens(),
             LocalRuiMotion provides RuiMotion(),
@@ -70,6 +72,9 @@ public object RuiTheme {
 
     public val shapes: RuiShapes
         @Composable get() = LocalRuiShapes.current
+
+    public val strings: RuiStrings
+        @Composable get() = LocalRuiStrings.current
 
     public val spacing: RuiSpacing
         @Composable get() = LocalRuiSpacing.current

@@ -50,6 +50,7 @@ import rui.sample.screens.TokensScreen
 import rui.sample.screens.TogglesScreen
 import rui.sample.screens.ListsScreen
 import rui.sample.screens.BannerScreen
+import rui.sample.screens.LocalizationScreen
 import rui.theme.RuiTheme
 
 /** The catalog's routes. */
@@ -77,6 +78,7 @@ public sealed interface CatalogPage : RuiNavKey {
     public data object Drawer : CatalogPage
     public data object Lists : CatalogPage
     public data object InlineBanner : CatalogPage
+    public data object Localization : CatalogPage
 }
 
 private fun CatalogPage.title(): String = when (this) {
@@ -103,6 +105,7 @@ private fun CatalogPage.title(): String = when (this) {
     CatalogPage.Drawer -> "Drawer"
     CatalogPage.Lists -> "Lists"
     CatalogPage.InlineBanner -> "Inline banner"
+    CatalogPage.Localization -> "Localization"
 }
 
 /**
@@ -117,6 +120,7 @@ public fun CatalogApp() {
     val systemDark = isSystemInDarkTheme()
     var darkTheme by remember { mutableStateOf(systemDark) }
     var frostedEnabled by remember { mutableStateOf(true) }
+    var languageChoice by remember { mutableStateOf(LanguageChoice.System) }
     var tab by remember { mutableStateOf(0) }
     val backStack = rememberRuiNavBackStack<CatalogPage>(CatalogPage.Root)
     val nav = remember { RuiNavController(backStack) }
@@ -125,7 +129,7 @@ public fun CatalogApp() {
     // lifetime.
     val snackbarHostState = rui.components.rememberRuiSnackbarHostState()
 
-    RuiTheme(darkTheme = darkTheme) {
+    RuiTheme(darkTheme = darkTheme, strings = languageChoice.resolveStrings()) {
         // In-app theme toggle: push the appearance to the system bars in the
         // same frame, so icons stay visible over the switched background.
         StatusBarAppearance(darkIcons = !darkTheme)
@@ -239,6 +243,11 @@ public fun CatalogApp() {
                             CatalogPage.Drawer -> DrawerScreen(contentPadding = padding)
                             CatalogPage.Lists -> ListsScreen(contentPadding = padding)
                             CatalogPage.InlineBanner -> BannerScreen(contentPadding = padding)
+                            CatalogPage.Localization -> LocalizationScreen(
+                                languageChoice = languageChoice,
+                                onLanguageChoiceChange = { languageChoice = it },
+                                contentPadding = padding,
+                            )
                         }
                     }
                 }

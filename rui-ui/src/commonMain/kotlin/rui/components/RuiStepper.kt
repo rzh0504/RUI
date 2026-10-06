@@ -57,6 +57,7 @@ public fun RuiStepper(
     val colors = RuiTheme.colors
     val dimens = RuiTheme.dimens
     val typography = RuiTheme.typography
+    val strings = RuiTheme.strings
 
     Row(
         modifier = modifier
@@ -67,7 +68,7 @@ public fun RuiStepper(
         StepperSegment(
             icon = RuiIcons.Minus,
             enabled = enabled && value > range.first,
-            onClickLabel = "Decrease",
+            onClickLabel = strings.decrease,
             onClick = { onValueChange((value - 1).coerceIn(range)) },
             modifier = Modifier
                 .width(StepperSegmentWidth)
@@ -97,7 +98,7 @@ public fun RuiStepper(
         StepperSegment(
             icon = RuiIcons.Plus,
             enabled = enabled && value < range.last,
-            onClickLabel = "Increase",
+            onClickLabel = strings.increase,
             onClick = { onValueChange((value + 1).coerceIn(range)) },
             modifier = Modifier
                 .width(StepperSegmentWidth)

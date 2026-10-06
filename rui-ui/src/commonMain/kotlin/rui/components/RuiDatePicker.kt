@@ -25,21 +25,17 @@ public fun daysInMonth(year: Int, month: Int): Int = when (month) {
     else -> 31
 }
 
-internal val DefaultMonthNames = listOf(
-    "January", "February", "March", "April", "May", "June",
-    "July", "August", "September", "October", "November", "December",
-)
-
 private fun clampToMonth(date: RuiDate): RuiDate =
     date.copy(day = date.day.coerceIn(1, daysInMonth(date.year, date.month)))
 
 /**
  * A date picker on month, day and year wheels (fixed month-day-year column
- * order; not localized). Changing the month or year clamps the day to the
- * new month — February 30 becomes February 28 — and the day wheel animates
- * to the clamped value.
+ * order; month labels follow [RuiTheme.strings]). Changing the month or year
+ * clamps the day to the new month — February 30 becomes February 28 — and
+ * the day wheel animates to the clamped value.
  *
- * @param monthNames Twelve month labels, localizable by the caller.
+ * @param monthNames Twelve month labels, overriding
+ *   [RuiTheme.strings]'s `monthNames`.
  * @param yearRange Years offered by the year wheel, ascending.
  */
 @Composable
@@ -48,12 +44,13 @@ public fun RuiDatePicker(
     onValueChange: (RuiDate) -> Unit,
     modifier: Modifier = Modifier,
     yearRange: IntRange = 1900..2100,
-    monthNames: List<String> = DefaultMonthNames,
+    monthNames: List<String>? = null,
 ) {
     val typography = RuiTheme.typography
     val spacing = RuiTheme.spacing
 
-    check(monthNames.size == 12) { "monthNames must have 12 entries, was ${monthNames.size}" }
+    val names = monthNames ?: RuiTheme.strings.monthNames
+    check(names.size == 12) { "monthNames must have 12 entries, was ${names.size}" }
     check(!yearRange.isEmpty()) { "yearRange must not be empty" }
 
     val date = clampToMonth(value)
@@ -65,7 +62,7 @@ public fun RuiDatePicker(
         verticalAlignment = Alignment.CenterVertically,
     ) {
         RuiWheelPicker(
-            items = monthNames,
+            items = names,
             selectedIndex = date.month - 1,
             onSelectedIndexChange = { index ->
                 onValueChange(clampToMonth(date.copy(month = index + 1)))

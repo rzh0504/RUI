@@ -28,3 +28,6 @@ DerivedData/
 # OS
 .DS_Store
 Thumbs.db
+
+# ZCode session artifacts
+.zcode/

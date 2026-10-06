@@ -91,6 +91,7 @@ public fun RuiTopAppBar(
     scrollBehavior: RuiScrollBehavior? = null,
 ) {
     val colors = RuiTheme.colors
+    val backLabel = RuiTheme.strings.back
 
     val barBackground = if (backdrop != null && isBlurSupported) {
         Modifier.blurSurface(
@@ -126,7 +127,7 @@ public fun RuiTopAppBar(
                             variant = RuiButtonVariant.Plain,
                             modifier = Modifier.padding(end = RuiTheme.spacing.xs),
                         ) {
-                            RuiIcon(imageVector = RuiIcons.ChevronLeft, contentDescription = "Back")
+                            RuiIcon(imageVector = RuiIcons.ChevronLeft, contentDescription = backLabel)
                         }
                     }
                     RuiText(
@@ -149,7 +150,7 @@ public fun RuiTopAppBar(
                     ) {
                         if (showBack) {
                             RuiIconButton(onClick = onBack, variant = RuiButtonVariant.Plain) {
-                                RuiIcon(imageVector = RuiIcons.ChevronLeft, contentDescription = "Back")
+                                RuiIcon(imageVector = RuiIcons.ChevronLeft, contentDescription = backLabel)
                             }
                         }
                         Spacer(Modifier.weight(1f))
@@ -390,6 +391,7 @@ private fun CollapsingTopAppBarLayout(
 ) {
     val typography = RuiTheme.typography
     val spacing = RuiTheme.spacing
+    val backLabel = RuiTheme.strings.back
 
     val scrolledOffset = remember(scrollBehavior) {
         { scrollBehavior?.state?.heightOffset ?: 0f }
@@ -449,7 +451,7 @@ private fun CollapsingTopAppBarLayout(
             ) {
                 if (showBack) {
                     RuiIconButton(onClick = onBack, variant = RuiButtonVariant.Plain) {
-                        RuiIcon(imageVector = RuiIcons.ChevronLeft, contentDescription = "Back")
+                        RuiIcon(imageVector = RuiIcons.ChevronLeft, contentDescription = backLabel)
                     }
                 }
             }

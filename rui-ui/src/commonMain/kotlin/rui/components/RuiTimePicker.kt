@@ -19,15 +19,14 @@ public data class RuiTimeOfDay(
     }
 }
 
-private val DefaultPeriodLabels = listOf("AM", "PM")
-
 /**
  * A time picker on two (24-hour) or three (12-hour) wheels. The value is
  * canonical [RuiTimeOfDay] — the 12-hour presentation maps to and from it,
  * so callers never handle AM/PM bookkeeping.
  *
  * @param is24Hour Renders a 0–23 hour wheel instead of 1–12 plus a period wheel.
- * @param periodLabels Labels of the period wheel in 12-hour mode.
+ * @param periodLabels Labels of the period wheel in 12-hour mode, overriding
+ *   [RuiTheme.strings]'s `periodLabels`.
  */
 @Composable
 public fun RuiTimePicker(
@@ -35,10 +34,12 @@ public fun RuiTimePicker(
     onValueChange: (RuiTimeOfDay) -> Unit,
     modifier: Modifier = Modifier,
     is24Hour: Boolean = true,
-    periodLabels: List<String> = DefaultPeriodLabels,
+    periodLabels: List<String>? = null,
 ) {
     val typography = RuiTheme.typography
     val spacing = RuiTheme.spacing
+
+    val labels = periodLabels ?: RuiTheme.strings.periodLabels
 
     val hourItems = if (is24Hour) (0..23).toList() else (1..12).toList()
     val minuteItems = (0..59).toList()
@@ -84,7 +85,7 @@ public fun RuiTimePicker(
         }
         if (!is24Hour) {
             RuiWheelPicker(
-                items = periodLabels,
+                items = labels,
                 selectedIndex = if (isPm) 1 else 0,
                 onSelectedIndexChange = { index ->
                     val hour = (value.hour % 12) + if (index == 1) 12 else 0

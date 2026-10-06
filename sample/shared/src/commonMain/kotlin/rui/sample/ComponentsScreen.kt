@@ -35,6 +35,13 @@ public fun ComponentsScreen(
                 title = "Frosted material",
                 trailing = { RuiSwitch(checked = frostedEnabled, onCheckedChange = onFrostedEnabledChange) },
             )
+            RuiDivider(inset = RuiTheme.spacing.lg)
+            RuiListItem(
+                title = "Localization",
+                subtitle = "Built-in strings in English and Chinese",
+                showChevron = true,
+                onClick = { onOpen(CatalogPage.Localization) },
+            )
         }
 
         SectionLabel("Controls")
