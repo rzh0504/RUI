@@ -183,6 +183,13 @@ public fun ComponentsScreen(
                 showChevron = true,
                 onClick = { onOpen(CatalogPage.SwipeActions) },
             )
+            RuiDivider(inset = RuiTheme.spacing.lg)
+            RuiListItem(
+                title = "Reorder",
+                subtitle = "Drag rows into a new order, live",
+                showChevron = true,
+                onClick = { onOpen(CatalogPage.Reorder) },
+            )
         }
 
         SectionLabel("Overlays")

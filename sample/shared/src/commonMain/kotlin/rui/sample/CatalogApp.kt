@@ -52,6 +52,7 @@ import rui.sample.screens.TogglesScreen
 import rui.sample.screens.ListsScreen
 import rui.sample.screens.BannerScreen
 import rui.sample.screens.LocalizationScreen
+import rui.sample.screens.ReorderScreen
 import rui.theme.RuiTheme
 
 /** The catalog's routes. */
@@ -81,6 +82,7 @@ public sealed interface CatalogPage : RuiNavKey {
     public data object Lists : CatalogPage
     public data object InlineBanner : CatalogPage
     public data object Localization : CatalogPage
+    public data object Reorder : CatalogPage
 }
 
 private fun CatalogPage.title(): String = when (this) {
@@ -109,6 +111,7 @@ private fun CatalogPage.title(): String = when (this) {
     CatalogPage.Lists -> "Lists"
     CatalogPage.InlineBanner -> "Inline banner"
     CatalogPage.Localization -> "Localization"
+    CatalogPage.Reorder -> "Reorder"
 }
 
 /**
@@ -252,6 +255,7 @@ public fun CatalogApp() {
                                 onLanguageChoiceChange = { languageChoice = it },
                                 contentPadding = padding,
                             )
+                            CatalogPage.Reorder -> ReorderScreen(contentPadding = padding)
                         }
                     }
                 }
