@@ -145,6 +145,13 @@ public fun ComponentsScreen(
                 showChevron = true,
                 onClick = { onOpen(CatalogPage.Snackbar) },
             )
+            RuiDivider(inset = RuiTheme.spacing.lg)
+            RuiListItem(
+                title = "Inline banner",
+                subtitle = "Persistent in-flow notices, dismissible",
+                showChevron = true,
+                onClick = { onOpen(CatalogPage.InlineBanner) },
+            )
         }
 
         SectionLabel("Gestures")

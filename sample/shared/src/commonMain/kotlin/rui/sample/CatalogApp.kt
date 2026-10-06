@@ -49,6 +49,7 @@ import rui.sample.screens.TextFieldScreen
 import rui.sample.screens.TokensScreen
 import rui.sample.screens.TogglesScreen
 import rui.sample.screens.ListsScreen
+import rui.sample.screens.BannerScreen
 import rui.theme.RuiTheme
 
 /** The catalog's routes. */
@@ -75,6 +76,7 @@ public sealed interface CatalogPage : RuiNavKey {
     public data object PageIndicator : CatalogPage
     public data object Drawer : CatalogPage
     public data object Lists : CatalogPage
+    public data object InlineBanner : CatalogPage
 }
 
 private fun CatalogPage.title(): String = when (this) {
@@ -100,6 +102,7 @@ private fun CatalogPage.title(): String = when (this) {
     CatalogPage.PageIndicator -> "Page indicator"
     CatalogPage.Drawer -> "Drawer"
     CatalogPage.Lists -> "Lists"
+    CatalogPage.InlineBanner -> "Inline banner"
 }
 
 /**
@@ -235,6 +238,7 @@ public fun CatalogApp() {
                             CatalogPage.PageIndicator -> PageIndicatorScreen(contentPadding = padding)
                             CatalogPage.Drawer -> DrawerScreen(contentPadding = padding)
                             CatalogPage.Lists -> ListsScreen(contentPadding = padding)
+                            CatalogPage.InlineBanner -> BannerScreen(contentPadding = padding)
                         }
                     }
                 }
