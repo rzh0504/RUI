@@ -97,12 +97,16 @@ public fun RuiCalendarPicker(
             ) {
                 RuiIcon(imageVector = RuiIcons.ChevronLeft, contentDescription = "Previous month")
             }
-            RuiText(
-                text = "${monthNames[cursor.month - 1]} ${cursor.year}",
-                style = RuiTheme.typography.titleMd,
+            Box(
                 modifier = Modifier.weight(1f),
-                color = colors.content,
-            )
+                contentAlignment = Alignment.Center,
+            ) {
+                RuiText(
+                    text = "${monthNames[cursor.month - 1]} ${cursor.year}",
+                    style = RuiTheme.typography.titleMd,
+                    color = colors.content,
+                )
+            }
             RuiIconButton(
                 onClick = { cursor = shiftMonth(cursor, 1) },
                 enabled = canGoForward,
@@ -113,7 +117,11 @@ public fun RuiCalendarPicker(
             }
         }
 
-        Row {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(top = spacing.sm, bottom = spacing.xs),
+        ) {
             weekdayNames.forEach { label ->
                 Box(modifier = Modifier.weight(1f), contentAlignment = Alignment.Center) {
                     RuiText(
