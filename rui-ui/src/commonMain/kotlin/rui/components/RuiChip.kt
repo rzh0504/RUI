@@ -124,7 +124,14 @@ public fun RuiChip(
 
     val interactive = onClick != null && enabled
     Row(
+        // Clip before the selectable node: the state layer it draws must be
+        // clipped to the capsule, or it renders as a raw rectangle over the
+        // pill's rounded ends. The focus ring stays outside the clip so the
+        // ring can draw beyond the capsule (RuiButton's order).
         modifier = modifier
+            .height(ChipHeight)
+            .clip(RuiTheme.shapes.full)
+            .background(container, RuiTheme.shapes.full)
             .then(
                 if (interactive) {
                     Modifier
@@ -143,10 +150,7 @@ public fun RuiChip(
                 } else {
                     Modifier
                 },
-            )
-            .height(ChipHeight)
-            .clip(RuiTheme.shapes.full)
-            .background(container, RuiTheme.shapes.full),
+            ),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         if (leading != null) {
