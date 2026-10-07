@@ -108,6 +108,13 @@ public fun ComponentsScreen(
                 showChevron = true,
                 onClick = { onOpen(CatalogPage.Lists) },
             )
+            RuiDivider(inset = RuiTheme.spacing.lg)
+            RuiListItem(
+                title = "Lazy list",
+                subtitle = "Virtualized rows for long content",
+                showChevron = true,
+                onClick = { onOpen(CatalogPage.LazyList) },
+            )
         }
 
         SectionLabel("Identity")
