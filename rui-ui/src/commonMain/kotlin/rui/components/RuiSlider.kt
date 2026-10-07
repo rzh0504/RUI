@@ -27,12 +27,9 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.hapticfeedback.HapticFeedback
-import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.semantics.ProgressBarRangeInfo
 import androidx.compose.ui.semantics.progressBarRangeInfo
@@ -41,6 +38,8 @@ import androidx.compose.ui.semantics.setProgress
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
+import rui.foundation.RuiHaptics
+import rui.foundation.rememberRuiHaptics
 import rui.theme.RuiTheme
 import kotlin.math.roundToInt
 
@@ -116,7 +115,7 @@ public fun RuiSlider(
     require(steps >= 0) { "steps should be >= 0" }
     require(valueRange.start < valueRange.endInclusive) { "valueRange start should be less than end" }
 
-    val haptics = LocalHapticFeedback.current
+    val haptics = rememberRuiHaptics()
     val layoutDirection = LocalLayoutDirection.current
     val isRtl = layoutDirection == LayoutDirection.Rtl
     val onValueChangeState by rememberUpdatedState(onValueChange)
@@ -262,15 +261,15 @@ public fun RuiSlider(
 }
 
 /**
- * Haptic ticks while dragging: a light tick per step crossing when [steps]
- * is set, and a threshold tick on reaching either end. Mechanics from miuix's
+ * Haptic ticks while dragging: a selection tick per step crossing when [steps]
+ * is set, and a light impact on reaching either end. Mechanics from miuix's
  * SliderHapticState.
  */
 internal class SliderHapticState {
     private var lastStepIndex: Int? = null
     private var lastEdge: Int = -1
 
-    fun onDragStart(fraction: Float, steps: Int, haptics: HapticFeedback) {
+    fun onDragStart(fraction: Float, steps: Int, haptics: RuiHaptics) {
         lastStepIndex = if (steps > 0) (fraction * (steps + 1)).roundToInt() else null
         lastEdge = when {
             fraction <= 0f -> 0
@@ -279,12 +278,12 @@ internal class SliderHapticState {
         }
     }
 
-    fun onValueChange(fraction: Float, steps: Int, haptics: HapticFeedback) {
+    fun onValueChange(fraction: Float, steps: Int, haptics: RuiHaptics) {
         if (steps > 0) {
             val index = (fraction * (steps + 1)).roundToInt()
             if (index != lastStepIndex) {
                 lastStepIndex = index
-                haptics.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                haptics.selection()
             }
         }
         val edge = when {
@@ -294,7 +293,7 @@ internal class SliderHapticState {
         }
         if (edge != -1 && edge != lastEdge) {
             lastEdge = edge
-            haptics.performHapticFeedback(HapticFeedbackType.GestureThresholdActivate)
+            haptics.impactLight()
         }
     }
 }

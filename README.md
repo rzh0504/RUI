@@ -37,7 +37,7 @@ Rules that keep it neutral and extensible:
 
 - `rui-ui` depends only on Compose (ui/foundation/runtime), Compose Unstyled and Coil (image loading) — **no `material3`, ever**.
 - Components are slot-based and hoist state; every visual slot can be overridden by the caller.
-- `expect/actual` is limited to a tiny capability surface (`isBlurSupported`), so adding a target later touches only build files.
+- `expect/actual` is limited to a tiny capability surface (`isBlurSupported`, `StatusBarAppearance`, haptics), so adding a target later touches only build files.
 
 ## Modules
 

@@ -28,18 +28,17 @@ import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
 import androidx.compose.ui.input.nestedscroll.NestedScrollSource
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.Velocity
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
+import rui.foundation.rememberRuiHaptics
 import rui.theme.RuiTheme
 import kotlin.math.abs
 
@@ -77,7 +76,7 @@ public fun <T> RuiWheelPicker(
     val rowHeight = RuiTheme.dimens.pickerRowHeight
     val colors = RuiTheme.colors
     val dimens = RuiTheme.dimens
-    val haptics = LocalHapticFeedback.current
+    val haptics = rememberRuiHaptics()
     val scope = rememberCoroutineScope()
     val listState = rememberLazyListState()
     val flingBehavior = rememberSnapFlingBehavior(listState, SnapPosition.Center)
@@ -183,7 +182,7 @@ public fun <T> RuiWheelPicker(
                     lastTicked = index
                 } else if (index != lastTicked) {
                     lastTicked = index
-                    haptics.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                    haptics.selection()
                 }
             }
     }

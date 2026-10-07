@@ -24,7 +24,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
 import androidx.compose.ui.input.nestedscroll.NestedScrollSource
 import androidx.compose.ui.input.nestedscroll.nestedScroll
@@ -32,11 +31,11 @@ import androidx.compose.ui.input.pointer.PointerEventType
 import androidx.compose.ui.input.pointer.PointerType
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.Velocity
 import androidx.compose.ui.unit.dp
+import rui.foundation.rememberRuiHaptics
 import rui.foundation.utils.SpringEngine
 import rui.foundation.utils.SpringMath
 import rui.theme.RuiTheme
@@ -488,11 +487,11 @@ private fun RefreshHeader(
     state: RuiPullToRefreshState,
     modifier: Modifier = Modifier,
 ) {
-    val haptics = LocalHapticFeedback.current
+    val haptics = rememberRuiHaptics()
 
     LaunchedEffect(state.refreshState) {
         if (state.refreshState == RuiRefreshState.ThresholdReached) {
-            haptics.performHapticFeedback(HapticFeedbackType.GestureThresholdActivate)
+            haptics.impactMedium()
         }
     }
 

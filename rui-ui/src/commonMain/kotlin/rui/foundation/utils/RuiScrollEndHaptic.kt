@@ -28,6 +28,10 @@ private const val POST_FLING_CONSUMED_VELOCITY_THRESHOLD = 25.0f
  * the scrollable it decorates. Chain it on the same modifier as (or outside)
  * the scroll modifier.
  *
+ * Rui's own components speak the semantic [rui.foundation.RuiHaptics] API and
+ * don't use this modifier; it stays raw-`HapticFeedbackType` on purpose, for
+ * callers decorating their own scrollables with a type of their choosing.
+ *
  * Adapted from the miuix project (Apache License 2.0, see NOTICE).
  */
 public fun Modifier.scrollEndHaptic(

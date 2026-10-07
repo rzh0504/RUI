@@ -29,15 +29,12 @@ import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.graphics.Outline
 import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.hapticfeedback.HapticFeedback
-import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.findRootCoordinates
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.layout.positionInWindow
 import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
 import kotlin.math.abs
@@ -46,6 +43,8 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.launch
+import rui.foundation.RuiHaptics
+import rui.foundation.rememberRuiHaptics
 import rui.theme.RuiTheme
 
 /**
@@ -137,7 +136,7 @@ public fun <T : Any> RuiReorderableColumn(
     canDrag: (T) -> Boolean = { true },
     itemContent: @Composable RuiReorderableItemScope.(item: T) -> Unit,
 ) {
-    val haptics = LocalHapticFeedback.current
+    val haptics = rememberRuiHaptics()
     val scope = rememberCoroutineScope()
     val density = LocalDensity.current
     val currentOnMove by rememberUpdatedState(onMove)
@@ -328,7 +327,7 @@ private fun ReorderItem(
 @Stable
 private class ReorderState(
     private val onMove: (fromIndex: Int, toIndex: Int) -> Unit,
-    private val haptics: HapticFeedback,
+    private val haptics: RuiHaptics,
     private val scope: CoroutineScope,
 ) {
     /** Item keys in the current order, mirrored from the caller's items. */
@@ -393,10 +392,7 @@ private class ReorderState(
         draggedKey = key
         draggedIndex = keys.indexOf(key)
         dragOffset = 0f
-        haptics.performHapticFeedback(
-            if (fromLongPress) HapticFeedbackType.LongPress
-            else HapticFeedbackType.GestureThresholdActivate,
-        )
+        haptics.impactMedium()
     }
 
     fun drag(delta: Float) {
@@ -413,7 +409,7 @@ private class ReorderState(
     fun endDrag() {
         val key = draggedKey ?: return
         draggedKey = null
-        haptics.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+        haptics.impactLight()
         if (dragOffset != 0f) {
             settlingKey = key
             val residual = dragOffset
