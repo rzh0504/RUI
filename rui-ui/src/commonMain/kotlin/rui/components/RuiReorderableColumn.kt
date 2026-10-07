@@ -82,16 +82,16 @@ internal fun moveShifts(from: Int, to: Int, draggedHeight: Float): Map<Int, Floa
 }
 
 /** How far a lifted item scales up while dragging. */
-private const val LiftScale = 0.03f
+internal const val LiftScale = 0.03f
 
 /** Shadow elevation of a lifted item. */
-private val LiftShadow = 14.dp
+internal val LiftShadow = 14.dp
 
 /** Width of the edge band that drives autoscroll while dragging. */
-private val AutoscrollEdge = 56.dp
+internal val AutoscrollEdge = 56.dp
 
 /** Full autoscroll speed, reached at the viewport edge (px/s). */
-private val AutoscrollSpeed = 640.dp
+internal val AutoscrollSpeed = 640.dp
 
 /**
  * Drag-to-reorder over a plain Column — the reorderable counterpart of the

@@ -3,6 +3,7 @@ package rui.sample.screens
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.calculateEndPadding
 import androidx.compose.foundation.layout.calculateStartPadding
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -15,6 +16,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.unit.dp
+import rui.components.RuiLazyReorderableColumn
 import rui.components.RuiListItem
 import rui.components.RuiReorderableColumn
 import rui.foundation.RuiSurface
@@ -27,6 +29,10 @@ import rui.sample.ui.SectionLabel
 import rui.theme.RuiTheme
 
 private data class Track(val id: Int, val title: String, val artist: String)
+
+private val LazyPlaylist = List(40) { i ->
+    Track(100 + i, "Session ${i + 1}", "Lazy · row ${i + 1} of 40")
+}
 
 private val Playlist = listOf(
     Track(1, "Glasswork", "Mara Ito"),
@@ -50,6 +56,7 @@ public fun ReorderScreen(contentPadding: PaddingValues = PaddingValues(0.dp)) {
     val spacing = RuiTheme.spacing
     val layoutDirection = LocalLayoutDirection.current
     val tracks = remember { mutableStateListOf<Track>().apply { addAll(Playlist) } }
+    val lazyTracks = remember { mutableStateListOf<Track>().apply { addAll(LazyPlaylist) } }
     val scrollState = rememberScrollState()
     val move: (Int, Int) -> Unit = { from, to -> tracks.add(to, tracks.removeAt(from)) }
 
@@ -109,6 +116,21 @@ public fun ReorderScreen(contentPadding: PaddingValues = PaddingValues(0.dp)) {
                 onMove = move,
                 key = { it.id },
                 autoscrollState = scrollState,
+            ) { track ->
+                RuiListItem(
+                    title = track.title,
+                    subtitle = track.artist,
+                    modifier = Modifier.draggableItem(),
+                )
+            }
+        }
+
+        SectionLabel("Lazy list")
+        RuiSurface(modifier = Modifier.fillMaxWidth().height(360.dp)) {
+            RuiLazyReorderableColumn(
+                items = lazyTracks.toList(),
+                onMove = { from, to -> lazyTracks.add(to, lazyTracks.removeAt(from)) },
+                key = { it.id },
             ) { track ->
                 RuiListItem(
                     title = track.title,
