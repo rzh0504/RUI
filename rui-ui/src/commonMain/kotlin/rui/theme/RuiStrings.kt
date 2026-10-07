@@ -43,6 +43,9 @@ public interface RuiStrings {
     /** Label of a banner's dismiss affordance. */
     public val dismiss: String
 
+    /** Label of a chip's remove affordance. */
+    public val remove: String
+
     /** Label of the stepper's decrease segment. */
     public val decrease: String
 
@@ -80,6 +83,7 @@ public object RuiStringsDefaults {
         override val back = "Back"
         override val clear = "Clear"
         override val dismiss = "Dismiss"
+        override val remove = "Remove"
         override val decrease = "Decrease"
         override val increase = "Increase"
         override val previousMonth = "Previous month"
@@ -97,6 +101,7 @@ public object RuiStringsDefaults {
         override val back = "返回"
         override val clear = "清除"
         override val dismiss = "关闭"
+        override val remove = "移除"
         override val decrease = "减少"
         override val increase = "增大"
         override val previousMonth = "上个月"

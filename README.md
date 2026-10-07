@@ -14,8 +14,9 @@ compose-unstyled          behavior, state, keyboard, a11y (zero visuals)
 │  ├─ theme       tokens: colors / type / shapes /   │
 │  │              spacing / motion  (RuiTheme)       │
 │  ├─ foundation  Surface · Text · Icon · state      │
-│  │              layer · FrostedSurface · BlurBackdrop│
-│  │              utils: bounce overscroll · haptics │
+│  │              layer · FrostedSurface ·           │
+│  │              BlurBackdrop · utils: bounce       │
+│  │              overscroll · haptics               │
 │  └─ components  Scaffold · TopAppBar · NavBar ·    │
 │                 Button · TextField · SearchBar ·   │
 │                 Switch · Checkbox · TriState ·     │
@@ -27,7 +28,7 @@ compose-unstyled          behavior, state, keyboard, a11y (zero visuals)
 │                 WheelPicker · Date/TimePicker ·    │
 │                 Skeleton · EmptyState · Dialog ·   │
 │                 Drawer · Tabs · PageIndicator ·    │
-│                 List · AsyncImage                  │
+│                 List · AsyncImage · Chip           │
 └───────┬────────────────────────────────────────────┘
         │
   sample/          catalog app: shared UI + androidApp + iosApp

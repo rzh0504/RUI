@@ -28,6 +28,7 @@ import rui.foundation.RuiIcons
 import rui.foundation.rememberBlurBackdrop
 import rui.foundation.utils.StatusBarAppearance
 import rui.sample.screens.ButtonsScreen
+import rui.sample.screens.ChipsScreen
 import rui.sample.screens.BottomSheetScreen
 import rui.sample.screens.DialogScreen
 import rui.sample.screens.DropdownMenuScreen
@@ -59,6 +60,7 @@ import rui.theme.RuiTheme
 public sealed interface CatalogPage : RuiNavKey {
     public data object Root : CatalogPage
     public data object Buttons : CatalogPage
+    public data object Chips : CatalogPage
     public data object TextField : CatalogPage
     public data object Toggles : CatalogPage
     public data object Tabs : CatalogPage
@@ -88,6 +90,7 @@ public sealed interface CatalogPage : RuiNavKey {
 private fun CatalogPage.title(): String = when (this) {
     CatalogPage.Root -> "Rui"
     CatalogPage.Buttons -> "Buttons"
+    CatalogPage.Chips -> "Chips"
     CatalogPage.TextField -> "Text field"
     CatalogPage.Toggles -> "Selection controls"
     CatalogPage.Tabs -> "Segmented tabs"
@@ -215,6 +218,7 @@ public fun CatalogApp() {
                                 else -> TokensScreen(contentPadding = padding)
                             }
                             CatalogPage.Buttons -> ButtonsScreen(contentPadding = padding)
+                            CatalogPage.Chips -> ChipsScreen(contentPadding = padding)
                             CatalogPage.TextField -> TextFieldScreen(contentPadding = padding)
                             CatalogPage.Toggles -> TogglesScreen(contentPadding = padding)
                             CatalogPage.Tabs -> TabsScreen(contentPadding = padding)

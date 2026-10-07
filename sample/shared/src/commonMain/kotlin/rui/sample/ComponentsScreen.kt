@@ -89,6 +89,13 @@ public fun ComponentsScreen(
             )
             RuiDivider(inset = RuiTheme.spacing.lg)
             RuiListItem(
+                title = "Chips",
+                subtitle = "Compact tags for filters and metadata",
+                showChevron = true,
+                onClick = { onOpen(CatalogPage.Chips) },
+            )
+            RuiDivider(inset = RuiTheme.spacing.lg)
+            RuiListItem(
                 title = "Disclosure",
                 subtitle = "Expandable sections in place",
                 showChevron = true,

@@ -16,7 +16,7 @@ class RuiStringsTest {
                 labels.forEach { assertTrue(it.isNotBlank(), "$labels: $it") }
             }
             for (label in listOf(
-                strings.back, strings.clear, strings.dismiss,
+                strings.back, strings.clear, strings.dismiss, strings.remove,
                 strings.decrease, strings.increase,
                 strings.previousMonth, strings.nextMonth,
             )) {
