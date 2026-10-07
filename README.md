@@ -28,7 +28,8 @@ compose-unstyled          behavior, state, keyboard, a11y (zero visuals)
 │                 WheelPicker · Date/TimePicker ·    │
 │                 Skeleton · EmptyState · Dialog ·   │
 │                 Drawer · Tabs · PageIndicator ·    │
-│                 List · AsyncImage · Chip           │
+│                 List · AsyncImage · Chip ·         │
+│                 LazyColumn · LazyReorder           │
 └───────┬────────────────────────────────────────────┘
         │
   sample/          catalog app: shared UI + androidApp + iosApp
