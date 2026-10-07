@@ -4,9 +4,15 @@ import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.text.selection.TextSelectionColors
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.derivedStateOf
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.staticCompositionLocalOf
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalWindowInfo
 import com.composeunstyled.theme.buildThemeV2
 import com.composeunstyled.theme.rememberColoredIndication
+import kotlin.math.roundToInt
 
 private val LocalRuiColorScheme = staticCompositionLocalOf { RuiColorScheme.light() }
 private val LocalRuiTypography = staticCompositionLocalOf { ruiTypography() }
@@ -63,6 +69,19 @@ public object RuiTheme {
             )
         }
 
+        // The window's width class, re-resolved only when the window crosses a
+        // breakpoint — reading containerSize inside derivedStateOf tracks
+        // resizes without recomposing for every pixel.
+        val windowInfo = LocalWindowInfo.current
+        val density = LocalDensity.current
+        val windowWidthClass by remember(windowInfo, density) {
+            derivedStateOf {
+                windowWidthClassAt(
+                    with(density) { windowInfo.containerSize.width.toDp().value.roundToInt() },
+                )
+            }
+        }
+
         ProvideRuiThemeLocals(
             colorScheme = colorScheme,
             typography = typography,
@@ -71,6 +90,7 @@ public object RuiTheme {
             spacing = spacing,
             dimens = dimens,
             motion = motion,
+            windowWidthClass = windowWidthClass,
         ) {
             unstyledTheme(content)
         }
@@ -96,6 +116,20 @@ public object RuiTheme {
 
     public val motion: RuiMotion
         @Composable get() = LocalRuiMotion.current
+
+    /**
+     * The current window's width class, resolved by [RuiTheme] from the
+     * window's width. Key adaptive layouts on it:
+     *
+     * ```
+     * when (RuiTheme.windowWidthClass) {
+     *     RuiWindowWidthClass.Compact -> singleColumn()
+     *     else -> listWithDetail()
+     * }
+     * ```
+     */
+    public val windowWidthClass: RuiWindowWidthClass
+        @Composable get() = LocalRuiWindowWidthClass.current
 }
 
 /** Alphas of the content-colored state layer applied to interactive components. */
@@ -121,6 +155,7 @@ internal fun ProvideRuiThemeLocals(
     spacing: RuiSpacing,
     dimens: RuiDimens,
     motion: RuiMotion,
+    windowWidthClass: RuiWindowWidthClass,
     content: @Composable () -> Unit,
 ) {
     CompositionLocalProvider(
@@ -131,6 +166,7 @@ internal fun ProvideRuiThemeLocals(
         LocalRuiSpacing provides spacing,
         LocalRuiDimens provides dimens,
         LocalRuiMotion provides motion,
+        LocalRuiWindowWidthClass provides windowWidthClass,
         content = content,
     )
 }

@@ -101,6 +101,7 @@ class RuiThemeDefaultsTest {
         val spacing = RuiSpacing().copy(md = 10.dp)
         val dimens = RuiDimens().copy(touchTarget = 48.dp)
         val motion = RuiMotion()
+        val windowWidthClass = RuiWindowWidthClass.Expanded
 
         composeInTest {
             ProvideRuiThemeLocals(
@@ -111,10 +112,12 @@ class RuiThemeDefaultsTest {
                 spacing = spacing,
                 dimens = dimens,
                 motion = motion,
+                windowWidthClass = windowWidthClass,
             ) {
                 assertEquals(spacing, RuiTheme.spacing)
                 assertEquals(dimens, RuiTheme.dimens)
                 assertEquals(motion, RuiTheme.motion)
+                assertEquals(windowWidthClass, RuiTheme.windowWidthClass)
             }
         }
     }

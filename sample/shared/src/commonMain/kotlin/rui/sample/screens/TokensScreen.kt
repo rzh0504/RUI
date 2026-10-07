@@ -34,6 +34,7 @@ import rui.foundation.FrostedSurface
 import rui.foundation.RuiIcon
 import rui.foundation.RuiIcons
 import rui.components.RuiDivider
+import rui.components.RuiListItem
 import rui.components.RuiListGroup
 import rui.foundation.RuiSurface
 import rui.foundation.RuiText
@@ -170,6 +171,21 @@ public fun TokensScreen(contentPadding: PaddingValues = PaddingValues(0.dp)) {
             MotionRow("pop", "0.85 / 450", RuiTheme.motion.pop)
             RuiDivider(inset = RuiTheme.spacing.lg)
             MotionRow("navigation", "1.0 / 550", RuiTheme.motion.navigation)
+        }
+
+        SectionLabel("Layout")
+        RuiListGroup {
+            RuiListItem(
+                title = "Window width class",
+                subtitle = "Material breakpoints: 600dp / 840dp",
+                trailing = {
+                    RuiText(
+                        text = RuiTheme.windowWidthClass.name,
+                        style = typography.labelLg,
+                        color = colors.contentMuted,
+                    )
+                },
+            )
         }
     }
 }

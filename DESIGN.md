@@ -68,6 +68,10 @@ Duration tokens: state layers 90ms in / 180ms out, short transitions 120ms, medi
 
 The only sanctioned exceptions live with their component: the top app bar's collapse snap and the title spring (its stiffness is parameterized by the miuix-folme response math).
 
+### Window width class
+
+`RuiWindowWidthClass` — Compact / Medium / Expanded at Material's 600dp/840dp breakpoints (the one non-token Material borrowing; there is no neutral convention to copy). `RuiTheme` resolves it from the window's width automatically — `RuiTheme.windowWidthClass` — re-resolving only when a breakpoint is crossed. `windowWidthClassAt(widthDp)` is the pure resolver for other width sources.
+
 ## Interaction recipes
 
 - **State layer** — pressed 10%, hovered 6%, focused 8%, dragged 12% alpha of the *component's content color* (`rememberRuiIndication`, `ColoredIndication` under the hood).
