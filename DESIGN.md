@@ -52,6 +52,8 @@ Token values — `sm 6 · md 10 · lg 14 · xl 18 · sheet 14 (top only) · full
 `RuiSpacing`: 4 / 8 / 12 / 16 / 24 / 32 on a 4dp grid.
 `RuiDimens`: touch target 44dp (between Material's 48 and HIG's 44), border 1dp, focus ring 2dp, icon 20dp, picker row 36dp.
 
+All three token sets (`spacing` / `dimens` / `motion`) are injectable at `RuiTheme`; each is a data class, so a family-wide adjustment — denser layout, accessibility preset, slower motion — is a `copy()` away.
+
 ### Motion — `RuiMotion`
 
 Duration tokens: state layers 90ms in / 180ms out, short transitions 120ms, medium 200ms, loop tokens for skeletons — pulse 600ms per leg (reversed) and sweep 1200ms per pass (linear). Spring tokens, one per motion family — components pick a family, never a raw spec:

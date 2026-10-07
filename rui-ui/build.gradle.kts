@@ -12,6 +12,10 @@ kotlin {
         minSdk = 23
 
         withHostTest {
+            // Compose's runtime logs through android.util.Log; on the JVM host
+            // the stub would throw and mask the actual error, so return
+            // defaults instead.
+            isReturnDefaultValues = true
         }
     }
 

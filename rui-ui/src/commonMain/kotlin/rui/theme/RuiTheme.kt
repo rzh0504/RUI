@@ -22,6 +22,15 @@ private val LocalRuiMotion = staticCompositionLocalOf { RuiMotion() }
  * Unstyled's theme (content color, default text style, selection colors and the
  * state-layer indication), so Unstyled primitives composed without a Rui wrapper
  * still render consistently.
+ *
+ * Every token set is injectable. [spacing], [dimens] and [motion] are data
+ * classes, so a whole-family adjustment is a [RuiSpacing.copy]/[RuiDimens.copy]/
+ * [RuiMotion.copy] away — e.g. a denser layout, or larger spacing for an
+ * accessibility preset:
+ *
+ * ```
+ * RuiTheme(spacing = RuiSpacing().copy(md = 8.dp, lg = 12.dp)) { … }
+ * ```
  */
 public object RuiTheme {
     @Composable
@@ -31,6 +40,9 @@ public object RuiTheme {
         typography: RuiTypography = ruiTypography(),
         shapes: RuiShapes = ruiShapes(),
         strings: RuiStrings = RuiStringsDefaults.English,
+        spacing: RuiSpacing = RuiSpacing(),
+        dimens: RuiDimens = RuiDimens(),
+        motion: RuiMotion = RuiMotion(),
         content: @Composable () -> Unit,
     ) {
         val unstyledTheme = buildThemeV2 {
@@ -40,8 +52,8 @@ public object RuiTheme {
                 hoveredAlpha = StateLayerAlphas.hovered,
                 focusedAlpha = StateLayerAlphas.focused,
                 draggedAlpha = StateLayerAlphas.dragged,
-                showAnimationSpec = RuiMotion().stateLayerIn,
-                hideAnimationSpec = RuiMotion().stateLayerOut,
+                showAnimationSpec = motion.stateLayerIn,
+                hideAnimationSpec = motion.stateLayerOut,
             )
             defaultContentColor = colorScheme.content
             defaultTextStyle = typography.bodyMd
@@ -51,14 +63,14 @@ public object RuiTheme {
             )
         }
 
-        CompositionLocalProvider(
-            LocalRuiColorScheme provides colorScheme,
-            LocalRuiTypography provides typography,
-            LocalRuiShapes provides shapes,
-            LocalRuiStrings provides strings,
-            LocalRuiSpacing provides RuiSpacing(),
-            LocalRuiDimens provides RuiDimens(),
-            LocalRuiMotion provides RuiMotion(),
+        ProvideRuiThemeLocals(
+            colorScheme = colorScheme,
+            typography = typography,
+            shapes = shapes,
+            strings = strings,
+            spacing = spacing,
+            dimens = dimens,
+            motion = motion,
         ) {
             unstyledTheme(content)
         }
@@ -92,4 +104,33 @@ internal object StateLayerAlphas {
     const val hovered = 0.06f
     const val focused = 0.08f
     const val dragged = 0.12f
+}
+
+/**
+ * Wires [RuiTheme]'s resolved token sets into the composition locals its
+ * accessors read. Kept separate from [RuiTheme.invoke] so tests can verify the
+ * parameter-to-local wiring without composing the Unstyled theme bridge, which
+ * resolves the system theme from platform locals a unit test has none of.
+ */
+@Composable
+internal fun ProvideRuiThemeLocals(
+    colorScheme: RuiColorScheme,
+    typography: RuiTypography,
+    shapes: RuiShapes,
+    strings: RuiStrings,
+    spacing: RuiSpacing,
+    dimens: RuiDimens,
+    motion: RuiMotion,
+    content: @Composable () -> Unit,
+) {
+    CompositionLocalProvider(
+        LocalRuiColorScheme provides colorScheme,
+        LocalRuiTypography provides typography,
+        LocalRuiShapes provides shapes,
+        LocalRuiStrings provides strings,
+        LocalRuiSpacing provides spacing,
+        LocalRuiDimens provides dimens,
+        LocalRuiMotion provides motion,
+        content = content,
+    )
 }

@@ -1,6 +1,14 @@
 package rui.theme
 
+import androidx.compose.runtime.AbstractApplier
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.Composition
+import androidx.compose.runtime.Recomposer
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.unit.dp
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
+import kotlin.coroutines.EmptyCoroutineContext
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotEquals
@@ -87,4 +95,55 @@ class RuiThemeDefaultsTest {
             assertEquals(0f, it.value % 4f, "Spacing token $it off the 4dp grid")
         }
     }
+
+    @Test
+    fun injectedTokensRoundTripThroughTheAccessors() {
+        val spacing = RuiSpacing().copy(md = 10.dp)
+        val dimens = RuiDimens().copy(touchTarget = 48.dp)
+        val motion = RuiMotion()
+
+        composeInTest {
+            ProvideRuiThemeLocals(
+                colorScheme = RuiColorScheme.light(),
+                typography = ruiTypography(),
+                shapes = ruiShapes(),
+                strings = RuiStringsDefaults.English,
+                spacing = spacing,
+                dimens = dimens,
+                motion = motion,
+            ) {
+                assertEquals(spacing, RuiTheme.spacing)
+                assertEquals(dimens, RuiTheme.dimens)
+                assertEquals(motion, RuiTheme.motion)
+            }
+        }
+    }
+}
+
+/**
+ * Runs [content] through a one-shot composition over a sink applier — enough
+ * runtime for providing and reading composition locals, no platform needed.
+ * The recomposer runs so the initial composition is accepted; nothing in the
+ * content awaits frames, so the run is cancelled as soon as it's applied.
+ */
+private fun composeInTest(content: @Composable () -> Unit) {
+    runBlocking {
+        val recomposer = Recomposer(EmptyCoroutineContext)
+        val runner = launch { recomposer.runRecomposeAndApplyChanges() }
+        try {
+            val composition = Composition(SinkApplier(), recomposer)
+            composition.setContent(content)
+            composition.dispose()
+        } finally {
+            runner.cancel()
+        }
+    }
+}
+
+private class SinkApplier : AbstractApplier<Any?>(Unit) {
+    override fun insertTopDown(index: Int, instance: Any?) {}
+    override fun insertBottomUp(index: Int, instance: Any?) {}
+    override fun remove(index: Int, count: Int) {}
+    override fun move(from: Int, to: Int, count: Int) {}
+    override fun onClear() {}
 }
