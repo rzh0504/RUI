@@ -73,7 +73,7 @@ public fun RuiCalendarPicker(
     check(!yearRange.isEmpty()) { "yearRange must not be empty" }
 
     val anchor = value ?: today ?: RuiDate(yearRange.first, 1, 1)
-    var cursor by remember {
+    var cursor by remember(yearRange) {
         mutableStateOf(RuiDate(anchor.year.coerceIn(yearRange), anchor.month, 1))
     }
     // The view follows the value when it changes from outside (including a
@@ -87,13 +87,18 @@ public fun RuiCalendarPicker(
     val canGoBack = cursor.year > yearRange.first || cursor.month > 1
     val canGoForward = cursor.year < yearRange.last || cursor.month < 12
 
+    fun moveCursor(delta: Int) {
+        val candidate = shiftMonth(cursor, delta)
+        if (candidate.year in yearRange) cursor = candidate
+    }
+
     Column(modifier = modifier.padding(spacing.md)) {
         Row(
             modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             RuiIconButton(
-                onClick = { cursor = shiftMonth(cursor, -1) },
+                onClick = { moveCursor(-1) },
                 enabled = canGoBack,
                 variant = RuiButtonVariant.Plain,
                 size = RuiButtonSize.Sm,
@@ -115,7 +120,7 @@ public fun RuiCalendarPicker(
                 )
             }
             RuiIconButton(
-                onClick = { cursor = shiftMonth(cursor, 1) },
+                onClick = { moveCursor(1) },
                 enabled = canGoForward,
                 variant = RuiButtonVariant.Plain,
                 size = RuiButtonSize.Sm,
@@ -153,6 +158,7 @@ public fun RuiCalendarPicker(
                         todayContent = colors.primary,
                         inMonthContent = colors.content,
                         outOfMonthContent = colors.contentDisabled,
+                        enabled = cell.date.year in yearRange,
                         onSelect = onValueChange,
                         modifier = Modifier.weight(1f),
                     )
@@ -173,6 +179,7 @@ private fun CalendarDayCell(
     todayContent: Color,
     inMonthContent: Color,
     outOfMonthContent: Color,
+    enabled: Boolean,
     onSelect: (RuiDate) -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -196,6 +203,7 @@ private fun CalendarDayCell(
                 interactionSource = interactionSource,
                 indication = rememberRuiIndication(),
                 role = Role.Button,
+                enabled = enabled,
                 onClick = { onSelect(cell.date) },
             ),
         contentAlignment = Alignment.Center,

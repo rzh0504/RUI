@@ -2,6 +2,7 @@ package rui.components
 
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
 import kotlin.test.assertTrue
 
 /**
@@ -73,5 +74,12 @@ class RuiCalendarPickerTest {
                 )
             }
         }
+    }
+
+    @Test
+    fun dateRejectsInvalidCivilValues() {
+        assertFailsWith<IllegalArgumentException> { RuiDate(2024, 2, 30) }
+        assertFailsWith<IllegalArgumentException> { RuiDate(2024, 13, 1) }
+        assertFailsWith<IllegalArgumentException> { daysInMonth(2024, 0) }
     }
 }

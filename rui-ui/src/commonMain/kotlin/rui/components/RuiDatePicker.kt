@@ -16,13 +16,23 @@ public data class RuiDate(
     public val year: Int,
     public val month: Int,
     public val day: Int,
-)
+) {
+    init {
+        require(month in 1..12) { "month must be in 1..12, was $month" }
+        require(day in 1..daysInMonth(year, month)) {
+            "day must be in 1..${daysInMonth(year, month)} for $year-$month, was $day"
+        }
+    }
+}
 
 /** Number of days in [month] (1..12) of [year], Gregorian rules. */
-public fun daysInMonth(year: Int, month: Int): Int = when (month) {
+public fun daysInMonth(year: Int, month: Int): Int {
+    require(month in 1..12) { "month must be in 1..12, was $month" }
+    return when (month) {
     2 -> if (year % 4 == 0 && (year % 100 != 0 || year % 400 == 0)) 29 else 28
     4, 6, 9, 11 -> 30
     else -> 31
+    }
 }
 
 private fun clampToMonth(date: RuiDate): RuiDate =

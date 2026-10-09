@@ -83,13 +83,9 @@ public fun RuiPullToRefresh(
     // true->false pulse cannot latch.
     LaunchedEffect(isRefreshing, state.refreshState) {
         if (!isRefreshing && state.refreshState == RuiRefreshState.Refreshing) {
-            coroutineScope.launch {
-                state.finishRefreshing(isRefreshingNow)
-            }
+            state.finishRefreshing(isRefreshingNow)
         } else if (isRefreshing && state.refreshState == RuiRefreshState.Idle) {
-            coroutineScope.launch {
-                state.showRefreshing(isRefreshingNow)
-            }
+            state.showRefreshing(isRefreshingNow)
         }
     }
 
