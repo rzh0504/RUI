@@ -98,6 +98,7 @@ public fun rememberRuiDrawerState(
  * @param content The screen the drawer slides over.
  */
 @OptIn(ExperimentalComposeUiApi::class)
+@Suppress("DEPRECATION")
 @Composable
 public fun RuiDrawer(
     state: RuiDrawerState,

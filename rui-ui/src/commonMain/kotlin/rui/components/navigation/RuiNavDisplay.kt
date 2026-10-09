@@ -96,6 +96,7 @@ public class RuiNavController<T : RuiNavKey>(public val backStack: androidx.comp
  * Entries removed by a pop stay composed until the pop animation settles.
  */
 @OptIn(ExperimentalComposeUiApi::class)
+@Suppress("DEPRECATION")
 @Composable
 public fun <T : RuiNavKey> RuiNavDisplay(
     backStack: List<T>,

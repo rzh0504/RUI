@@ -33,7 +33,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.SubcomposeLayout
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.semantics.Role
-import androidx.compose.ui.semantics.invisibleToUser
+import androidx.compose.ui.semantics.hideFromAccessibility
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Constraints
@@ -96,6 +96,7 @@ public fun rememberRuiSwipeGroup(): RuiSwipeGroup =
  * Pass a [group] to make the row close when another row of the same group opens.
  */
 @Stable
+@Suppress("DEPRECATION")
 public class RuiSwipeActionsState internal constructor(
     density: Density,
     motion: RuiMotion,
@@ -271,7 +272,7 @@ private fun SwipeActionButtons(
 ) {
     Row(
         modifier = Modifier.semantics {
-            if (hidden) invisibleToUser()
+            if (hidden) hideFromAccessibility()
         },
     ) {
         actions.forEach { option ->

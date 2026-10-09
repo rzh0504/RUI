@@ -204,8 +204,8 @@ public class RuiTopAppBarState(
                 save = { listOf(it.heightOffsetLimit, it.heightOffset) },
                 restore = {
                     RuiTopAppBarState(
-                        initialHeightOffsetLimit = it[0] as Float,
-                        initialHeightOffset = it[1] as Float,
+                        initialHeightOffsetLimit = it[0],
+                        initialHeightOffset = it[1],
                     )
                 },
             )

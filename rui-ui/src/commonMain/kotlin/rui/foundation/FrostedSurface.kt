@@ -52,7 +52,7 @@ public fun FrostedSurface(
                 .then(
                     if (useBlur) {
                         Modifier.blurSurface(
-                            backdrop = backdrop!!,
+                            backdrop = backdrop,
                             radius = blurRadius,
                             tint = effectiveTint,
                             shape = shape,

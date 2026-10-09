@@ -19,7 +19,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.semantics.invisibleToUser
+import androidx.compose.ui.semantics.hideFromAccessibility
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.LayoutDirection
 import rui.theme.RuiTheme
@@ -73,7 +73,7 @@ public fun RuiSkeleton(
     }
     val bone = modifier
         .defaultMinSize(minHeight = lineHeight)
-        .semantics { invisibleToUser() }
+        .semantics { hideFromAccessibility() }
 
     when (effect) {
         RuiSkeletonEffect.Pulse -> {

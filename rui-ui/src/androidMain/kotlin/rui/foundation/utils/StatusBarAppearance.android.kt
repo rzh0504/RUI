@@ -12,6 +12,7 @@ import androidx.compose.runtime.SideEffect
 import androidx.compose.ui.platform.LocalView
 
 @Composable
+@Suppress("DEPRECATION")
 public actual fun StatusBarAppearance(darkIcons: Boolean) {
     val view = LocalView.current
     SideEffect {
