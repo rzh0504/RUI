@@ -44,6 +44,10 @@ private fun clampToMonth(date: RuiDate): RuiDate =
  * clamps the day to the new month — February 30 becomes February 28 — and
  * the day wheel animates to the clamped value.
  *
+ * An external [value] whose year falls outside [yearRange] shows on the year
+ * wheel clamped to the nearest boundary; the value is never rewritten on its
+ * own — the first wheel turn reports from the clamped working date.
+ *
  * @param monthNames Twelve month labels, overriding
  *   [RuiTheme.strings]'s `monthNames`.
  * @param yearRange Years offered by the year wheel, ascending.
@@ -63,7 +67,10 @@ public fun RuiDatePicker(
     check(names.size == 12) { "monthNames must have 12 entries, was ${names.size}" }
     check(!yearRange.isEmpty()) { "yearRange must not be empty" }
 
-    val date = clampToMonth(value)
+    // The year wheel can only present in-range years, so the working date
+    // clamps its year to the nearest boundary; the value itself is never
+    // rewritten until a wheel turns.
+    val date = clampToMonth(value.copy(year = value.year.coerceIn(yearRange)))
     val years = yearRange.toList()
 
     Row(

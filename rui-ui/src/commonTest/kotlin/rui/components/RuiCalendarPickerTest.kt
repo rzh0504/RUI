@@ -82,4 +82,14 @@ class RuiCalendarPickerTest {
         assertFailsWith<IllegalArgumentException> { RuiDate(2024, 13, 1) }
         assertFailsWith<IllegalArgumentException> { daysInMonth(2024, 0) }
     }
+
+    @Test
+    fun leapYearFebruaryBounds() {
+        assertEquals(29, daysInMonth(2024, 2))
+        assertEquals(29, daysInMonth(2000, 2))
+        assertEquals(28, daysInMonth(2023, 2))
+        assertEquals(28, daysInMonth(1900, 2))
+        assertEquals(29, RuiDate(2024, 2, 29).day)
+        assertFailsWith<IllegalArgumentException> { RuiDate(1900, 2, 29) }
+    }
 }

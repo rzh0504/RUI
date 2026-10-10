@@ -50,7 +50,10 @@ internal data class DayCell(val date: RuiDate, val inMonth: Boolean)
  * @param weekdayNames Seven weekday labels, Monday first, overriding
  *   [RuiTheme.strings]'s `weekdayNames`.
  * @param yearRange Months outside the range are unreachable — the chevrons
- *   disable at the bounds, the caller never clamps.
+ *   disable at the bounds and days outside the range render disabled. An
+ *   external [value] outside the range stays the caller's (the picker never
+ *   rewrites it); the grid opens on the nearest in-range year of the same
+ *   calendar month.
  */
 @Composable
 public fun RuiCalendarPicker(
