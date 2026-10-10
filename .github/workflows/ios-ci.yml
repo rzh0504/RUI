@@ -33,12 +33,16 @@ jobs:
       - name: Build iOS app (includes framework link + embed)
         run: |
           # -target builds reject -derivedDataPath (a scheme-only flag); put
-          # the products in a known place via CONFIGURATION_BUILD_DIR.
+          # the products in a known place via CONFIGURATION_BUILD_DIR. ARCHS
+          # pins the simulator to arm64 — the KMP framework targets only
+          # register iosSimulatorArm64, and the run-script Gradle call fails
+          # on the x86_64 slice Xcode would otherwise include.
           xcodebuild \
             -project sample/iosApp/iosApp.xcodeproj \
             -target iosApp \
             -sdk iphonesimulator \
             -configuration Debug \
+            ARCHS=arm64 ONLY_ACTIVE_ARCH=YES \
             CONFIGURATION_BUILD_DIR="$PWD/sample/iosApp/build/Products" \
             build \
             CODE_SIGNING_ALLOWED=NO
