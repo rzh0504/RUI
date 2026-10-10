@@ -4,6 +4,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -24,12 +25,20 @@ import com.composeunstyled.TextInput
 import com.composeunstyled.UnstyledTextField
 import rui.foundation.RuiText
 import rui.foundation.ruiFocusRing
+import rui.foundation.ruiMinimumTouchTarget
 import rui.theme.RuiTheme
 
 /**
  * The Rui text field: Unstyled's state-driven input (hoisted [TextFieldState])
  * in a filled, borderless container — separation comes from the fill color,
  * a hairline appears only to mark the error state.
+ *
+ * Slot contract: [trailing] is the action slot — its content is wrapped in a
+ * touch-target reservation anchored to the field's edge, so an icon-sized
+ * clear or toggle keeps a full [rui.theme.RuiDimens.touchTarget] slot without
+ * floating away from the edge. Keep [leading] decorative (a magnifier, a
+ * domain icon); for a clickable leading action pass a [RuiIconButton], which
+ * reserves its own touch target.
  */
 @Composable
 public fun RuiTextField(
@@ -109,7 +118,9 @@ public fun RuiTextField(
                     }
                 }
                 if (trailing != null) {
-                    trailing()
+                    Box(modifier = Modifier.ruiMinimumTouchTarget(Alignment.CenterEnd)) {
+                        trailing()
+                    }
                 }
             }
         }
