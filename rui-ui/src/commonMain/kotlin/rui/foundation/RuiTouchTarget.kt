@@ -4,8 +4,51 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.layout
+import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.IntSize
+import androidx.compose.ui.unit.LayoutDirection
 import rui.theme.RuiTheme
+
+/**
+ * The measured result of a touch-target-reserved node: the node's size and
+ * where the visual content lands inside it.
+ */
+internal data class TouchTargetPlacement(
+    val width: Int,
+    val height: Int,
+    val contentOffsetX: Int,
+    val contentOffsetY: Int,
+)
+
+/**
+ * The reserve-and-anchor math behind [ruiMinimumTouchTarget], pure so the
+ * geometry rules are testable: the node grows to [minimumPx] in each
+ * dimension, a parent constraining tighter than the token wins (the node
+ * keeps the parent's size instead of overflowing it), and the content lands
+ * per [alignment] inside the reserved node.
+ */
+internal fun touchTargetPlacement(
+    contentWidth: Int,
+    contentHeight: Int,
+    minimumPx: Int,
+    alignment: Alignment,
+    layoutDirection: LayoutDirection,
+    minWidth: Int = 0,
+    maxWidth: Int = Constraints.Infinity,
+    minHeight: Int = 0,
+    maxHeight: Int = Constraints.Infinity,
+): TouchTargetPlacement {
+    var width = maxOf(contentWidth, minimumPx)
+    var height = maxOf(contentHeight, minimumPx)
+    if (contentWidth < minimumPx) width = width.coerceIn(minWidth, maxWidth)
+    if (contentHeight < minimumPx) height = height.coerceIn(minHeight, maxHeight)
+    val offset = alignment.align(
+        size = IntSize(contentWidth, contentHeight),
+        space = IntSize(width, height),
+        layoutDirection = layoutDirection,
+    )
+    return TouchTargetPlacement(width, height, offset.x, offset.y)
+}
 
 /**
  * Reserves at least [rui.theme.RuiDimens.touchTarget] in both dimensions for
@@ -33,19 +76,19 @@ public fun Modifier.ruiMinimumTouchTarget(
 
     return layout { measurable, constraints ->
         val placeable = measurable.measure(constraints)
-        val minimum = touchTarget.roundToPx()
-        var width = maxOf(placeable.width, minimum)
-        var height = maxOf(placeable.height, minimum)
-        if (placeable.width < minimum) width = width.coerceIn(constraints.minWidth, constraints.maxWidth)
-        if (placeable.height < minimum) height = height.coerceIn(constraints.minHeight, constraints.maxHeight)
-        layout(width, height) {
-            placeable.placeRelative(
-                alignment.align(
-                    size = IntSize(placeable.width, placeable.height),
-                    space = IntSize(width, height),
-                    layoutDirection = layoutDirection,
-                ),
-            )
+        val placement = touchTargetPlacement(
+            contentWidth = placeable.width,
+            contentHeight = placeable.height,
+            minimumPx = touchTarget.roundToPx(),
+            alignment = alignment,
+            layoutDirection = layoutDirection,
+            minWidth = constraints.minWidth,
+            maxWidth = constraints.maxWidth,
+            minHeight = constraints.minHeight,
+            maxHeight = constraints.maxHeight,
+        )
+        layout(placement.width, placement.height) {
+            placeable.placeRelative(placement.contentOffsetX, placement.contentOffsetY)
         }
     }
 }

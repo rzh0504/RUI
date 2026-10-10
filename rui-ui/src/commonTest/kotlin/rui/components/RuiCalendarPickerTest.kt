@@ -3,6 +3,7 @@ package rui.components
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
+import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
 /**
@@ -91,5 +92,26 @@ class RuiCalendarPickerTest {
         assertEquals(28, daysInMonth(1900, 2))
         assertEquals(29, RuiDate(2024, 2, 29).day)
         assertFailsWith<IllegalArgumentException> { RuiDate(1900, 2, 29) }
+    }
+
+    @Test
+    fun cursorClampsIntoYearRangePreservingTheMonth() {
+        // An external value outside the range keeps the caller's day; the
+        // grid opens on the nearest in-range year of the same month.
+        assertEquals(RuiDate(2024, 5, 1), calendarCursor(RuiDate(2023, 5, 10), 2024..2026))
+        assertEquals(RuiDate(2026, 7, 1), calendarCursor(RuiDate(2030, 7, 3), 2024..2026))
+        assertEquals(RuiDate(2025, 3, 1), calendarCursor(RuiDate(2025, 3, 21), 2024..2026))
+    }
+
+    @Test
+    fun cursorShiftIsRejectedAtTheRangeBounds() {
+        assertNull(shiftedCursor(RuiDate(2024, 1, 1), -1, 2024..2025))
+        assertNull(shiftedCursor(RuiDate(2025, 12, 1), 1, 2024..2025))
+    }
+
+    @Test
+    fun cursorShiftCrossesYearBoundariesInsideTheRange() {
+        assertEquals(RuiDate(2025, 1, 1), shiftedCursor(RuiDate(2024, 12, 1), 1, 2024..2025))
+        assertEquals(RuiDate(2024, 12, 1), shiftedCursor(RuiDate(2025, 1, 1), -1, 2024..2025))
     }
 }

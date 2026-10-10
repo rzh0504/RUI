@@ -77,22 +77,23 @@ public fun RuiCalendarPicker(
 
     val anchor = value ?: today ?: RuiDate(yearRange.first, 1, 1)
     var cursor by remember(yearRange) {
-        mutableStateOf(RuiDate(anchor.year.coerceIn(yearRange), anchor.month, 1))
+        mutableStateOf(calendarCursor(anchor, yearRange))
     }
     // The view follows the value when it changes from outside (including a
     // pick on an adjacent-month day); browsing months only moves the cursor.
     LaunchedEffect(value) {
         if (value != null) {
-            cursor = RuiDate(value.year.coerceIn(yearRange), value.month, 1)
+            cursor = calendarCursor(value, yearRange)
         }
     }
 
-    val canGoBack = cursor.year > yearRange.first || cursor.month > 1
-    val canGoForward = cursor.year < yearRange.last || cursor.month < 12
+    // The chevrons' enabled state and the accepted shifts are the same
+    // decision, so a disabled chevron and a rejected shift can never disagree.
+    val canGoBack = shiftedCursor(cursor, -1, yearRange) != null
+    val canGoForward = shiftedCursor(cursor, 1, yearRange) != null
 
     fun moveCursor(delta: Int) {
-        val candidate = shiftMonth(cursor, delta)
-        if (candidate.year in yearRange) cursor = candidate
+        shiftedCursor(cursor, delta, yearRange)?.let { cursor = it }
     }
 
     Column(modifier = modifier.padding(spacing.md)) {
@@ -247,6 +248,23 @@ internal fun monthCells(year: Int, month: Int): List<DayCell> {
 private fun shiftMonth(date: RuiDate, delta: Int): RuiDate {
     val total = date.year * 12 + date.month - 1 + delta
     return RuiDate(year = total.floorDiv(12), month = total.mod(12) + 1, day = 1)
+}
+
+/**
+ * The month the grid opens on for an external anchor: the year clamps into
+ * [yearRange] (the grid can only present in-range months) while the calendar
+ * month is preserved, and the cursor always sits on day one.
+ */
+internal fun calendarCursor(anchor: RuiDate, yearRange: IntRange): RuiDate =
+    RuiDate(anchor.year.coerceIn(yearRange), anchor.month, 1)
+
+/**
+ * The cursor shifted by [delta] months, or `null` when the shift would leave
+ * [yearRange] — the same decision that backs the chevrons' enabled state.
+ */
+internal fun shiftedCursor(cursor: RuiDate, delta: Int, yearRange: IntRange): RuiDate? {
+    val candidate = shiftMonth(cursor, delta)
+    return if (candidate.year in yearRange) candidate else null
 }
 
 /**
