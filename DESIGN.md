@@ -95,7 +95,7 @@ The catalog wires it end to end: `RuiScaffold(backdrop = …)` captures the cont
 - `scrollEndHaptic()` — a haptic tick when a fling hits a scroll boundary.
 - `pressScale(interactionSource)` — sink-while-pressed scale for large tiles that pair with (or replace) the state layer.
 
-`rui.foundation.RuiHaptics` is the semantic haptics layer the components speak — `selection` / `impactLight` / `impactMedium` / `success` / `warning` / `error`, mapped per platform (UIKit feedback generators on iOS, versioned `View.performHapticFeedback` constants on Android). Call `rememberRuiHaptics()`; `scrollEndHaptic()` stays raw-`HapticFeedbackType` on purpose for callers decorating their own scrollables.
+`rui.foundation.RuiHaptics` is the semantic haptics layer the components speak — `selection` / `impactLight` / `impactMedium` / `success` / `warning` / `error`, mapped per platform (UIKit feedback generators on iOS; versioned `View.performHapticFeedback` constants on Android, degrading along the returned `Boolean` to a silent no-op when the motor or the system setting refuses). Call `rememberRuiHaptics()`; `scrollEndHaptic()` stays raw-`HapticFeedbackType` on purpose for callers decorating their own scrollables.
 
 ## Component conventions
 

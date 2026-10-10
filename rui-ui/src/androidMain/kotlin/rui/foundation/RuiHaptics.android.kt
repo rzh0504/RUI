@@ -16,7 +16,10 @@ public actual fun rememberRuiHaptics(): RuiHaptics {
 private class ViewRuiHaptics(private val view: View) : RuiHaptics {
     override fun selection() = perform(HapticFeedbackConstants.CLOCK_TICK)
 
-    override fun impactLight() = perform(HapticFeedbackConstants.CONTEXT_CLICK)
+    override fun impactLight() = perform(
+        HapticFeedbackConstants.CONTEXT_CLICK,
+        HapticFeedbackConstants.VIRTUAL_KEY,
+    )
 
     override fun impactMedium() = perform(
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
@@ -24,6 +27,7 @@ private class ViewRuiHaptics(private val view: View) : RuiHaptics {
         } else {
             HapticFeedbackConstants.VIRTUAL_KEY
         },
+        HapticFeedbackConstants.VIRTUAL_KEY,
     )
 
     override fun success() = perform(
@@ -32,6 +36,7 @@ private class ViewRuiHaptics(private val view: View) : RuiHaptics {
         } else {
             HapticFeedbackConstants.CLOCK_TICK
         },
+        HapticFeedbackConstants.CLOCK_TICK,
     )
 
     // "Withdrawn from the threshold" is the closest warning signal Android's
@@ -42,6 +47,7 @@ private class ViewRuiHaptics(private val view: View) : RuiHaptics {
         } else {
             HapticFeedbackConstants.LONG_PRESS
         },
+        HapticFeedbackConstants.LONG_PRESS,
     )
 
     override fun error() = perform(
@@ -50,9 +56,18 @@ private class ViewRuiHaptics(private val view: View) : RuiHaptics {
         } else {
             HapticFeedbackConstants.LONG_PRESS
         },
+        HapticFeedbackConstants.LONG_PRESS,
     )
 
-    private fun perform(constant: Int) {
-        view.performHapticFeedback(constant)
+    /**
+     * Plays the first constant the device actually performs. `false` — no
+     * vibrator, the user's haptic setting switched off, the view detached —
+     * degrades to the next constant and finally stays silent; a refused buzz
+     * is never forced.
+     */
+    private fun perform(vararg constants: Int) {
+        for (constant in constants) {
+            if (view.performHapticFeedback(constant)) return
+        }
     }
 }
