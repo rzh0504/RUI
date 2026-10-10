@@ -33,9 +33,9 @@ import rui.theme.RuiTheme
  * The Rui dialog: Unstyled's modal behavior (portal host, Esc/back dismiss,
  * pane title semantics, scrim) with a token-styled panel.
  *
- * The app root should compose [com.composeunstyled.DialogHost] so dialog
- * panels portal above everything; without one, Unstyled falls back to a
- * platform modal.
+ * The app root should compose [RuiOverlayHost] so dialog panels portal above
+ * everything; without one, Unstyled falls back to a platform modal — insets,
+ * backdrop and scrim behavior then differ, and a setup note is logged.
  */
 @Composable
 public fun RuiDialog(
@@ -105,6 +105,8 @@ private fun RuiDialogPanel(
     val spacing = RuiTheme.spacing
     val motion = RuiTheme.motion
     val dimens = RuiTheme.dimens
+
+    WarnWithoutRuiOverlayHost("RuiDialog")
 
     UnstyledDialog(
         visible = visible,

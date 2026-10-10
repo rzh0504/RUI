@@ -11,9 +11,8 @@ import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.unit.dp
-import com.composeunstyled.DialogHost
-import com.composeunstyled.ModalBottomSheetHost
 import com.composeunstyled.TooltipHost
+import rui.components.RuiOverlayHost
 import rui.components.RuiNavigationBar
 import rui.components.RuiNavigationBarItem
 import rui.components.RuiScaffold
@@ -145,12 +144,11 @@ public fun CatalogApp() {
         // In-app theme toggle: push the appearance to the system bars in the
         // same frame, so icons stay visible over the switched background.
         StatusBarAppearance(darkIcons = !darkTheme)
-        DialogHost {
-            // Bottom sheets portal here, above the navigation stack, exactly
-            // like dialogs portal through DialogHost.
-            ModalBottomSheetHost {
-                // Tooltip panels portal above the navigation stack too.
-                TooltipHost {
+        // Dialogs and bottom sheets portal above the navigation stack —
+        // both through the one overlay host.
+        RuiOverlayHost {
+            // Tooltip panels portal above the navigation stack too.
+            TooltipHost {
                 RuiNavDisplay(backStack = backStack, onBack = { nav.pop() }) { page ->
                 val atRoot = page == CatalogPage.Root
                 // Top-level pages get the collapsing large title; pushed
@@ -266,7 +264,6 @@ public fun CatalogApp() {
                             CatalogPage.Reorder -> ReorderScreen(contentPadding = padding)
                         }
                     }
-                }
                 }
             }
         }

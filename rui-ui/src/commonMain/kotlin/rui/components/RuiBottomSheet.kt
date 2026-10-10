@@ -42,9 +42,9 @@ import rui.theme.RuiTheme
  * Give it the screen's [backdrop] to render the frosted material; without
  * one the sheet falls back to an opaque elevated surface.
  *
- * The app root must compose [com.composeunstyled.ModalBottomSheetHost] so
- * sheets portal above everything (see [RuiDialog] for the same convention
- * with [com.composeunstyled.DialogHost]).
+ * The app root should compose [RuiOverlayHost] so sheets portal above
+ * everything — the same host dialogs use; without one the platform modal
+ * fallback logs a setup note pointing there.
  *
  * @param visible Whether the sheet is showing; the caller owns this state.
  * @param onDismiss Called for every dismiss path (scrim, back, drag-to-hide).
@@ -64,6 +64,8 @@ public fun RuiBottomSheet(
     val spacing = RuiTheme.spacing
     val motion = RuiTheme.motion
     val isVisible by rememberUpdatedState(visible)
+
+    WarnWithoutRuiOverlayHost("RuiBottomSheet")
 
     val state = rememberModalBottomSheetState(
         initialDetent = SheetDetent.Hidden,
