@@ -281,6 +281,6 @@ private fun TokenRow(name: String, color: Color) {
 }
 
 private fun hexOf(color: Color): String {
-    val argb = color.toArgb()
-    return "#%06X".format(argb and 0xFFFFFF)
+    val hex = (color.toArgb() and 0xFFFFFF).toString(16).uppercase()
+    return "#" + hex.padStart(6, '0')
 }
