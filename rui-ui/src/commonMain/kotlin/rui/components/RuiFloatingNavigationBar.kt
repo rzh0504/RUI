@@ -6,6 +6,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -23,27 +24,15 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.drawWithContent
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.CompositingStrategy
-import androidx.compose.ui.graphics.RectangleShape
-import androidx.compose.ui.graphics.BlurEffect
 import androidx.compose.ui.graphics.Shape
-import androidx.compose.ui.graphics.TileMode
-import androidx.compose.ui.graphics.drawscope.translate
 import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.graphics.layer.drawLayer
-import androidx.compose.ui.layout.LayoutCoordinates
-import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalLayoutDirection
@@ -85,14 +74,10 @@ public object RuiFloatingNavigationBarDefaults {
     public val MaxWidth: Dp = 480.dp
 
     /**
-     * Height of the fog fade above the capsule: the progressive blur ramps
-     * from nothing up here to full fog at the capsule's top edge, and stays
-     * fogged down to the screen's bottom edge.
+     * How far the scrim rises above the capsule — YumeBox's BottomEdgeScrim
+     * overshoot, so content fades out before it reaches the bar.
      */
-    public val FogExtent: Dp = 24.dp
-
-    /** Milkiness of the fog: the wash drawn over the blurred backdrop. */
-    public val FogTintAlpha: Float = 0.5f
+    public val ScrimRise: Dp = 28.dp
 
     /** How far the bar slides down when hidden. */
     public val ExitOffset: Dp = 84.dp
@@ -106,7 +91,7 @@ public object RuiFloatingNavigationBarDefaults {
     /** Tint of the selection pill: the accent washed over the capsule. */
     public const val IndicatorAlpha: Float = 0.12f
 
-    /** Blur radius of the frosted glass and the fog. */
+    /** Blur radius of the frosted glass. */
     public val BlurRadius: Dp = 32.dp
 
     /** Tab icon size — the nav bar's icon metric, shared with the docked bar. */
@@ -122,18 +107,18 @@ public object RuiFloatingNavigationBarDefaults {
 
 /**
  * A floating bottom navigation bar: a capsule hovering above the content,
- * grounded in a progressive fog — the content behind the bar blurs and
- * washes toward the capsule across [RuiFloatingNavigationBarDefaults.FogExtent]
- * above it and stays fogged down to the screen's bottom edge, so nothing
- * sharp pokes out around or beneath the bar. The fog needs a [backdrop]
- * (and a platform that blurs); without one it is simply not drawn and the
- * capsule falls back to an honest translucent stadium.
+ * grounded in a bottom edge scrim — a vertical gradient veil that hides
+ * content sliding into the bar's zone (transparent above the capsule,
+ * opaque at the screen's bottom edge), so nothing sharp pokes out around or
+ * beneath the bar. The scrim reads as a progressive blur while sampling
+ * nothing; light themes wash it white, dark ones with the surface color.
  *
  * The capsule itself is frosted like the docked [RuiNavigationBar] — with a
- * [backdrop] it blurs the content behind itself. Place inside
- * [RuiScaffold]'s `bottomBar` slot; the scaffold reports the capsule, its
- * surrounding air and the fog as content padding, so lists scroll under the
- * floating bar and never end up hidden behind it.
+ * [backdrop] it blurs the content behind itself; without one it is an
+ * honest translucent stadium. Place inside [RuiScaffold]'s `bottomBar`
+ * slot; the scaffold reports the capsule, its surrounding air and the
+ * scrim's rise as content padding, so lists scroll under the floating bar
+ * and never end up hidden behind it.
  *
  * The current destination is marked by a pill in the accent color sliding
  * between the equal-width slots; the selected slot's icon and label read in
@@ -141,13 +126,13 @@ public object RuiFloatingNavigationBarDefaults {
  * [RuiNavigationBarItem] model of the docked bar: a slot with a `null` icon
  * renders label only, a blank label renders icon only.
  *
- * [visible] = false hides the bar: it slides down under the navigation-bar
- * inset while fog, tint, border and items fade, and its slots stop
- * responding — the reserved space stays, so the layout never jumps. Tapping
- * the already-selected tab re-invokes [onSelect] with its index, so
- * scroll-to-top patterns keep working; [selected] outside `items.indices`
- * selects nothing and parks the pill; an empty [items] renders an empty
- * capsule.
+ * [visible] = false hides the bar: the capsule slides down under the
+ * navigation-bar inset while the scrim, tint, border and items fade, and
+ * the slots stop responding — the reserved space stays, so the layout never
+ * jumps. Tapping the already-selected tab re-invokes [onSelect] with its
+ * index, so scroll-to-top patterns keep working; [selected] outside
+ * `items.indices` selects nothing and parks the pill; an empty [items]
+ * renders an empty capsule.
  */
 @Composable
 public fun RuiFloatingNavigationBar(
@@ -167,9 +152,9 @@ public fun RuiFloatingNavigationBar(
     val capsule = RuiFloatingNavigationBarDefaults.CapsuleShape
     val shadowShape = capsule.toShadowShape()
 
-    // Hide/show: the bar slides under the navigation-bar inset while fog,
-    // tint, border and items fade. The capsule's shadow fades through its
-    // color, never through a layer alpha — an alpha'd layer composites
+    // Hide/show: the capsule slides under the navigation-bar inset while the
+    // scrim and the chrome fade in place. The capsule's shadow fades through
+    // its color, never through a layer alpha — an alpha'd layer composites
     // offscreen and crops the shadow square (the snackbar's lesson).
     val exitPx = remember(density) {
         with(density) { RuiFloatingNavigationBarDefaults.ExitOffset.toPx() }
@@ -204,34 +189,25 @@ public fun RuiFloatingNavigationBar(
     } else {
         containerColor.copy(alpha = 0.85f)
     }
-    val fogExtentPx = with(density) { RuiFloatingNavigationBarDefaults.FogExtent.toPx() }
 
-    // The block spans to the screen's bottom edge so the fog can cover the
-    // navigation-bar inset too; the capsule floats above that inset inside.
+    // The block spans to the screen's bottom edge so the scrim can cover the
+    // navigation-bar inset too; the capsule floats above that inset inside,
+    // and alone under the hide slide — the scrim only fades, never moves.
+    val scrimColor = if (colors.background.luminance() < 0.5f) colors.surface else Color.White
     Box(
         modifier = modifier
-            .fillMaxWidth()
-            .graphicsLayer { translationY = slide.value },
+            .fillMaxWidth(),
     ) {
-        if (useBlur) {
-            Box(
-                modifier = Modifier
-                    .matchParentSize()
-                    .fogSurface(
-                        backdrop = backdrop,
-                        radius = RuiFloatingNavigationBarDefaults.BlurRadius,
-                        tint = containerColor.copy(alpha = RuiFloatingNavigationBarDefaults.FogTintAlpha),
-                        fadeExtentPx = fogExtentPx,
-                        alpha = { contentAlpha },
-                    ),
-            )
+        if (contentAlpha > 0f) {
+            BottomEdgeScrim(color = scrimColor, fadeAlpha = contentAlpha)
         }
 
         Box(
             modifier = Modifier
                 .fillMaxWidth()
+                .graphicsLayer { translationY = slide.value }
                 .navigationBarsPadding()
-                .padding(top = RuiFloatingNavigationBarDefaults.FogExtent),
+                .padding(top = RuiFloatingNavigationBarDefaults.ScrimRise),
         ) {
             Box(
                 modifier = Modifier
@@ -352,69 +328,27 @@ public fun RuiFloatingNavigationBar(
 }
 
 /**
- * The progressive fog behind the floating capsule: the [backdrop] drawn
- * blurred and washed with [tint], revealed by a vertical alpha ramp — sharp
- * at the node's top edge, fully fogged [fadeExtentPx] lower, fogged all the
- * way to the bottom edge. The ramp is a gradient mask over a uniform blur
- * (an offscreen layer + `DstIn`), not a per-pixel radius ramp; the backdrop
- * mechanism is [rui.foundation.Modifier.blurSurface]'s. [alpha] is read per
- * draw, so the hide animation never recomposes.
+ * YumeBox's BottomEdgeScrim, verbatim: a full-width veil over the bar's
+ * whole zone, transparent at the top edge, 55% at a quarter down, 88% at
+ * 55% down and opaque at the bottom — content sliding into the bar area
+ * fades into the wash, reading as a progressive blur while sampling
+ * nothing. [alpha] carries the hide fade.
  */
-private fun Modifier.fogSurface(
-    backdrop: BlurBackdrop,
-    radius: Dp,
-    tint: Color,
-    fadeExtentPx: Float,
-    alpha: () -> Float,
-): Modifier {
-    val consumerCoordinates = mutableStateOf<LayoutCoordinates?>(null)
-
-    return this
-        .clip(RectangleShape)
-        .onGloballyPositioned { coordinates ->
-            if (coordinates.isAttached) {
-                consumerCoordinates.value = coordinates
-            }
-        }
-        // Offscreen isolates the DstIn mask to this node's drawing — without
-        // it the mask would fade the page content beneath the fog too.
-        .graphicsLayer { compositingStrategy = CompositingStrategy.Offscreen }
-        .drawWithContent {
-            val fade = alpha()
-            val consumer = consumerCoordinates.value
-            val source = backdrop.layerCoordinates
-            if (fade <= 0f || consumer == null || source == null) {
-                return@drawWithContent
-            }
-            val offset = try {
-                source.localPositionOf(consumer, Offset.Zero)
-            } catch (_: Exception) {
-                return@drawWithContent
-            }
-            if (!offset.x.isFinite() || !offset.y.isFinite()) {
-                return@drawWithContent
-            }
-
-            backdrop.graphicsLayer.renderEffect =
-                BlurEffect(radius.toPx(), radius.toPx(), TileMode.Clamp)
-            translate(-offset.x, -offset.y) {
-                drawLayer(backdrop.graphicsLayer)
-            }
-            drawRect(tint)
-            val fadeFraction = if (size.height > 0f) {
-                (fadeExtentPx / size.height).coerceIn(0f, 1f)
-            } else {
-                1f
-            }
-            drawRect(
-                brush = Brush.verticalGradient(
-                    0f to Color.Transparent,
-                    fadeFraction to Color.Black.copy(alpha = fade),
-                    1f to Color.Black.copy(alpha = fade),
+@Composable
+private fun BoxScope.BottomEdgeScrim(color: Color, fadeAlpha: Float) {
+    Box(
+        modifier = Modifier
+            .matchParentSize()
+            .graphicsLayer { alpha = fadeAlpha }
+            .background(
+                Brush.verticalGradient(
+                    0f to color.copy(alpha = 0f),
+                    0.25f to color.copy(alpha = 0.55f),
+                    0.55f to color.copy(alpha = 0.88f),
+                    1f to color,
                 ),
-                blendMode = BlendMode.DstIn,
-            )
-        }
+            ),
+    )
 }
 
 /**
