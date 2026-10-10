@@ -13,7 +13,7 @@ import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.unit.dp
 import com.composeunstyled.TooltipHost
 import rui.components.RuiOverlayHost
-import rui.components.RuiNavigationBar
+import rui.components.RuiFloatingNavigationBar
 import rui.components.RuiNavigationBarItem
 import rui.components.RuiScaffold
 import rui.components.RuiTopAppBar
@@ -185,7 +185,7 @@ public fun CatalogApp() {
                     },
                     bottomBar = {
                         if (atRoot) {
-                            RuiNavigationBar(
+                            RuiFloatingNavigationBar(
                                 items = listOf(
                                     RuiNavigationBarItem("Components", RuiIcons.Grid),
                                     RuiNavigationBarItem("Tokens", RuiIcons.Swatch),
