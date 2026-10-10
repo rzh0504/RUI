@@ -31,3 +31,5 @@ Thumbs.db
 
 # ZCode session artifacts
 .zcode/
+docs/
+review.md
