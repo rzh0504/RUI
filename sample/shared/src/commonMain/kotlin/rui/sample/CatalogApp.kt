@@ -13,6 +13,7 @@ import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.unit.dp
 import com.composeunstyled.TooltipHost
 import rui.components.RuiOverlayHost
+import rui.components.RuiFloatingNavigationBar
 import rui.components.RuiNavigationBar
 import rui.components.RuiNavigationBarItem
 import rui.components.RuiScaffold
@@ -120,10 +121,10 @@ private fun CatalogPage.title(): String = when (this) {
 }
 
 /**
- * Root of the catalog app: a large-title app bar, a frosted-glass bottom
- * navigation bar (Components / Tokens) and component pages pushed onto a
- * [RuiNavDisplay] back stack. [DialogHost] sits at the root so RuiDialog
- * panels portal above everything.
+ * Root of the catalog app: a large-title app bar, a bottom navigation bar
+ * switchable between the docked bar and the floating capsule (Components /
+ * Tokens) and component pages pushed onto a [RuiNavDisplay] back stack.
+ * [DialogHost] sits at the root so RuiDialog panels portal above everything.
  */
 @OptIn(ExperimentalRuiApi::class, ExperimentalComposeUiApi::class)
 @Composable
@@ -131,6 +132,7 @@ public fun CatalogApp() {
     val systemDark = isSystemInDarkTheme()
     var darkTheme by remember { mutableStateOf(systemDark) }
     var frostedEnabled by remember { mutableStateOf(true) }
+    var floatingNavBarEnabled by remember { mutableStateOf(false) }
     var languageChoice by remember { mutableStateOf(LanguageChoice.System) }
     var tab by remember { mutableStateOf(0) }
     val backStack = rememberRuiNavBackStack<CatalogPage>(CatalogPage.Root)
@@ -185,15 +187,27 @@ public fun CatalogApp() {
                     },
                     bottomBar = {
                         if (atRoot) {
-                            RuiNavigationBar(
-                                items = listOf(
-                                    RuiNavigationBarItem("Components", RuiIcons.Grid),
-                                    RuiNavigationBarItem("Tokens", RuiIcons.Swatch),
-                                ),
-                                selected = tab,
-                                onSelect = { tab = it },
-                                backdrop = backdrop,
-                            )
+                            if (floatingNavBarEnabled) {
+                                RuiFloatingNavigationBar(
+                                    items = listOf(
+                                        RuiNavigationBarItem("Components", RuiIcons.Grid),
+                                        RuiNavigationBarItem("Tokens", RuiIcons.Swatch),
+                                    ),
+                                    selected = tab,
+                                    onSelect = { tab = it },
+                                    backdrop = backdrop,
+                                )
+                            } else {
+                                RuiNavigationBar(
+                                    items = listOf(
+                                        RuiNavigationBarItem("Components", RuiIcons.Grid),
+                                        RuiNavigationBarItem("Tokens", RuiIcons.Swatch),
+                                    ),
+                                    selected = tab,
+                                    onSelect = { tab = it },
+                                    backdrop = backdrop,
+                                )
+                            }
                         }
                     },
                 ) { padding ->
@@ -215,6 +229,8 @@ public fun CatalogApp() {
                                     onFrostedEnabledChange = { frostedEnabled = it },
                                     onOpen = { nav.push(it) },
                                     contentPadding = padding,
+                                    floatingNavBarEnabled = floatingNavBarEnabled,
+                                    onFloatingNavBarEnabledChange = { floatingNavBarEnabled = it },
                                 )
                                 else -> TokensScreen(contentPadding = padding)
                             }

@@ -20,6 +20,8 @@ public fun ComponentsScreen(
     onDarkThemeChange: (Boolean) -> Unit,
     frostedEnabled: Boolean,
     onFrostedEnabledChange: (Boolean) -> Unit,
+    floatingNavBarEnabled: Boolean,
+    onFloatingNavBarEnabledChange: (Boolean) -> Unit,
     onOpen: (CatalogPage) -> Unit,
     contentPadding: PaddingValues = PaddingValues(0.dp),
 ) {
@@ -34,6 +36,16 @@ public fun ComponentsScreen(
             RuiListItem(
                 title = "Frosted material",
                 trailing = { RuiSwitch(checked = frostedEnabled, onCheckedChange = onFrostedEnabledChange) },
+            )
+            RuiDivider(inset = RuiTheme.spacing.lg)
+            RuiListItem(
+                title = "Floating navigation bar",
+                trailing = {
+                    RuiSwitch(
+                        checked = floatingNavBarEnabled,
+                        onCheckedChange = onFloatingNavBarEnabledChange,
+                    )
+                },
             )
             RuiDivider(inset = RuiTheme.spacing.lg)
             RuiListItem(
