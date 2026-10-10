@@ -16,6 +16,7 @@ import com.composeunstyled.LocalContentColor
 import com.composeunstyled.UnstyledButton
 import com.composeunstyled.theme.ColoredIndication
 import rui.foundation.ruiFocusRing
+import rui.foundation.ruiMinimumTouchTarget
 import rui.theme.RuiTheme
 import rui.theme.StateLayerAlphas
 
@@ -54,6 +55,7 @@ public fun RuiIconButton(
         onClick = onClick,
         enabled = enabled,
         modifier = modifier
+            .ruiMinimumTouchTarget()
             .size(RuiButtonDefaults.iconButtonSize(size))
             .clip(shape)
             .background(colors.container, shape)
@@ -68,7 +70,11 @@ public fun RuiIconButton(
     }
 }
 
-/** Square side length matching [RuiButtonDefaults.minHeight] for the same tier. */
+/**
+ * Square visual side length matching [RuiButtonDefaults.minHeight] for the
+ * same tier. This is the chrome, not the touch slot: the button reserves
+ * [rui.theme.RuiDimens.touchTarget] around it regardless of the tier.
+ */
 public fun RuiButtonDefaults.iconButtonSize(size: RuiButtonSize): Dp = when (size) {
     RuiButtonSize.Sm -> 32.dp
     RuiButtonSize.Md -> 40.dp

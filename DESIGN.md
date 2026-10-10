@@ -50,7 +50,7 @@ Token values — `sm 6 · md 10 · lg 14 · xl 18 · sheet 14 (top only) · full
 ### Spacing & metrics
 
 `RuiSpacing`: 4 / 8 / 12 / 16 / 24 / 32 on a 4dp grid.
-`RuiDimens`: touch target 44dp (between Material's 48 and HIG's 44), border 1dp, focus ring 2dp, icon 20dp, picker row 36dp.
+`RuiDimens`: touch target 44dp (between Material's 48 and HIG's 44) — the minimum interactive size interactive components reserve, not a visual size, border 1dp, focus ring 2dp, icon 20dp, picker row 36dp.
 
 All three token sets (`spacing` / `dimens` / `motion`) are injectable at `RuiTheme`; each is a data class, so a family-wide adjustment — denser layout, accessibility preset, slower motion — is a `copy()` away.
 
@@ -76,6 +76,7 @@ The only sanctioned exceptions live with their component: the top app bar's coll
 
 - **State layer** — pressed 10%, hovered 6%, focused 8%, dragged 12% alpha of the *component's content color* (`rememberRuiIndication`, `ColoredIndication` under the hood).
 - **Focus** — 2dp ring in `primary`, drawn outside the shape (`focusRing`), visible only for keyboard focus (`FocusVisibilityProvider` at the app root enables this).
+- **Touch target** — visual sizes stay small (`Sm` buttons are 32dp chrome); interactive components reserve at least `RuiDimens.touchTarget` in their layout slot via `ruiMinimumTouchTarget` (reserve-and-center, Material's `minimumInteractiveComponentSize` recipe), so the OS input layer's expanded touch region has room and the token stays globally adjustable.
 - **Selection** — checkboxes and switches fill with `primary`; marks animate with short springs. Radios are circles (ring + dot, `CircleShape` like switches); in grouped lists an exclusive selection shows a `primary` check mark on the selected row (iOS settings style), with the mark's space reserved so rows don't shift.
 
 ## Frosted material

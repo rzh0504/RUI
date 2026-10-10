@@ -42,6 +42,7 @@ import kotlinx.coroutines.delay
 import rui.foundation.RuiIcon
 import rui.foundation.RuiIcons
 import rui.foundation.ruiFocusRing
+import rui.foundation.ruiMinimumTouchTarget
 import rui.theme.RuiTheme
 import rui.theme.StateLayerAlphas
 
@@ -98,6 +99,8 @@ public object RuiButtonDefaults {
         }
     }
 
+    /** Minimum visual height of a tier; the touch slot is reserved to the
+     * touch-target token by the button itself. */
     public fun minHeight(size: RuiButtonSize): Dp = when (size) {
         RuiButtonSize.Sm -> 32.dp
         RuiButtonSize.Md -> 40.dp
@@ -156,6 +159,7 @@ public fun RuiButton(
         onClick = onClick,
         enabled = enabled,
         modifier = modifier
+            .ruiMinimumTouchTarget()
             .heightIn(min = RuiButtonDefaults.minHeight(size))
             .clip(shape)
             .background(colors.container, shape)

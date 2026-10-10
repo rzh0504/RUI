@@ -1,6 +1,5 @@
 package rui.components
 
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -10,6 +9,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.selection.selectable
+import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -21,6 +22,7 @@ import rui.foundation.BlurBackdrop
 import rui.foundation.RuiIcon
 import rui.foundation.RuiText
 import rui.foundation.platform.isBlurSupported
+import rui.foundation.ruiMinimumTouchTarget
 import rui.theme.RuiTheme
 
 /** One destination of [RuiNavigationBar]. */
@@ -35,6 +37,12 @@ public data class RuiNavigationBarItem(
  * scrolled content is only revealed through the frosted blur; without one it
  * is an opaque page-background strip. Place inside [RuiScaffold]'s
  * `bottomBar` slot.
+ *
+ * Items are exposed as tabs, and the current destination is marked selected
+ * for assistive technology. [selected] outside `items.indices` selects
+ * nothing; an empty [items] renders an empty bar; tapping the already
+ * selected tab re-invokes [onSelect] with its index, so scroll-to-top
+ * patterns keep working.
  */
 @Composable
 public fun RuiNavigationBar(
@@ -63,7 +71,8 @@ public fun RuiNavigationBar(
             modifier = Modifier
                 .fillMaxWidth()
                 .navigationBarsPadding()
-                .heightIn(min = 56.dp),
+                .heightIn(min = 56.dp)
+                .selectableGroup(),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             items.forEachIndexed { index, item ->
@@ -72,8 +81,10 @@ public fun RuiNavigationBar(
                     modifier = Modifier
                         .weight(1f)
                         .heightIn(min = 56.dp)
+                        .ruiMinimumTouchTarget()
                         // No press indication: iOS tab bars don't ripple.
-                        .clickable(
+                        .selectable(
+                            selected = isSelected,
                             interactionSource = null,
                             indication = null,
                             role = Role.Tab,
