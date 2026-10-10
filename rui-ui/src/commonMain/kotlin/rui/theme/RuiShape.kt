@@ -1,5 +1,6 @@
 package rui.theme
 
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Outline
@@ -8,6 +9,7 @@ import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.LayoutDirection
+import androidx.compose.ui.unit.dp
 import kotlin.math.max
 import kotlin.math.min
 
@@ -159,4 +161,22 @@ public fun Path.addSmoothTopCornerRect(
     lineTo(0f, tile)
     cubicTo(0f, handle, handle, 0f, tile, 0f)
     close()
+}
+
+/**
+ * The elevation-shadow twin of a Rui shape. HWUI renders shadow outlines only
+ * from rounded rects — a squircle's Outline.Generic degrades to a rectangular
+ * shadow — so every Rui shape maps to a plain rounded shadow of the same
+ * radius: a shadow is a blur where squircle smoothing is imperceptible. The
+ * top-only variant keeps its square bottom edge flush with the screen edge.
+ */
+internal fun Shape.toShadowShape(): Shape = when (this) {
+    is SmoothCornerShape -> RoundedCornerShape(radius)
+    is TopSmoothCornerShape -> RoundedCornerShape(
+        topStart = radius,
+        topEnd = radius,
+        bottomStart = 0.dp,
+        bottomEnd = 0.dp,
+    )
+    else -> this
 }
