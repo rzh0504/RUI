@@ -23,14 +23,23 @@ jobs:
           chmod +x gradlew
           ./gradlew :rui-ui:compileKotlinIosSimulatorArm64 :sample:shared:compileKotlinIosSimulatorArm64
 
+      - name: Select the latest Xcode on the runner
+        run: |
+          LATEST_XCODE=$(ls -d /Applications/Xcode*.app | sort -V | tail -1)
+          echo "Selecting $LATEST_XCODE"
+          sudo xcode-select -s "$LATEST_XCODE"
+          xcodebuild -version
+
       - name: Build iOS app (includes framework link + embed)
         run: |
+          # -target builds reject -derivedDataPath (a scheme-only flag); put
+          # the products in a known place via CONFIGURATION_BUILD_DIR.
           xcodebuild \
             -project sample/iosApp/iosApp.xcodeproj \
             -target iosApp \
             -sdk iphonesimulator \
             -configuration Debug \
-            -derivedDataPath sample/iosApp/build/DerivedData \
+            CONFIGURATION_BUILD_DIR="$PWD/sample/iosApp/build/Products" \
             build \
             CODE_SIGNING_ALLOWED=NO
 
@@ -39,7 +48,7 @@ jobs:
           DEVICE=$(xcrun simctl list devices available | grep -m1 -o '[A-F0-9-]\{36\}')
           echo "Booting simulator $DEVICE"
           xcrun simctl boot "$DEVICE" || true
-          APP="sample/iosApp/build/DerivedData/Build/Products/Debug-iphonesimulator/iosApp.app"
+          APP="sample/iosApp/build/Products/iosApp.app"
           xcrun simctl install "$DEVICE" "$APP"
           xcrun simctl launch "$DEVICE" rui.sample.ios
           sleep 8
