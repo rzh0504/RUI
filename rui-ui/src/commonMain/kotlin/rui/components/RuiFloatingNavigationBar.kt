@@ -111,7 +111,8 @@ public object RuiFloatingNavigationBarDefaults {
  * content sliding into the bar's zone (transparent above the capsule,
  * opaque at the screen's bottom edge), so nothing sharp pokes out around or
  * beneath the bar. The scrim reads as a progressive blur while sampling
- * nothing; light themes wash it white, dark ones with the surface color.
+ * nothing; light themes wash it white, dark ones with the page's own
+ * background.
  *
  * The capsule itself is frosted like the docked [RuiNavigationBar] — with a
  * [backdrop] it blurs the content behind itself; without one it is an
@@ -193,7 +194,11 @@ public fun RuiFloatingNavigationBar(
     // The block spans to the screen's bottom edge so the scrim can cover the
     // navigation-bar inset too; the capsule floats above that inset inside,
     // and alone under the hide slide — the scrim only fades, never moves.
-    val scrimColor = if (colors.background.luminance() < 0.5f) colors.surface else Color.White
+    // The wash content fades into: white in the light theme (the recipe's
+    // pick), the page's own background in the dark one — Rui's dark surface
+    // sits LIGHTER than the page, so a surface veil reads as a lighter fog
+    // exactly like the white scrim the recipe's comment warns about.
+    val scrimColor = if (colors.background.luminance() < 0.5f) colors.background else Color.White
     Box(
         modifier = modifier
             .fillMaxWidth(),
