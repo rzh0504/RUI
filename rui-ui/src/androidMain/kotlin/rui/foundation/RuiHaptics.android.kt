@@ -14,50 +14,19 @@ public actual fun rememberRuiHaptics(): RuiHaptics {
 }
 
 private class ViewRuiHaptics(private val view: View) : RuiHaptics {
-    override fun selection() = perform(HapticFeedbackConstants.CLOCK_TICK)
+    override fun selection() = perform(selectionConstants())
 
-    override fun impactLight() = perform(
-        HapticFeedbackConstants.CONTEXT_CLICK,
-        HapticFeedbackConstants.VIRTUAL_KEY,
-    )
+    override fun impactLight() = perform(impactLightConstants())
 
-    override fun impactMedium() = perform(
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
-            HapticFeedbackConstants.GESTURE_THRESHOLD_ACTIVATE
-        } else {
-            HapticFeedbackConstants.VIRTUAL_KEY
-        },
-        HapticFeedbackConstants.VIRTUAL_KEY,
-    )
+    override fun impactMedium() = perform(impactMediumConstants(Build.VERSION.SDK_INT))
 
-    override fun success() = perform(
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-            HapticFeedbackConstants.CONFIRM
-        } else {
-            HapticFeedbackConstants.CLOCK_TICK
-        },
-        HapticFeedbackConstants.CLOCK_TICK,
-    )
+    override fun success() = perform(successConstants(Build.VERSION.SDK_INT))
 
     // "Withdrawn from the threshold" is the closest warning signal Android's
     // constant set offers; below it, the long-press buzz.
-    override fun warning() = perform(
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
-            HapticFeedbackConstants.GESTURE_THRESHOLD_DEACTIVATE
-        } else {
-            HapticFeedbackConstants.LONG_PRESS
-        },
-        HapticFeedbackConstants.LONG_PRESS,
-    )
+    override fun warning() = perform(warningConstants(Build.VERSION.SDK_INT))
 
-    override fun error() = perform(
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-            HapticFeedbackConstants.REJECT
-        } else {
-            HapticFeedbackConstants.LONG_PRESS
-        },
-        HapticFeedbackConstants.LONG_PRESS,
-    )
+    override fun error() = perform(errorConstants(Build.VERSION.SDK_INT))
 
     /**
      * Plays the first constant the device actually performs. `false` — no
@@ -65,9 +34,49 @@ private class ViewRuiHaptics(private val view: View) : RuiHaptics {
      * degrades to the next constant and finally stays silent; a refused buzz
      * is never forced.
      */
-    private fun perform(vararg constants: Int) {
+    private fun perform(constants: IntArray) {
         for (constant in constants) {
             if (view.performHapticFeedback(constant)) return
         }
     }
 }
+
+/**
+ * The Android mapping, split per semantic class and parameterized by API
+ * level so the version gates are host-testable. Every chain ends in a plainer
+ * constant that predates minSdk 23, so a motor or system setting refusing the
+ * rich primitive still has somewhere to degrade to.
+ */
+internal fun selectionConstants(): IntArray =
+    intArrayOf(HapticFeedbackConstants.CLOCK_TICK)
+
+internal fun impactLightConstants(): IntArray =
+    intArrayOf(HapticFeedbackConstants.CONTEXT_CLICK, HapticFeedbackConstants.VIRTUAL_KEY)
+
+internal fun impactMediumConstants(sdkInt: Int): IntArray =
+    if (sdkInt >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+        intArrayOf(HapticFeedbackConstants.GESTURE_THRESHOLD_ACTIVATE, HapticFeedbackConstants.VIRTUAL_KEY)
+    } else {
+        intArrayOf(HapticFeedbackConstants.VIRTUAL_KEY)
+    }
+
+internal fun successConstants(sdkInt: Int): IntArray =
+    if (sdkInt >= Build.VERSION_CODES.R) {
+        intArrayOf(HapticFeedbackConstants.CONFIRM, HapticFeedbackConstants.CLOCK_TICK)
+    } else {
+        intArrayOf(HapticFeedbackConstants.CLOCK_TICK)
+    }
+
+internal fun warningConstants(sdkInt: Int): IntArray =
+    if (sdkInt >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+        intArrayOf(HapticFeedbackConstants.GESTURE_THRESHOLD_DEACTIVATE, HapticFeedbackConstants.LONG_PRESS)
+    } else {
+        intArrayOf(HapticFeedbackConstants.LONG_PRESS)
+    }
+
+internal fun errorConstants(sdkInt: Int): IntArray =
+    if (sdkInt >= Build.VERSION_CODES.R) {
+        intArrayOf(HapticFeedbackConstants.REJECT, HapticFeedbackConstants.LONG_PRESS)
+    } else {
+        intArrayOf(HapticFeedbackConstants.LONG_PRESS)
+    }
