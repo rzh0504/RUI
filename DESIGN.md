@@ -54,6 +54,8 @@ Token values — `sm 6 · md 10 · lg 14 · xl 18 · sheet 14 (top only) · full
 
 All three token sets (`spacing` / `dimens` / `motion`) are injectable at `RuiTheme`; each is a data class, so a family-wide adjustment — denser layout, accessibility preset, slower motion — is a `copy()` away.
 
+**Token boundary.** `RuiDimens` holds only cross-component metrics, and every interactive component reads them — the touch target through `ruiMinimumTouchTarget`, icon size as `RuiIcon`'s default. A component's own geometry — the switch's 40×24 track and 18dp thumb, the nav bar's 56dp rows and 22dp icons, the sheet's grabber, the dialog's 320dp max, the dropdown's 250dp min — is that component's visual constant, mirroring the iOS metric it follows, and lives beside the component instead of in the token set. Density presets change the shared tokens; they do not reach into component internals.
+
 ### Motion — `RuiMotion`
 
 Duration tokens: state layers 90ms in / 180ms out, short transitions 120ms, medium 200ms, loop tokens for skeletons — pulse 600ms per leg (reversed) and sweep 1200ms per pass (linear). Spring tokens, one per motion family — components pick a family, never a raw spec:
