@@ -71,7 +71,7 @@ public fun <T> RuiWheelPicker(
     selectionBar: Boolean = true,
     itemContent: @Composable (item: T) -> Unit,
 ) {
-    val rows = if (visibleRows < 1) 1 else if (visibleRows % 2 == 0) visibleRows + 1 else visibleRows
+    val rows = wheelRowCount(visibleRows)
     val rowHeight = RuiTheme.dimens.pickerRowHeight
     val colors = RuiTheme.colors
     val dimens = RuiTheme.dimens
@@ -108,19 +108,12 @@ public fun <T> RuiWheelPicker(
         return layout.visibleItemsInfo.minBy { centerDistance(it) }.index
     }
 
-    fun isPerfectlyCentered(index: Int): Boolean {
-        val info = listState.layoutInfo.visibleItemsInfo.firstOrNull { it.index == index }
-            ?: return true
-        return centerDistance(info) < 1f
-    }
-
     // External value changes (the initial position, programmatic sets, a
     // wrapper clamping this wheel from another) move the drum; the drum's
     // own echoes don't.
     LaunchedEffect(selectedIndex, items.size) {
-        if (items.isEmpty()) return@LaunchedEffect
-        val target = selectedIndex.coerceIn(0, items.lastIndex)
-        if (target == lastReportedIndex) return@LaunchedEffect
+        val target = wheelCorrectionTarget(selectedIndex, items.size, lastReportedIndex)
+            ?: return@LaunchedEffect
         if (!positioned) {
             listState.scrollToItem(target)
             positioned = true
@@ -149,11 +142,14 @@ public fun <T> RuiWheelPicker(
                 ) {
                     val settled = centeredIndex()
                     if (settled >= 0) {
-                        if (settled != lastReportedIndex) {
-                            lastReportedIndex = settled
-                            reportedIndex(settled)
+                        val report = wheelSettledReport(settled, lastReportedIndex)
+                        if (report != null) {
+                            lastReportedIndex = report
+                            reportedIndex(report)
                         }
-                        if (!isPerfectlyCentered(settled)) {
+                        val info = listState.layoutInfo.visibleItemsInfo
+                            .firstOrNull { it.index == settled }
+                        if (info != null && wheelNeedsSnapCorrection(centerDistance(info))) {
                             listState.animateScrollToItem(settled)
                         }
                     }
@@ -167,12 +163,13 @@ public fun <T> RuiWheelPicker(
         snapshotFlow { centeredIndex() }
             .distinctUntilChanged()
             .collect { index ->
-                if (index < 0 || correcting) return@collect
-                if (lastTicked == -1) {
-                    lastTicked = index
-                } else if (index != lastTicked) {
-                    lastTicked = index
-                    haptics.selection()
+                when (wheelTickAction(lastTicked, index, correcting)) {
+                    WheelTickAction.Adopt -> lastTicked = index
+                    WheelTickAction.Tick -> {
+                        lastTicked = index
+                        haptics.selection()
+                    }
+                    WheelTickAction.None -> {}
                 }
             }
     }
@@ -247,6 +244,53 @@ public fun <T> RuiWheelPicker(
 
 private fun LazyListLayoutInfo.viewportCenter(): Float =
     (viewportStartOffset + viewportEndOffset) / 2f
+
+/** Rows actually rendered: at least one, even counts rounded up so a center row always exists. */
+internal fun wheelRowCount(visibleRows: Int): Int =
+    if (visibleRows < 1) 1 else if (visibleRows % 2 == 0) visibleRows + 1 else visibleRows
+
+/**
+ * The drum target for an external [selectedIndex], or `null` when nothing may
+ * move: an empty wheel, or a change that is only the drum's own echo — the
+ * caller writing the just-reported value back must not read as an external
+ * change, or correcting and reporting feed each other and the drum never
+ * rests. Out-of-range indices clamp to the nearest end.
+ */
+internal fun wheelCorrectionTarget(selectedIndex: Int, itemCount: Int, lastReportedIndex: Int?): Int? {
+    if (itemCount == 0) return null
+    val target = selectedIndex.coerceIn(0, itemCount - 1)
+    return if (target == lastReportedIndex) null else target
+}
+
+/**
+ * The value a settled drum commits, or `null` when the rest position changes
+ * nothing: nothing is visible, or the drum already sits on the reported row.
+ */
+internal fun wheelSettledReport(settledIndex: Int, lastReportedIndex: Int?): Int? {
+    if (settledIndex < 0) return null
+    return if (settledIndex == lastReportedIndex) null else settledIndex
+}
+
+/**
+ * Whether a settled drum needs a correction scroll to rest exactly on the row
+ * (a slow release settles between rows without ever flinging).
+ */
+internal fun wheelNeedsSnapCorrection(centerDistancePx: Float): Boolean = centerDistancePx >= 1f
+
+/** What the tick collector does with a newly centered row. */
+internal enum class WheelTickAction { None, Adopt, Tick }
+
+/**
+ * The selection tick for the row the drum passes over. The first observed row
+ * is the resting position, not a pass ([WheelTickAction.Adopt]); rows passed
+ * while an external correction animates do not tick; no value is committed.
+ */
+internal fun wheelTickAction(lastTicked: Int, centeredIndex: Int, correcting: Boolean): WheelTickAction = when {
+    centeredIndex < 0 || correcting -> WheelTickAction.None
+    lastTicked == -1 -> WheelTickAction.Adopt
+    centeredIndex != lastTicked -> WheelTickAction.Tick
+    else -> WheelTickAction.None
+}
 
 /**
  * A wheel owns its vertical gesture end to end: whatever the drum cannot
