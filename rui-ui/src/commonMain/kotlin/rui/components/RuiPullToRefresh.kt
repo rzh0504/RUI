@@ -78,10 +78,11 @@ public fun RuiPullToRefresh(
     val currentIsRefreshing by rememberUpdatedState(isRefreshing)
     val isRefreshingNow: () -> Boolean = remember { { currentIsRefreshing } }
 
-    // Two-way level sync with the hoisted isRefreshing. refreshState is a key
-    // on purpose: entering Refreshing re-samples the level, so a sub-frame
-    // true->false pulse cannot latch.
-    LaunchedEffect(isRefreshing, state.refreshState) {
+    // Sync only the hoisted level. Internal state changes are deliberately not
+    // effect keys: finishRefreshing() enters RefreshComplete before its
+    // collapse animation, and restarting this effect there would cancel that
+    // animation and leave the header at a non-zero height.
+    LaunchedEffect(isRefreshing, state) {
         if (!isRefreshing && state.refreshState == RuiRefreshState.Refreshing) {
             state.finishRefreshing(isRefreshingNow)
         } else if (isRefreshing && state.refreshState == RuiRefreshState.Idle) {
