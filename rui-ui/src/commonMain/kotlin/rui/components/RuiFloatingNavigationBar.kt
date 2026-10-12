@@ -266,6 +266,7 @@ public fun RuiFloatingNavigationBar(
                                         val x = floatingNavBarIndicatorX(
                                             fraction = position.value,
                                             slotWidthPx = slotWidthPx,
+                                            itemCount = items.size,
                                             isLtr = isLtr,
                                         )
                                         IntOffset((innerPx + x).roundToInt(), 0)
@@ -372,5 +373,13 @@ internal fun floatingNavBarSlotWidthPx(capsuleWidthPx: Float, innerPaddingPx: Fl
  * capsule's start edge — positive along the reading direction, mirrored
  * (negative screen x, the pill leaving the start edge leftwards) in RTL.
  */
-internal fun floatingNavBarIndicatorX(fraction: Float, slotWidthPx: Float, isLtr: Boolean): Float =
-    if (isLtr) fraction * slotWidthPx else -fraction * slotWidthPx
+internal fun floatingNavBarIndicatorX(
+    fraction: Float,
+    slotWidthPx: Float,
+    itemCount: Int,
+    isLtr: Boolean,
+): Float = if (isLtr) {
+    fraction * slotWidthPx
+} else {
+    (itemCount - 1 - fraction) * slotWidthPx
+}

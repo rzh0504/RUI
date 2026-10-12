@@ -32,22 +32,23 @@ class RuiFloatingNavigationBarTest {
 
     @Test
     fun indicatorWalksForwardInLtr() {
-        assertEquals(0f, floatingNavBarIndicatorX(fraction = 0f, slotWidthPx = 88f, isLtr = true))
-        assertEquals(88f, floatingNavBarIndicatorX(fraction = 1f, slotWidthPx = 88f, isLtr = true))
-        assertEquals(264f, floatingNavBarIndicatorX(fraction = 3f, slotWidthPx = 88f, isLtr = true))
+        assertEquals(0f, floatingNavBarIndicatorX(fraction = 0f, slotWidthPx = 88f, itemCount = 4, isLtr = true))
+        assertEquals(88f, floatingNavBarIndicatorX(fraction = 1f, slotWidthPx = 88f, itemCount = 4, isLtr = true))
+        assertEquals(264f, floatingNavBarIndicatorX(fraction = 3f, slotWidthPx = 88f, itemCount = 4, isLtr = true))
     }
 
     @Test
     fun indicatorMirrorsInRtl() {
-        // From the start edge (the right one), the pill leaves leftwards.
-        assertEquals(-88f, floatingNavBarIndicatorX(fraction = 1f, slotWidthPx = 88f, isLtr = false))
-        assertEquals(-264f, floatingNavBarIndicatorX(fraction = 3f, slotWidthPx = 88f, isLtr = false))
+        // RTL starts at the right edge but remains inside the capsule.
+        assertEquals(264f, floatingNavBarIndicatorX(fraction = 0f, slotWidthPx = 88f, itemCount = 4, isLtr = false))
+        assertEquals(176f, floatingNavBarIndicatorX(fraction = 1f, slotWidthPx = 88f, itemCount = 4, isLtr = false))
+        assertEquals(0f, floatingNavBarIndicatorX(fraction = 3f, slotWidthPx = 88f, itemCount = 4, isLtr = false))
     }
 
     @Test
     fun indicatorIsContinuousBetweenSlots() {
         // Mid-flight between slot 1 and slot 2, not parked on either.
-        val x = floatingNavBarIndicatorX(fraction = 1.5f, slotWidthPx = 88f, isLtr = true)
+        val x = floatingNavBarIndicatorX(fraction = 1.5f, slotWidthPx = 88f, itemCount = 4, isLtr = true)
         assertTrue(abs(x - 132f) < 0.01f)
     }
 }

@@ -17,7 +17,7 @@ class RuiTouchTargetTest {
 
     @Test
     fun smallerContentExpandsToTheTokenAndCenters() {
-        val placement = touchTargetPlacement(32, 32, token, Alignment.Center, LayoutDirection.Ltr)
+        val placement = touchTargetPlacement(32, 32, token, token, Alignment.Center, LayoutDirection.Ltr)
         assertEquals(44, placement.width)
         assertEquals(44, placement.height)
         assertEquals(6, placement.contentOffsetX)
@@ -26,10 +26,10 @@ class RuiTouchTargetTest {
 
     @Test
     fun contentAtOrAboveTheTokenIsUntouched() {
-        val at = touchTargetPlacement(44, 44, token, Alignment.Center, LayoutDirection.Ltr)
+        val at = touchTargetPlacement(44, 44, token, token, Alignment.Center, LayoutDirection.Ltr)
         assertEquals(44, at.width)
         assertEquals(0, at.contentOffsetX)
-        val above = touchTargetPlacement(48, 48, token, Alignment.Center, LayoutDirection.Ltr)
+        val above = touchTargetPlacement(48, 48, token, token, Alignment.Center, LayoutDirection.Ltr)
         assertEquals(48, above.width)
         assertEquals(0, above.contentOffsetX)
     }
@@ -37,14 +37,14 @@ class RuiTouchTargetTest {
     @Test
     fun oddCenteringRoundsHalfUp() {
         // Compose's Center rounding: (44 - 41) / 2 = 1.5 lands on 2.
-        val placement = touchTargetPlacement(41, 41, token, Alignment.Center, LayoutDirection.Ltr)
+        val placement = touchTargetPlacement(41, 41, token, token, Alignment.Center, LayoutDirection.Ltr)
         assertEquals(44, placement.width)
         assertEquals(2, placement.contentOffsetX)
     }
 
     @Test
     fun onlyTheSmallDimensionExpands() {
-        val placement = touchTargetPlacement(200, 20, token, Alignment.Center, LayoutDirection.Ltr)
+        val placement = touchTargetPlacement(200, 20, token, token, Alignment.Center, LayoutDirection.Ltr)
         assertEquals(200, placement.width)
         assertEquals(44, placement.height)
         assertEquals(0, placement.contentOffsetX)
@@ -52,18 +52,32 @@ class RuiTouchTargetTest {
     }
 
     @Test
+    fun widthAndHeightMinimumsAreIndependent() {
+        val placement = touchTargetPlacement(
+            contentWidth = 20,
+            contentHeight = 20,
+            minimumWidthPx = 44,
+            minimumHeightPx = 32,
+            alignment = Alignment.Center,
+            layoutDirection = LayoutDirection.Ltr,
+        )
+        assertEquals(44, placement.width)
+        assertEquals(32, placement.height)
+    }
+
+    @Test
     fun aTighterParentWinsOverTheToken() {
         // Exact width from weight: the slot keeps 40 instead of overflowing
         // to 44 — the touch layer still expands past the visual on its own.
         val exact = touchTargetPlacement(
-            32, 32, token, Alignment.Center, LayoutDirection.Ltr,
+            32, 32, token, token, Alignment.Center, LayoutDirection.Ltr,
             minWidth = 40, maxWidth = 40,
         )
         assertEquals(40, exact.width)
         assertEquals(4, exact.contentOffsetX)
         // A bounded parent clamps the reservation.
         val bounded = touchTargetPlacement(
-            32, 32, token, Alignment.Center, LayoutDirection.Ltr,
+            32, 32, token, token, Alignment.Center, LayoutDirection.Ltr,
             maxWidth = 36,
         )
         assertEquals(36, bounded.width)
@@ -73,14 +87,14 @@ class RuiTouchTargetTest {
 
     @Test
     fun edgeAnchorsPinTheContentAndMirrorInRtl() {
-        val endLtr = touchTargetPlacement(20, 20, token, Alignment.CenterEnd, LayoutDirection.Ltr)
+        val endLtr = touchTargetPlacement(20, 20, token, token, Alignment.CenterEnd, LayoutDirection.Ltr)
         assertEquals(44, endLtr.width)
         assertEquals(24, endLtr.contentOffsetX)
-        val endRtl = touchTargetPlacement(20, 20, token, Alignment.CenterEnd, LayoutDirection.Rtl)
+        val endRtl = touchTargetPlacement(20, 20, token, token, Alignment.CenterEnd, LayoutDirection.Rtl)
         assertEquals(0, endRtl.contentOffsetX)
-        val startLtr = touchTargetPlacement(20, 20, token, Alignment.CenterStart, LayoutDirection.Ltr)
+        val startLtr = touchTargetPlacement(20, 20, token, token, Alignment.CenterStart, LayoutDirection.Ltr)
         assertEquals(0, startLtr.contentOffsetX)
-        val startRtl = touchTargetPlacement(20, 20, token, Alignment.CenterStart, LayoutDirection.Rtl)
+        val startRtl = touchTargetPlacement(20, 20, token, token, Alignment.CenterStart, LayoutDirection.Rtl)
         assertEquals(24, startRtl.contentOffsetX)
     }
 }
