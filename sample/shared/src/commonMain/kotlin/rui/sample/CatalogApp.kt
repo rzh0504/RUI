@@ -1,15 +1,24 @@
 package rui.sample
 
 import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.animation.core.Animatable
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
 import com.composeunstyled.TooltipHost
 import rui.components.RuiOverlayHost
@@ -137,10 +146,10 @@ public fun CatalogApp() {
     var tab by remember { mutableStateOf(0) }
     val backStack = rememberRuiNavBackStack<CatalogPage>(CatalogPage.Root)
     val nav = remember { RuiNavController(backStack) }
-    // App-level transient feedback: every page's scaffold hosts the same
-    // state, so a snackbar shown on any page survives navigation within its
-    // lifetime.
+    // One app-level host and producer scope keep transient feedback alive
+    // while navigation entries are pushed and popped.
     val snackbarHostState = rui.components.rememberRuiSnackbarHostState()
+    val appScope = rememberCoroutineScope()
 
     RuiTheme(darkTheme = darkTheme, strings = languageChoice.resolveStrings()) {
         // In-app theme toggle: push the appearance to the system bars in the
@@ -151,6 +160,19 @@ public fun CatalogApp() {
         RuiOverlayHost {
             // Tooltip panels portal above the navigation stack too.
             TooltipHost {
+            val density = LocalDensity.current
+            val snackbarBottomDp = when {
+                backStack.size > 1 -> 0.dp
+                floatingNavBarEnabled -> 88.dp
+                else -> 48.dp
+            }
+            val snackbarBottomPx = with(density) { snackbarBottomDp.toPx() }
+            val snackbarOffset = remember(density) { Animatable(snackbarBottomPx) }
+            val snackbarMotion = RuiTheme.motion.navigation
+            LaunchedEffect(snackbarBottomPx) {
+                snackbarOffset.animateTo(snackbarBottomPx, snackbarMotion)
+            }
+            Box(Modifier.fillMaxSize()) {
                 RuiNavDisplay(backStack = backStack, onBack = { nav.pop() }) { page ->
                 val atRoot = page == CatalogPage.Root
                 // Top-level pages get the collapsing large title; pushed
@@ -168,7 +190,6 @@ public fun CatalogApp() {
                 }
                 RuiScaffold(
                     backdrop = backdrop,
-                    snackbarHost = { rui.components.RuiSnackbarHost(snackbarHostState) },
                     topBar = {
                         if (atRoot) {
                             RuiTopAppBar(
@@ -259,6 +280,7 @@ public fun CatalogApp() {
                             CatalogPage.Disclosure -> DisclosureScreen(contentPadding = padding)
                             CatalogPage.Snackbar -> SnackbarScreen(
                                 hostState = snackbarHostState,
+                                requestScope = appScope,
                                 contentPadding = padding,
                             )
                             CatalogPage.PullToRefresh -> PullToRefreshScreen(contentPadding = padding)
@@ -280,6 +302,17 @@ public fun CatalogApp() {
                             CatalogPage.Reorder -> ReorderScreen(contentPadding = padding)
                         }
                     }
+                }
+                }
+                Box(
+                    modifier = Modifier
+                        .align(androidx.compose.ui.Alignment.BottomCenter)
+                        .fillMaxWidth()
+                        .navigationBarsPadding()
+                        .padding(bottom = 8.dp)
+                        .offset(y = with(density) { -snackbarOffset.value.toDp() }),
+                ) {
+                    rui.components.RuiSnackbarHost(snackbarHostState)
                 }
             }
         }
