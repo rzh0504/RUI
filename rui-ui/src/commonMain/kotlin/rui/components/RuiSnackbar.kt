@@ -2,6 +2,7 @@ package rui.components
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.gestures.detectHorizontalDragGestures
@@ -165,9 +166,9 @@ public fun RuiSnackbarHost(
         AnimatedVisibility(
             visible = current != null,
             enter = slideInVertically(initialOffsetY = { it }),
-            // Two heights down, so the card fully clears the bottom inset it
-            // is docked above — one height can leave it on screen at removal.
-            exit = slideOutVertically(targetOffsetY = { it * 2 }),
+            // Match the established downward exit motion and fade the card
+            // during the same transition instead of exposing its final frame.
+            exit = slideOutVertically(targetOffsetY = { it * 2 }) + fadeOut(),
         ) {
             key(leaving) {
                 leaving?.let { data ->
