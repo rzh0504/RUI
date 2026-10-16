@@ -1,14 +1,12 @@
 package rui.sample.screens
 
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.offset
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import rui.components.RuiAvatar
 import rui.components.RuiBadge
+import rui.components.RuiBadgedBox
 import rui.components.RuiDivider
 import rui.components.RuiListGroup
 import rui.components.RuiListItem
@@ -46,15 +44,8 @@ private fun InboxRow(
         title = name,
         subtitle = message,
         leading = {
-            Box {
+            RuiBadgedBox(badge = { if (unread) RuiBadge() }) {
                 RuiAvatar(initials = initials)
-                if (unread) {
-                    RuiBadge(
-                        modifier = Modifier
-                            .align(Alignment.TopEnd)
-                            .offset(x = 4.dp, y = (-4).dp),
-                    )
-                }
             }
         },
         trailing = {
