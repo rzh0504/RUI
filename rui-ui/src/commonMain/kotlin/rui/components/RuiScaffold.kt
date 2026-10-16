@@ -51,7 +51,6 @@ public fun RuiScaffold(
     snackbarHost: @Composable () -> Unit = {},
     content: @Composable (PaddingValues) -> Unit,
 ) {
-    val navAnimating = rui.foundation.LocalRuiTransitionActive.current
     // PaddingValues whose values change without changing the instance — reads
     // stay in the layout phase of the consuming padding modifiers. Pattern
     // from miuix's Scaffold.
@@ -70,15 +69,22 @@ public fun RuiScaffold(
     }
     // Remembered so re-measures during scrolling don't hand subcompose a fresh
     // lambda (which would recompose the whole content). The explicit
-    // @Composable type is what makes the inner lambda composable.
-    val bodyContent: @Composable () -> Unit = remember(content, contentPadding, backdrop, navAnimating) {
+    // @Composable type is what makes the inner lambda composable. The
+    // transition flag is read inside the lambda rather than keyed here — a key
+    // would rebuild and re-measure this whole subcomposition at both flips of
+    // a nav transition, when the frame budget belongs to the motion; read at
+    // the recorder's scope the flip only swaps the recording modifier.
+    val bodyContent: @Composable () -> Unit = remember(content, contentPadding, backdrop) {
         {
             Box(
                 modifier = Modifier
                     .fillMaxSize()
                     .then(
                         if (backdrop != null) {
-                            Modifier.blurBackdrop(backdrop, recordEnabled = !navAnimating)
+                            Modifier.blurBackdrop(
+                                backdrop,
+                                recordEnabled = !rui.foundation.LocalRuiTransitionActive.current,
+                            )
                         } else {
                             Modifier
                         },
