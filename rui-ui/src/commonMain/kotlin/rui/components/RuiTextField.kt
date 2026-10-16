@@ -36,9 +36,12 @@ import rui.theme.RuiTheme
  * Slot contract: [trailing] is the action slot — its content is wrapped in a
  * touch-target reservation anchored to the field's edge, so an icon-sized
  * clear or toggle keeps a full [rui.theme.RuiDimens.touchTarget] slot without
- * floating away from the edge. Keep [leading] decorative (a magnifier, a
- * domain icon); for a clickable leading action pass a [RuiIconButton], which
- * reserves its own touch target.
+ * floating away from the edge. The reservation fills the field's height
+ * rather than adding to it: the vertical padding rides on the text input, so
+ * a slot appearing never grows a one-line field past its touch-target
+ * height. Keep [leading] decorative (a magnifier, a domain icon); for a
+ * clickable leading action pass a [RuiIconButton], which reserves its own
+ * touch target.
  */
 @Composable
 public fun RuiTextField(
@@ -105,14 +108,14 @@ public fun RuiTextField(
             lineLimits = lineLimits,
         ) {
             Row(
-                modifier = Modifier.padding(horizontal = spacing.lg, vertical = spacing.md),
+                modifier = Modifier.padding(horizontal = spacing.lg),
                 horizontalArrangement = Arrangement.spacedBy(spacing.sm),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 if (leading != null) {
                     leading()
                 }
-                TextInput(modifier = Modifier.weight(1f)) {
+                TextInput(modifier = Modifier.weight(1f).padding(vertical = spacing.md)) {
                     if (placeholder != null) {
                         RuiText(text = placeholder, color = colors.contentMuted)
                     }
