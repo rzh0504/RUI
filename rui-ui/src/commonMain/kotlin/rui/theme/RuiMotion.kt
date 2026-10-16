@@ -9,6 +9,7 @@ import androidx.compose.animation.core.TweenSpec
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.runtime.Immutable
+import androidx.compose.ui.graphics.Color
 import rui.foundation.utils.NavSettleEasing
 
 /**
@@ -98,5 +99,13 @@ public data class RuiMotion(
     public val navigationDriver: TweenSpec<Float> = tween(
         durationMillis = 500,
         easing = NavSettleEasing(response = 0.8f, damping = 0.95f),
+    ),
+    /**
+     * Color crossfade for state-driven tints — a selection pill sliding
+     * under labels reads best when the label colors trade places with it.
+     */
+    public val colorFade: TweenSpec<Color> = tween(
+        durationMillis = 120,
+        easing = FastOutSlowInEasing,
     ),
 )
