@@ -36,8 +36,13 @@ import rui.foundation.ExperimentalRuiApi
 import rui.foundation.RuiIcons
 import rui.foundation.rememberBlurBackdrop
 import rui.foundation.utils.StatusBarAppearance
+import rui.sample.screens.AccountScreen
 import rui.sample.screens.BlocksScreen
 import rui.sample.screens.ButtonsScreen
+import rui.sample.screens.CartScreen
+import rui.sample.screens.InboxScreen
+import rui.sample.screens.SearchResultsScreen
+import rui.sample.screens.SignInScreen
 
 import rui.sample.screens.ChipsScreen
 import rui.sample.screens.BottomSheetScreen
@@ -71,7 +76,11 @@ import rui.theme.RuiTheme
 /** The catalog's routes. */
 public sealed interface CatalogPage : RuiNavKey {
     public data object Root : CatalogPage
-    public data object Blocks : CatalogPage
+    public data object SignIn : CatalogPage
+    public data object Account : CatalogPage
+    public data object Cart : CatalogPage
+    public data object Inbox : CatalogPage
+    public data object SearchResults : CatalogPage
     public data object Buttons : CatalogPage
     public data object Chips : CatalogPage
     public data object TextField : CatalogPage
@@ -103,7 +112,11 @@ public sealed interface CatalogPage : RuiNavKey {
 
 private fun CatalogPage.title(): String = when (this) {
     CatalogPage.Root -> "Rui"
-    CatalogPage.Blocks -> "Blocks"
+    CatalogPage.SignIn -> "Sign in"
+    CatalogPage.Account -> "Account"
+    CatalogPage.Cart -> "Cart"
+    CatalogPage.Inbox -> "Inbox"
+    CatalogPage.SearchResults -> "Search results"
     CatalogPage.Buttons -> "Buttons"
     CatalogPage.Chips -> "Chips"
     CatalogPage.TextField -> "Text field"
@@ -226,6 +239,7 @@ public fun CatalogApp() {
                                 RuiFloatingNavigationBar(
                                     items = listOf(
                                         RuiNavigationBarItem("Components", RuiIcons.Grid),
+                                        RuiNavigationBarItem("Blocks", RuiIcons.Layers),
                                         RuiNavigationBarItem("Tokens", RuiIcons.Swatch),
                                     ),
                                     selected = tab,
@@ -236,6 +250,7 @@ public fun CatalogApp() {
                                 RuiNavigationBar(
                                     items = listOf(
                                         RuiNavigationBarItem("Components", RuiIcons.Grid),
+                                        RuiNavigationBarItem("Blocks", RuiIcons.Layers),
                                         RuiNavigationBarItem("Tokens", RuiIcons.Swatch),
                                     ),
                                     selected = tab,
@@ -267,9 +282,17 @@ public fun CatalogApp() {
                                     floatingNavBarEnabled = floatingNavBarEnabled,
                                     onFloatingNavBarEnabledChange = { floatingNavBarEnabled = it; SampleSettings.putBoolean(KeyFloatingNavBar, it) },
                                 )
+                                1 -> BlocksScreen(
+                                    onOpen = { nav.push(it) },
+                                    contentPadding = padding,
+                                )
                                 else -> TokensScreen(contentPadding = padding)
                             }
-                            CatalogPage.Blocks -> BlocksScreen(contentPadding = padding)
+                            CatalogPage.SignIn -> SignInScreen(contentPadding = padding)
+                            CatalogPage.Account -> AccountScreen(contentPadding = padding)
+                            CatalogPage.Cart -> CartScreen(contentPadding = padding)
+                            CatalogPage.Inbox -> InboxScreen(contentPadding = padding)
+                            CatalogPage.SearchResults -> SearchResultsScreen(contentPadding = padding)
                             CatalogPage.Buttons -> ButtonsScreen(contentPadding = padding)
                             CatalogPage.Chips -> ChipsScreen(contentPadding = padding)
                             CatalogPage.TextField -> TextFieldScreen(contentPadding = padding)
