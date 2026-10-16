@@ -21,6 +21,7 @@ kotlin {
 
     iosArm64()
     iosSimulatorArm64()
+    jvm()
 
     sourceSets {
         commonMain.dependencies {
@@ -34,6 +35,11 @@ kotlin {
             implementation(libs.coil.network.ktor3)
         }
         androidMain.dependencies {
+            implementation(libs.ktor.client.okhttp)
+        }
+        jvmMain.dependencies {
+            // OkHttp works on the desktop JVM, so the desktop engine matches
+            // Android's.
             implementation(libs.ktor.client.okhttp)
         }
         iosMain.dependencies {
