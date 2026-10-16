@@ -38,6 +38,7 @@ import rui.foundation.rememberBlurBackdrop
 import rui.foundation.utils.StatusBarAppearance
 import rui.sample.screens.BlocksScreen
 import rui.sample.screens.ButtonsScreen
+
 import rui.sample.screens.ChipsScreen
 import rui.sample.screens.BottomSheetScreen
 import rui.sample.screens.DialogScreen
@@ -138,14 +139,24 @@ private fun CatalogPage.title(): String = when (this) {
  * Tokens) and component pages pushed onto a [RuiNavDisplay] back stack.
  * [DialogHost] sits at the root so RuiDialog panels portal above everything.
  */
+private const val KeyDarkTheme = "appearance.darkTheme"
+private const val KeyFrosted = "appearance.frosted"
+private const val KeyFloatingNavBar = "appearance.floatingNavBar"
+private const val KeyLanguage = "appearance.language"
+
 @OptIn(ExperimentalRuiApi::class, ExperimentalComposeUiApi::class)
 @Composable
 public fun CatalogApp() {
     val systemDark = isSystemInDarkTheme()
-    var darkTheme by remember { mutableStateOf(systemDark) }
-    var frostedEnabled by remember { mutableStateOf(true) }
-    var floatingNavBarEnabled by remember { mutableStateOf(false) }
-    var languageChoice by remember { mutableStateOf(LanguageChoice.System) }
+    var darkTheme by remember { mutableStateOf(SampleSettings.getBoolean(KeyDarkTheme, systemDark)) }
+    var frostedEnabled by remember { mutableStateOf(SampleSettings.getBoolean(KeyFrosted, true)) }
+    var floatingNavBarEnabled by remember { mutableStateOf(SampleSettings.getBoolean(KeyFloatingNavBar, false)) }
+    var languageChoice by remember {
+        mutableStateOf(
+            LanguageChoice.entries.firstOrNull { it.name == SampleSettings.getString(KeyLanguage, LanguageChoice.System.name) }
+                ?: LanguageChoice.System,
+        )
+    }
     var tab by remember { mutableStateOf(0) }
     val backStack = rememberRuiNavBackStack<CatalogPage>(CatalogPage.Root)
     val nav = remember { RuiNavController(backStack) }
@@ -248,13 +259,13 @@ public fun CatalogApp() {
                             CatalogPage.Root -> when (tab) {
                                 0 -> ComponentsScreen(
                                     darkTheme = darkTheme,
-                                    onDarkThemeChange = { darkTheme = it },
+                                    onDarkThemeChange = { darkTheme = it; SampleSettings.putBoolean(KeyDarkTheme, it) },
                                     frostedEnabled = frostedEnabled,
-                                    onFrostedEnabledChange = { frostedEnabled = it },
+                                    onFrostedEnabledChange = { frostedEnabled = it; SampleSettings.putBoolean(KeyFrosted, it) },
                                     onOpen = { nav.push(it) },
                                     contentPadding = padding,
                                     floatingNavBarEnabled = floatingNavBarEnabled,
-                                    onFloatingNavBarEnabledChange = { floatingNavBarEnabled = it },
+                                    onFloatingNavBarEnabledChange = { floatingNavBarEnabled = it; SampleSettings.putBoolean(KeyFloatingNavBar, it) },
                                 )
                                 else -> TokensScreen(contentPadding = padding)
                             }
@@ -300,7 +311,7 @@ public fun CatalogApp() {
                             CatalogPage.InlineBanner -> BannerScreen(contentPadding = padding)
                             CatalogPage.Localization -> LocalizationScreen(
                                 languageChoice = languageChoice,
-                                onLanguageChoiceChange = { languageChoice = it },
+                                onLanguageChoiceChange = { languageChoice = it; SampleSettings.putString(KeyLanguage, it.name) },
                                 contentPadding = padding,
                             )
                             CatalogPage.Reorder -> ReorderScreen(contentPadding = padding)
