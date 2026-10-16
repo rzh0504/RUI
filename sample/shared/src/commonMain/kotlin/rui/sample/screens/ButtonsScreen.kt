@@ -4,7 +4,6 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.runtime.Composable
@@ -18,8 +17,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.delay
 import rui.components.RuiAvatar
+import rui.components.RuiAvatarDefaults
 import rui.components.RuiAvatarSize
 import rui.components.RuiBadge
+import rui.components.RuiBadgeDefaults
 import rui.components.RuiBadgedBox
 import rui.components.RuiButton
 import rui.components.RuiButtonSize
@@ -34,6 +35,7 @@ import rui.foundation.RuiIcons
 import rui.foundation.RuiText
 import rui.sample.ui.ContentColumn
 import rui.sample.ui.SectionLabel
+import rui.sample.ui.circleRimDotOffset
 import rui.theme.RuiTheme
 
 @Composable
@@ -169,14 +171,19 @@ public fun ButtonsScreen(contentPadding: PaddingValues = PaddingValues(0.dp)) {
                         RuiIcon(imageVector = RuiIcons.Close, contentDescription = "Alerts")
                     }
                 }
-                // A dot centered on the avatar's bottom-end corner — the one
-                // placement RuiBadgedBox can't express, so it stays manual.
+                // A status dot riding the avatar's rim along the bottom-end
+                // diagonal — a circular anchor never reaches its bounding-box
+                // corner, so RuiBadgedBox's corner placement can't apply.
                 Box {
                     RuiAvatar(initials = "ZR", size = RuiAvatarSize.Md)
                     RuiBadge(
                         modifier = Modifier
                             .align(Alignment.BottomEnd)
-                            .offset(x = 3.dp, y = 3.dp),
+                            .circleRimDotOffset(
+                                circleSize = RuiAvatarDefaults.diameter(RuiAvatarSize.Md),
+                                dotSize = RuiBadgeDefaults.DotSize,
+                                corner = Alignment.BottomEnd,
+                            ),
                     )
                 }
             }

@@ -1,17 +1,22 @@
 package rui.sample.screens
 
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import rui.components.RuiAvatar
+import rui.components.RuiAvatarDefaults
+import rui.components.RuiAvatarSize
 import rui.components.RuiBadge
-import rui.components.RuiBadgedBox
+import rui.components.RuiBadgeDefaults
 import rui.components.RuiDivider
 import rui.components.RuiListGroup
 import rui.components.RuiListItem
 import rui.foundation.RuiText
 import rui.sample.ui.ContentColumn
+import rui.sample.ui.circleRimDotOffset
 import rui.theme.RuiTheme
 
 /** Inbox page: notification rows with unread dot badges and time stamps. */
@@ -44,8 +49,22 @@ private fun InboxRow(
         title = name,
         subtitle = message,
         leading = {
-            RuiBadgedBox(badge = { if (unread) RuiBadge() }) {
+            // Unread dot riding the avatar's rim along the top-end diagonal —
+            // circular anchors never reach their bounding-box corner, so
+            // RuiBadgedBox's corner placement can't apply.
+            Box {
                 RuiAvatar(initials = initials)
+                if (unread) {
+                    RuiBadge(
+                        modifier = Modifier
+                            .align(Alignment.TopEnd)
+                            .circleRimDotOffset(
+                                circleSize = RuiAvatarDefaults.diameter(RuiAvatarSize.Md),
+                                dotSize = RuiBadgeDefaults.DotSize,
+                                corner = Alignment.TopEnd,
+                            ),
+                    )
+                }
             }
         },
         trailing = {

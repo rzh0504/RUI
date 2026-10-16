@@ -68,9 +68,9 @@ private const val BadgeId = "rui_badge_badge"
  * A small count or status marker: a dot when [text] is null, otherwise a
  * pill sized to its label. Position it over the anchored element with
  * [RuiBadgedBox]; a bare [RuiBadge] is for deliberate placements the box
- * can't express — a dot centered on an avatar's bottom-end corner. The pill
- * uses a plain (unsmoothed) stadium: at this size corner smoothing is
- * illegible.
+ * can't express — a status dot on a circular avatar's rim, which a circle
+ * never reaches via its bounding-box corner. The pill uses a plain
+ * (unsmoothed) stadium: at this size corner smoothing is illegible.
  *
  * @param text The count or short label; `null` renders the dot.
  */
