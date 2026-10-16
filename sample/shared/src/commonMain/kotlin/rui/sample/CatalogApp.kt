@@ -36,6 +36,7 @@ import rui.foundation.ExperimentalRuiApi
 import rui.foundation.RuiIcons
 import rui.foundation.rememberBlurBackdrop
 import rui.foundation.utils.StatusBarAppearance
+import rui.sample.screens.BlocksScreen
 import rui.sample.screens.ButtonsScreen
 import rui.sample.screens.ChipsScreen
 import rui.sample.screens.BottomSheetScreen
@@ -69,6 +70,7 @@ import rui.theme.RuiTheme
 /** The catalog's routes. */
 public sealed interface CatalogPage : RuiNavKey {
     public data object Root : CatalogPage
+    public data object Blocks : CatalogPage
     public data object Buttons : CatalogPage
     public data object Chips : CatalogPage
     public data object TextField : CatalogPage
@@ -100,6 +102,7 @@ public sealed interface CatalogPage : RuiNavKey {
 
 private fun CatalogPage.title(): String = when (this) {
     CatalogPage.Root -> "Rui"
+    CatalogPage.Blocks -> "Blocks"
     CatalogPage.Buttons -> "Buttons"
     CatalogPage.Chips -> "Chips"
     CatalogPage.TextField -> "Text field"
@@ -255,6 +258,7 @@ public fun CatalogApp() {
                                 )
                                 else -> TokensScreen(contentPadding = padding)
                             }
+                            CatalogPage.Blocks -> BlocksScreen(contentPadding = padding)
                             CatalogPage.Buttons -> ButtonsScreen(contentPadding = padding)
                             CatalogPage.Chips -> ChipsScreen(contentPadding = padding)
                             CatalogPage.TextField -> TextFieldScreen(contentPadding = padding)

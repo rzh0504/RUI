@@ -56,6 +56,16 @@ public fun ComponentsScreen(
             )
         }
 
+        SectionLabel("Blocks")
+        RuiListGroup {
+            RuiListItem(
+                title = "Real-world blocks",
+                subtitle = "App sections composed from Rui components",
+                showChevron = true,
+                onClick = { onOpen(CatalogPage.Blocks) },
+            )
+        }
+
         SectionLabel("Controls")
         RuiListGroup {
             RuiListItem(
