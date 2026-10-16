@@ -1,6 +1,6 @@
 package rui.sample.screens
 
-import androidx.compose.animation.core.SpringSpec
+import androidx.compose.animation.core.AnimationSpec
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -171,6 +171,13 @@ public fun TokensScreen(contentPadding: PaddingValues = PaddingValues(0.dp)) {
             MotionRow("pop", "0.85 / 450", RuiTheme.motion.pop)
             RuiDivider(inset = RuiTheme.spacing.lg)
             MotionRow("navigation", "1.0 / 550", RuiTheme.motion.navigation)
+            RuiDivider(inset = RuiTheme.spacing.lg)
+            MotionRow(
+                "navigationDriver",
+                "500ms · 0.8 / 0.95",
+                RuiTheme.motion.navigationDriver,
+                specLabel = "duration · response / damping",
+            )
         }
 
         SectionLabel("Layout")
@@ -195,7 +202,12 @@ public fun TokensScreen(contentPadding: PaddingValues = PaddingValues(0.dp)) {
  * spec — toggling direction shows the return feel too.
  */
 @Composable
-private fun MotionRow(name: String, spec: String, animationSpec: SpringSpec<Float>) {
+private fun MotionRow(
+    name: String,
+    spec: String,
+    animationSpec: AnimationSpec<Float>,
+    specLabel: String = "damping / stiffness",
+) {
     var target by remember { mutableStateOf(0f) }
     val position by animateFloatAsState(
         targetValue = target,
@@ -215,7 +227,7 @@ private fun MotionRow(name: String, spec: String, animationSpec: SpringSpec<Floa
         Column(Modifier.weight(1f)) {
             RuiText(text = name, style = RuiTheme.typography.titleSm)
             RuiText(
-                text = "damping / stiffness",
+                text = specLabel,
                 style = RuiTheme.typography.bodySm,
                 color = RuiTheme.colors.contentMuted,
             )

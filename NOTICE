@@ -60,6 +60,13 @@ License, Version 2.0.
       iOS-adjacent visuals (4dp capsule linear bar, thin ring, animated fill)
       on Rui's token system; no third orbiting-dot variant.
 
+  rui-ui/src/commonMain/kotlin/rui/foundation/utils/NavSettleEasing.kt
+    - Duration-pinned navigation settle curve (underdamped spring step
+      response baked into an Easing) adapted from miuix-nav's
+      runtime/NavSettleEasing.kt (NavProgrammaticEasing).
+    - Modified: internal to Rui, exposed as the navigationDriver motion
+      token's default; no gesture-commit/cancel phase variants.
+
 A copy of the Apache License, Version 2.0 for that portion of the code is
 available at https://www.apache.org/licenses/LICENSE-2.0 and must be
 distributed alongside this product.

@@ -109,7 +109,7 @@ public fun <T : RuiNavKey> RuiNavDisplay(
     val renderStack = remember { mutableStateListOf(backStack.first()) }
     val animatedTop = remember { Animatable(0f) }
     var transitionRunning by remember { mutableStateOf(false) }
-    val transitionSpec = RuiTheme.motion.navigation
+    val transitionSpec = RuiTheme.motion.navigationDriver
 
     LaunchedEffect(backStack.size, backStack.lastOrNull()) {
         // Pushes join the render stack immediately so the new entry slides in.
