@@ -1,3 +1,4 @@
+import org.jetbrains.kotlin.gradle.ExperimentalWasmDsl
 import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinNativeTarget
 
 plugins {
@@ -17,6 +18,18 @@ kotlin {
     iosArm64()
     iosSimulatorArm64()
     jvm()
+    @OptIn(ExperimentalWasmDsl::class)
+    wasmJs {
+        // index.html loads the bundle as catalog.js from the canvas-less
+        // #catalog viewport container.
+        outputModuleName = "catalog"
+        browser {
+            commonWebpackConfig {
+                outputFileName = "catalog.js"
+            }
+        }
+        binaries.executable()
+    }
 
     sourceSets {
         commonMain.dependencies {
@@ -28,6 +41,11 @@ kotlin {
         }
         jvmMain.dependencies {
             implementation(compose.desktop.currentOs)
+        }
+        wasmJsMain.dependencies {
+            // kotlinx.browser (window/localStorage) for the sample-side
+            // actuals; Rui itself never touches browser APIs.
+            implementation(libs.kotlinx.browser)
         }
     }
 
