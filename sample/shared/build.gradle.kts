@@ -16,6 +16,7 @@ kotlin {
 
     iosArm64()
     iosSimulatorArm64()
+    jvm()
 
     sourceSets {
         commonMain.dependencies {
@@ -25,11 +26,22 @@ kotlin {
             implementation(compose.ui)
             implementation(libs.compose.ui.backhandler)
         }
+        jvmMain.dependencies {
+            implementation(compose.desktop.currentOs)
+        }
     }
 
     targets.withType<KotlinNativeTarget> {
         binaries.framework {
             baseName = "SampleShared"
         }
+    }
+}
+
+// One JVM target, so the Compose Desktop application plugin binds to it:
+// ./gradlew :sample:shared:run launches the catalog in a desktop window.
+compose.desktop {
+    application {
+        mainClass = "rui.sample.MainKt"
     }
 }
