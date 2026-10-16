@@ -22,12 +22,14 @@ import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
+import com.composeunstyled.theme.ColoredIndication
 import rui.foundation.RuiIcon
 import rui.foundation.RuiIcons
 import rui.foundation.RuiSurface
 import rui.foundation.RuiText
 import rui.foundation.rememberRuiIndication
 import rui.theme.RuiTheme
+import rui.theme.StateLayerAlphas
 
 /** How a [RuiInlineBanner] reads. */
 public enum class RuiInlineBannerVariant {
@@ -113,20 +115,58 @@ public fun RuiInlineBanner(
                 modifier = Modifier.weight(1f),
             )
             if (actionLabel != null && onAction != null) {
-                RuiButton(
+                BannerAction(
+                    label = actionLabel,
+                    color = colors.content,
                     onClick = onAction,
-                    variant = RuiButtonVariant.Plain,
-                    size = RuiButtonSize.Sm,
-                    colors = RuiButtonDefaults.colors(RuiButtonVariant.Plain)
-                        .copy(content = colors.content),
-                ) {
-                    RuiText(actionLabel)
-                }
+                )
             }
             if (onDismiss != null) {
                 DismissButton(onClick = onDismiss)
             }
         }
+    }
+}
+
+/**
+ * The banner's action: a plain content-colored text. It measures like the
+ * message line — a full [RuiButton] reserves the touch-target token in its
+ * layout slot and balloons a one-line banner — while the state layer still
+ * reads over the strip.
+ */
+@Composable
+private fun BannerAction(
+    label: String,
+    color: Color,
+    onClick: () -> Unit,
+) {
+    val interactionSource = remember { MutableInteractionSource() }
+    val spacing = RuiTheme.spacing
+    val motion = RuiTheme.motion
+    val indication = remember(color, motion) {
+        ColoredIndication(
+            hoveredColor = color.copy(alpha = StateLayerAlphas.hovered),
+            pressedColor = color.copy(alpha = StateLayerAlphas.pressed),
+            focusedColor = color.copy(alpha = StateLayerAlphas.focused),
+            draggedColor = color.copy(alpha = StateLayerAlphas.dragged),
+            animationSpecEnter = motion.stateLayerIn,
+            animationSpecExit = motion.stateLayerOut,
+        )
+    }
+    Box(
+        modifier = Modifier
+            .clip(RuiTheme.shapes.full)
+            .clickable(
+                interactionSource = interactionSource,
+                indication = indication,
+                onClickLabel = label,
+                role = Role.Button,
+                onClick = onClick,
+            )
+            .padding(horizontal = spacing.sm, vertical = spacing.xs),
+        contentAlignment = Alignment.Center,
+    ) {
+        RuiText(text = label, style = RuiTheme.typography.labelMd, color = color)
     }
 }
 
