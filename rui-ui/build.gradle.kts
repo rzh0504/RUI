@@ -1,3 +1,5 @@
+import org.jetbrains.kotlin.gradle.ExperimentalWasmDsl
+
 plugins {
     alias(libs.plugins.kotlinMultiplatform)
     alias(libs.plugins.androidKotlinMultiplatformLibrary)
@@ -22,6 +24,10 @@ kotlin {
     iosArm64()
     iosSimulatorArm64()
     jvm()
+    @OptIn(ExperimentalWasmDsl::class)
+    wasmJs {
+        browser()
+    }
 
     sourceSets {
         commonMain.dependencies {
@@ -42,11 +48,24 @@ kotlin {
             // Android's.
             implementation(libs.ktor.client.okhttp)
         }
+        wasmJsMain.dependencies {
+            // In Ktor 3.x the fetch-based Js engine ships inside
+            // ktor-client-core for the web targets — ktor-client-js is gone.
+            implementation(libs.ktor.client.core)
+        }
         iosMain.dependencies {
             implementation(libs.ktor.client.darwin)
         }
         commonTest.dependencies {
             implementation(kotlin("test"))
         }
+
+        // Shared by the Skiko-rendered non-Android targets (desktop JVM and
+        // WebAssembly): actuals that need no platform-specific API.
+        val skikoMain by creating {
+            dependsOn(commonMain.get())
+        }
+        jvmMain.get().dependsOn(skikoMain)
+        wasmJsMain.get().dependsOn(skikoMain)
     }
 }
