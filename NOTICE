@@ -75,6 +75,15 @@ License, Version 2.0.
     - Modified: RuiBadge exposes a text/dot API instead of an arbitrary
       content slot; no placement rulers; sizes on Rui's token system.
 
+  rui-ui/src/commonMain/kotlin/rui/components/RuiNavigationRail.kt
+    - Rail layout concept and item structure adapted from miuix's
+      basic/NavigationRail.kt.
+    - Modified: static dual forms instead of the collapse/expand morph (no
+      expand-state machine, no label size interpolation); no badge slot; an
+      opaque page-background column with a hairline instead of an opaque
+      surface; Rui's primary-pill selection language; no Android insets
+      machinery.
+
   rui-ui/src/commonMain/kotlin/rui/components/RuiScrollBar.kt
     - Scrollbar adapter contract, thumb geometry (proportional length with a
       minimum, reverse-layout flip), drag mapping with carried-over overshoot

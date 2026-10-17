@@ -153,6 +153,16 @@ public fun ComponentsScreen(
             )
         }
 
+        SectionLabel("Navigation")
+        RuiListGroup {
+            RuiListItem(
+                title = "Navigation rail",
+                subtitle = "Collapsed strip and expanded rows",
+                showChevron = true,
+                onClick = { onOpen(CatalogPage.NavigationRail) },
+            )
+        }
+
         SectionLabel("Indicators")
         RuiListGroup {
             RuiListItem(
