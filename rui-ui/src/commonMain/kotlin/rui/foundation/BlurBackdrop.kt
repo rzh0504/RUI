@@ -60,34 +60,13 @@ private class BlurBackdropImpl(
     val onDraw: ContentDrawScope.() -> Unit,
 ) : BlurBackdrop {
     override var layerCoordinates: LayoutCoordinates? by mutableStateOf(null)
-
-    /**
-     * Bumped every time the capture re-records. Consumers read it inside their
-     * own draw so a changing capture invalidates them: layers that draw the
-     * capture through an *intermediate* layer (the progressive blur's bands)
-     * must re-record whenever the captured content changes, or they keep
-     * showing the frame the intermediate layer was last recorded at — a ghost
-     * that freezes under every scroll.
-     */
-    var revision: Int = 0
 }
-
-/** The capture's [BlurBackdropImpl.revision], for Rui's own blur consumers. */
-internal val BlurBackdrop.captureRevision: Int
-    get() = (this as BlurBackdropImpl).revision
 
 /**
  * Creates a backdrop whose capturing node replays [onDraw] into its layer
  * (defaults to drawing the captured content as-is). Draw an opaque background
  * color first when the captured tree has transparent areas — blurring
  * transparent pixels fades toward nothing.
- *
- * The capture re-records whenever the capturing node's own draw runs. Content
- * that moves *without* that draw — a scrollable translating its children by
- * placement, for one — keeps sampling the frame it was recorded at; pass the
- * driving state through [Modifier.blurBackdrop]'s `redrawKey` (e.g.
- * `{ scrollState.value }`) so the capture re-records every frame the content
- * moves.
  *
  * Scope one backdrop to one screen (one navigation entry): every
  * [Modifier.blurBackdrop] recorder overwrites the layer and its coordinates,
@@ -107,24 +86,12 @@ public fun rememberBlurBackdrop(
  * re-records the layer; recording is cheap and doesn't invalidate consumers
  * on its own. Set [recordEnabled] to false while a transition is running to
  * keep the animation's frame budget (surfaces sample the last frame).
- *
- * @param redrawKey Read on every draw of this node *before* recording: pass
- *   the state that drives content which moves without redrawing it — a scroll
- *   position translating its children by placement (`{ scrollState.value }`),
- *   for one — so the capture re-records every frame that state moves. Reads
- *   inside `onDraw` do not register here; the key must ride the recorder's
- *   own draw.
  */
 public fun Modifier.blurBackdrop(
     backdrop: BlurBackdrop,
     recordEnabled: Boolean = true,
-    redrawKey: (() -> Any?)? = null,
 ): Modifier =
     drawWithContent {
-        // Read before drawing: a key that moved (a scroll position driving
-        // placement-only content movement) invalidates this draw, so the
-        // capture re-records even when no child redraws on its own.
-        redrawKey?.invoke()
         drawContent()
         if (!recordEnabled) return@drawWithContent
         val impl = backdrop as BlurBackdropImpl
@@ -139,38 +106,9 @@ public fun Modifier.blurBackdrop(
                 drawContext.density = previous
             }
         }
-        impl.revision++
     }.onGloballyPositioned { coordinates ->
         if (coordinates.isAttached) {
             (backdrop as BlurBackdropImpl).layerCoordinates = coordinates
-        }
-    }
-
-/**
- * Resolves where the consuming node sits in the backdrop's coordinate space.
- * Null means the blur cannot be drawn this frame (no captured coordinates yet,
- * detached nodes, an exception from translation). A [positionOverride] value
- * passes through as-is — a NaN component is the caller's "skip the layer this
- * frame" signal and is checked by the draw site.
- */
-internal fun resolveBackdropOffset(
-    backdrop: BlurBackdrop,
-    consumerCoordinates: LayoutCoordinates?,
-    positionOverride: (() -> Offset)?,
-): Offset? =
-    if (positionOverride != null) {
-        positionOverride()
-    } else {
-        val source = backdrop.layerCoordinates
-        val consumer = consumerCoordinates
-        if (source == null || consumer == null) {
-            null
-        } else {
-            try {
-                source.localPositionOf(consumer, Offset.Zero)
-            } catch (_: Exception) {
-                null
-            }
         }
     }
 
@@ -212,16 +150,22 @@ public fun Modifier.blurSurface(
                 drawContent()
                 return@drawWithContent
             }
-            // Reading the capture's revision keeps this draw live: a layer
-            // drawn through RenderEffect must re-run whenever the captured
-            // content re-records, or skiko's recorded reference shows the
-            // frame this draw last ran at.
-            backdrop.captureRevision
 
-            val offset = resolveBackdropOffset(backdrop, consumerCoordinates.value, positionOverride)
-            if (offset == null) {
-                drawContent()
-                return@drawWithContent
+            val offset = if (positionOverride != null) {
+                positionOverride()
+            } else {
+                val source = backdrop.layerCoordinates
+                val consumer = consumerCoordinates.value
+                if (source == null || consumer == null) {
+                    drawContent()
+                    return@drawWithContent
+                }
+                try {
+                    source.localPositionOf(consumer, Offset.Zero)
+                } catch (_: Exception) {
+                    drawContent()
+                    return@drawWithContent
+                }
             }
 
             val radiusPx = radius.toPx()
