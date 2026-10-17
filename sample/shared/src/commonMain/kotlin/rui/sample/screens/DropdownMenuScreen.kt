@@ -12,6 +12,7 @@ import rui.components.AnchorAlignment
 import rui.components.RuiDivider
 import rui.components.RuiDropdownMenu
 import rui.components.RuiDropdownMenuItem
+import rui.components.RuiDropdownSubmenu
 import rui.components.RuiListGroup
 import rui.components.RuiListItem
 import rui.foundation.BlurBackdrop
@@ -29,6 +30,7 @@ public fun DropdownMenuScreen(
 ) {
     var editMenu by remember { mutableStateOf(false) }
     var viewsMenu by remember { mutableStateOf(false) }
+    var shareMenu by remember { mutableStateOf(false) }
 
     ContentColumn(contentPadding = contentPadding) {
         RuiText(
@@ -88,6 +90,39 @@ public fun DropdownMenuScreen(
                     onClick = { viewsMenu = false },
                     leading = { RuiIcon(imageVector = RuiIcons.Close, contentDescription = null) },
                 )
+            }
+            RuiDivider(inset = RuiTheme.spacing.lg)
+            RuiDropdownMenu(
+                expanded = shareMenu,
+                onDismissRequest = { shareMenu = false },
+                backdrop = backdrop,
+                alignment = AnchorAlignment.End,
+                anchor = {
+                    RuiListItem(
+                        title = "Share",
+                        subtitle = "Cascading submenus, two levels deep",
+                        onClick = { shareMenu = !shareMenu },
+                    )
+                },
+            ) {
+                RuiDropdownMenuItem(
+                    text = "Copy link",
+                    onClick = { shareMenu = false },
+                    leading = { RuiIcon(imageVector = RuiIcons.Check, contentDescription = null) },
+                )
+                RuiDropdownSubmenu(
+                    text = "Share to…",
+                    leading = { RuiIcon(imageVector = RuiIcons.Search, contentDescription = null) },
+                ) {
+                    RuiDropdownMenuItem(text = "Message", onClick = { shareMenu = false })
+                    RuiDropdownMenuItem(text = "Mail", onClick = { shareMenu = false })
+                    RuiDropdownSubmenu(text = "More…") {
+                        RuiDropdownMenuItem(text = "Notes", onClick = { shareMenu = false })
+                        RuiDropdownMenuItem(text = "Reminders", onClick = { shareMenu = false })
+                    }
+                }
+                RuiDivider()
+                RuiDropdownMenuItem(text = "Delete", onClick = { shareMenu = false }, danger = true)
             }
         }
     }
