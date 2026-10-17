@@ -231,13 +231,17 @@ public fun RuiSlider(
             modifier = Modifier
                 .align(Alignment.CenterStart)
                 .graphicsLayer {
+                    // The box is start-anchored: translationX must place its
+                    // LEFT edge at the intended center minus one radius, or
+                    // every thumb renders one radius right of its value and
+                    // overflows the track at the maximum.
                     val thumbRadiusPx = RuiSliderDefaults.ThumbSize.toPx() / 2f
                     translationX = sliderThumbX(
                         sliderFractionOf(animatedValue, valueRange),
                         trackWidthPx.toFloat(),
                         thumbRadiusPx,
                         isRtl,
-                    )
+                    ) - thumbRadiusPx
                     scaleX = thumbScale
                     scaleY = thumbScale
                 }
@@ -549,13 +553,14 @@ public fun RuiRangeSlider(
                 modifier = Modifier
                     .align(Alignment.CenterStart)
                     .graphicsLayer {
+                        // Same left-edge correction as the single slider.
                         val thumbRadiusPx = RuiSliderDefaults.ThumbSize.toPx() / 2f
                         translationX = sliderThumbX(
                             sliderFractionOf(animated, valueRange),
                             trackWidthPx.toFloat(),
                             thumbRadiusPx,
                             isRtl,
-                        )
+                        ) - thumbRadiusPx
                         scaleX = scale
                         scaleY = scale
                     }

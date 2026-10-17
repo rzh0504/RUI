@@ -75,7 +75,7 @@ public fun RuiSidebar(
             header?.invoke(this)
             Column(
                 modifier = Modifier
-                    .weight(1f, fill = false)
+                    .weight(1f)
                     .verticalScroll(scrollState)
                     .selectableGroup(),
             ) {

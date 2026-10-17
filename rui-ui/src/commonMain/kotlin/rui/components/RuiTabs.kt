@@ -104,8 +104,10 @@ public fun <T> RuiTabGroup(
                         }
                     }
 
-                    val selectedIndex = tabs.indexOf(selectedTab).coerceIn(0, tabs.size - 1)
-                    val selectedGeometry = tabMetrics.getOrNull(selectedIndex)
+                    // An empty tab group selects nothing: indexOf yields -1,
+                    // which getOrNull turns into absent geometry.
+                    val selectedGeometry =
+                        tabMetrics.getOrNull(tabs.indexOf(selectedTab).coerceAtLeast(0))
 
                     // The pill appears with the first measured frame — no
                     // wipe-in; after that every selection change slides it.

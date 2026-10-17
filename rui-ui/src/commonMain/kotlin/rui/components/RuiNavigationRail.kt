@@ -95,7 +95,7 @@ public fun RuiNavigationRail(
             header?.invoke(this)
             Column(
                 modifier = Modifier
-                    .weight(1f, fill = false)
+                    .weight(1f)
                     .verticalScroll(scrollState)
                     .selectableGroup(),
                 horizontalAlignment = Alignment.CenterHorizontally,

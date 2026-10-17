@@ -139,8 +139,10 @@ public fun RuiBadgedBox(
         },
     ) { measurables, constraints ->
         val badgePlaceable = measurables.first { it.layoutId == BadgeId }.measure(
-            // Loose height: the badge never stretches to the anchor's.
-            constraints.copy(minHeight = 0),
+            // Loose width AND height: a caller's fillMaxWidth would otherwise
+            // forward its minWidth here and stretch the badge across the
+            // anchor instead of keeping it badge-sized.
+            constraints.copy(minWidth = 0, minHeight = 0),
         )
         val anchorPlaceable = measurables.first { it.layoutId == AnchorId }.measure(constraints)
 
