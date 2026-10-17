@@ -127,6 +127,13 @@ public fun ComponentsScreen(
                 showChevron = true,
                 onClick = { onOpen(CatalogPage.LazyList) },
             )
+            RuiDivider(inset = RuiTheme.spacing.lg)
+            RuiListItem(
+                title = "Scroll bar",
+                subtitle = "Overlay indicator, draggable with a mouse",
+                showChevron = true,
+                onClick = { onOpen(CatalogPage.ScrollBar) },
+            )
         }
 
         SectionLabel("Identity")
