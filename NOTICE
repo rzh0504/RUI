@@ -28,7 +28,8 @@ License, Version 2.0.
       (LayerBackdrop/LayerBackdropModifier).
     - Modified: heavily reduced - blur applies through Compose's
       cross-platform BlurEffect instead of miuix's AGSL/SkSL runtime-shader
-      pipeline; no progressive blur, noise dither or highlights.
+      pipeline; no noise dither or highlights (the progressive ramp is its own
+      adaptation, see ProgressiveBlur.kt below).
 
   rui-ui/src/commonMain/kotlin/rui/components/RuiTopAppBar.kt
     - Collapsing large-title top app bar (RuiScrollBehavior /
@@ -82,6 +83,16 @@ License, Version 2.0.
       pure indicator, like iOS); no hover highlight; fade timings, widths and
       alphas retuned to Rui's tokens; the estimation and geometry math is
       extracted as testable pure classes.
+
+  rui-ui/src/commonMain/kotlin/rui/foundation/ProgressiveBlur.kt
+    - Progressive (gradient-strength) blur parameterization — edge presets,
+      start/end fractions and the power-curve falloff — after miuix-blur's
+      ProgressiveBlur/BackdropEffects.
+    - Modified: implemented as per-band private GraphicsLayers sampling Rui's
+      shared BlurBackdrop capture (each band's radius is its own layer's
+      renderEffect, never a mid-frame mutation of the shared layer) instead of
+      miuix's AGSL/SkSL runtime-shader passes; axis-aligned edges only, no
+      blend/tint folding into the ramp pass.
 
 A copy of the Apache License, Version 2.0 for that portion of the code is
 available at https://www.apache.org/licenses/LICENSE-2.0 and must be

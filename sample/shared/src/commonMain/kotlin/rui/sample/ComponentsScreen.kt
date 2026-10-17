@@ -153,6 +153,16 @@ public fun ComponentsScreen(
             )
         }
 
+        SectionLabel("Material")
+        RuiListGroup {
+            RuiListItem(
+                title = "Progressive blur",
+                subtitle = "Blur strength ramping along an edge",
+                showChevron = true,
+                onClick = { onOpen(CatalogPage.ProgressiveBlur) },
+            )
+        }
+
         SectionLabel("Indicators")
         RuiListGroup {
             RuiListItem(

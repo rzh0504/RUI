@@ -72,6 +72,7 @@ import rui.sample.screens.BannerScreen
 import rui.sample.screens.LocalizationScreen
 import rui.sample.screens.ReorderScreen
 import rui.sample.screens.ScrollBarScreen
+import rui.sample.screens.ProgressiveBlurScreen
 import rui.theme.RuiTheme
 
 /** The catalog's routes. */
@@ -110,6 +111,7 @@ public sealed interface CatalogPage : RuiNavKey {
     public data object Localization : CatalogPage
     public data object Reorder : CatalogPage
     public data object ScrollBar : CatalogPage
+    public data object ProgressiveBlur : CatalogPage
 }
 
 private fun CatalogPage.title(): String = when (this) {
@@ -147,6 +149,7 @@ private fun CatalogPage.title(): String = when (this) {
     CatalogPage.Localization -> "Localization"
     CatalogPage.Reorder -> "Reorder"
     CatalogPage.ScrollBar -> "Scroll bar"
+    CatalogPage.ProgressiveBlur -> "Progressive blur"
 }
 
 /**
@@ -342,6 +345,7 @@ public fun CatalogApp() {
                             )
                             CatalogPage.Reorder -> ReorderScreen(contentPadding = padding)
                             CatalogPage.ScrollBar -> ScrollBarScreen(contentPadding = padding)
+                            CatalogPage.ProgressiveBlur -> ProgressiveBlurScreen(contentPadding = padding)
                         }
                     }
                 }
