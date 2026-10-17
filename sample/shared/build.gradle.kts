@@ -1,3 +1,4 @@
+import org.jetbrains.kotlin.gradle.ExperimentalWasmDsl
 import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinNativeTarget
 
 plugins {
@@ -16,6 +17,19 @@ kotlin {
 
     iosArm64()
     iosSimulatorArm64()
+    jvm()
+    @OptIn(ExperimentalWasmDsl::class)
+    wasmJs {
+        // index.html loads the bundle as catalog.js from the canvas-less
+        // #catalog viewport container.
+        outputModuleName = "catalog"
+        browser {
+            commonWebpackConfig {
+                outputFileName = "catalog.js"
+            }
+        }
+        binaries.executable()
+    }
 
     sourceSets {
         commonMain.dependencies {
@@ -25,11 +39,33 @@ kotlin {
             implementation(compose.ui)
             implementation(libs.compose.ui.backhandler)
         }
+        jvmMain.dependencies {
+            implementation(compose.desktop.currentOs)
+        }
+        wasmJsMain.dependencies {
+            // kotlinx.browser (window/localStorage) for the sample-side
+            // actuals; Rui itself never touches browser APIs.
+            implementation(libs.kotlinx.browser)
+        }
+
+        // Same iOS shared-set wiring as :rui-ui — see the note there. The
+        // template also leaves iosMain disconnected from commonMain here.
+        iosMain.get().dependsOn(commonMain.get())
+        iosArm64Main.get().dependsOn(iosMain.get())
+        iosSimulatorArm64Main.get().dependsOn(iosMain.get())
     }
 
     targets.withType<KotlinNativeTarget> {
         binaries.framework {
             baseName = "SampleShared"
         }
+    }
+}
+
+// One JVM target, so the Compose Desktop application plugin binds to it:
+// ./gradlew :sample:shared:run launches the catalog in a desktop window.
+compose.desktop {
+    application {
+        mainClass = "rui.sample.MainKt"
     }
 }

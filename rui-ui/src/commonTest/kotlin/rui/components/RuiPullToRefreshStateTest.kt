@@ -7,9 +7,9 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.cancelChildren
 import kotlinx.coroutines.joinAll
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withTimeout
 import kotlinx.coroutines.yield
+import kotlinx.coroutines.test.runTest
 import rui.foundation.utils.SpringMath
 import kotlin.math.abs
 import kotlin.test.Test
@@ -53,10 +53,12 @@ class RuiPullToRefreshStateTest {
         return Triple(state, scope, clock)
     }
 
-    private fun <T> withState(block: suspend (RuiPullToRefreshState) -> T): T {
+    private fun withState(block: suspend (RuiPullToRefreshState) -> Unit) {
         val (state, scope, clock) = newTestState()
         try {
-            return runBlocking(clock) { block(state) }
+            runTest(context = clock) {
+                block(state)
+            }
         } finally {
             scope.coroutineContext.cancelChildren()
         }
@@ -90,7 +92,7 @@ class RuiPullToRefreshStateTest {
     fun levelDropWhileExpandingStillCollapses() {
         val (state, scope, clock) = newTestState()
         try {
-            runBlocking(clock) {
+            runTest(context = clock) {
                 // The show animation is mid-expansion when the hoisted level
                 // drops — the completion must take over from wherever the
                 // spring is and end idle with nothing left running.

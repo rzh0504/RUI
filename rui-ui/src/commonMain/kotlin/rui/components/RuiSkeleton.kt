@@ -30,15 +30,18 @@ private val PulseMinAlpha = 0.4f
 /** Width of the sweeping highlight band, as a fraction of the bone. */
 private const val SweepBandFraction = 0.6f
 
-/** The sheen over the muted base — a white highlight reads on light and dark. */
-private val SweepHighlight = Color.White.copy(alpha = 0.55f)
-
 /** The looping animation of a skeleton bone. */
 public enum class RuiSkeletonEffect {
     /** The whole bone breathes between full and muted opacity. */
     Pulse,
 
-    /** A highlight band sweeps across the bone, start edge to end edge. */
+    /**
+     * A highlight band sweeps across the bone, start edge to end edge. The
+     * band is the bone's own full-strength color traveling over the bone
+     * dimmed to the pulse's trough — the same two endpoints the pulse
+     * breathes between, so both effects share one amplitude (a white sheen
+     * reads far too bright in dark appearance).
+     */
     Sweep,
 }
 
@@ -101,7 +104,7 @@ public fun RuiSkeleton(
             Box(
                 modifier = bone
                     .clip(shape)
-                    .background(colors.surfaceMuted)
+                    .background(colors.surfaceMuted.copy(alpha = PulseMinAlpha))
                     .drawBehind {
                         // The band travels from fully before the start edge to
                         // fully past the end edge; mirrored in RTL.
@@ -116,7 +119,7 @@ public fun RuiSkeleton(
                             brush = Brush.linearGradient(
                                 colors = listOf(
                                     Color.Transparent,
-                                    SweepHighlight,
+                                    colors.surfaceMuted,
                                     Color.Transparent,
                                 ),
                                 start = Offset(center - bandWidth / 2f, 0f),

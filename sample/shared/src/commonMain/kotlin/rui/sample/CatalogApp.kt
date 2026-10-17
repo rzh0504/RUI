@@ -3,6 +3,8 @@ package rui.sample
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.animation.core.Animatable
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.navigationBarsPadding
@@ -25,6 +27,8 @@ import rui.components.RuiOverlayHost
 import rui.components.RuiFloatingNavigationBar
 import rui.components.RuiNavigationBar
 import rui.components.RuiNavigationBarItem
+import rui.components.RuiNavigationRail
+import rui.components.RuiSidebar
 import rui.components.RuiScaffold
 import rui.components.RuiTopAppBar
 import rui.components.navigation.RuiNavDisplay
@@ -36,7 +40,14 @@ import rui.foundation.ExperimentalRuiApi
 import rui.foundation.RuiIcons
 import rui.foundation.rememberBlurBackdrop
 import rui.foundation.utils.StatusBarAppearance
+import rui.sample.screens.AccountScreen
+import rui.sample.screens.BlocksScreen
 import rui.sample.screens.ButtonsScreen
+import rui.sample.screens.CartScreen
+import rui.sample.screens.InboxScreen
+import rui.sample.screens.SearchResultsScreen
+import rui.sample.screens.SignInScreen
+
 import rui.sample.screens.ChipsScreen
 import rui.sample.screens.BottomSheetScreen
 import rui.sample.screens.DialogScreen
@@ -64,11 +75,20 @@ import rui.sample.screens.ListsScreen
 import rui.sample.screens.BannerScreen
 import rui.sample.screens.LocalizationScreen
 import rui.sample.screens.ReorderScreen
+import rui.sample.screens.ScrollBarScreen
+import rui.sample.screens.NavigationRailScreen
+import rui.sample.screens.SidebarScreen
 import rui.theme.RuiTheme
+import rui.theme.RuiWindowWidthClass
 
 /** The catalog's routes. */
 public sealed interface CatalogPage : RuiNavKey {
     public data object Root : CatalogPage
+    public data object SignIn : CatalogPage
+    public data object Account : CatalogPage
+    public data object Cart : CatalogPage
+    public data object Inbox : CatalogPage
+    public data object SearchResults : CatalogPage
     public data object Buttons : CatalogPage
     public data object Chips : CatalogPage
     public data object TextField : CatalogPage
@@ -96,10 +116,17 @@ public sealed interface CatalogPage : RuiNavKey {
     public data object InlineBanner : CatalogPage
     public data object Localization : CatalogPage
     public data object Reorder : CatalogPage
+    public data object ScrollBar : CatalogPage
+    public data object NavigationRail : CatalogPage
 }
 
 private fun CatalogPage.title(): String = when (this) {
     CatalogPage.Root -> "Rui"
+    CatalogPage.SignIn -> "Sign in"
+    CatalogPage.Account -> "Account"
+    CatalogPage.Cart -> "Cart"
+    CatalogPage.Inbox -> "Inbox"
+    CatalogPage.SearchResults -> "Search results"
     CatalogPage.Buttons -> "Buttons"
     CatalogPage.Chips -> "Chips"
     CatalogPage.TextField -> "Text field"
@@ -127,6 +154,8 @@ private fun CatalogPage.title(): String = when (this) {
     CatalogPage.InlineBanner -> "Inline banner"
     CatalogPage.Localization -> "Localization"
     CatalogPage.Reorder -> "Reorder"
+    CatalogPage.ScrollBar -> "Scroll bar"
+    CatalogPage.NavigationRail -> "Navigation rail"
 }
 
 /**
@@ -135,14 +164,24 @@ private fun CatalogPage.title(): String = when (this) {
  * Tokens) and component pages pushed onto a [RuiNavDisplay] back stack.
  * [DialogHost] sits at the root so RuiDialog panels portal above everything.
  */
+private const val KeyDarkTheme = "appearance.darkTheme"
+private const val KeyFrosted = "appearance.frosted"
+private const val KeyFloatingNavBar = "appearance.floatingNavBar"
+private const val KeyLanguage = "appearance.language"
+
 @OptIn(ExperimentalRuiApi::class, ExperimentalComposeUiApi::class)
 @Composable
 public fun CatalogApp() {
     val systemDark = isSystemInDarkTheme()
-    var darkTheme by remember { mutableStateOf(systemDark) }
-    var frostedEnabled by remember { mutableStateOf(true) }
-    var floatingNavBarEnabled by remember { mutableStateOf(false) }
-    var languageChoice by remember { mutableStateOf(LanguageChoice.System) }
+    var darkTheme by remember { mutableStateOf(SampleSettings.getBoolean(KeyDarkTheme, systemDark)) }
+    var frostedEnabled by remember { mutableStateOf(SampleSettings.getBoolean(KeyFrosted, true)) }
+    var floatingNavBarEnabled by remember { mutableStateOf(SampleSettings.getBoolean(KeyFloatingNavBar, false)) }
+    var languageChoice by remember {
+        mutableStateOf(
+            LanguageChoice.entries.firstOrNull { it.name == SampleSettings.getString(KeyLanguage, LanguageChoice.System.name) }
+                ?: LanguageChoice.System,
+        )
+    }
     var tab by remember { mutableStateOf(0) }
     val backStack = rememberRuiNavBackStack<CatalogPage>(CatalogPage.Root)
     val nav = remember { RuiNavController(backStack) }
@@ -155,6 +194,12 @@ public fun CatalogApp() {
         // In-app theme toggle: push the appearance to the system bars in the
         // same frame, so icons stay visible over the switched background.
         StatusBarAppearance(darkIcons = !darkTheme)
+        val widthClass = RuiTheme.windowWidthClass
+        val rootNavItems = listOf(
+            RuiNavigationBarItem("Components", RuiIcons.Grid),
+            RuiNavigationBarItem("Blocks", RuiIcons.Layers),
+            RuiNavigationBarItem("Tokens", RuiIcons.Swatch),
+        )
         // Dialogs and bottom sheets portal above the navigation stack —
         // both through the one overlay host.
         RuiOverlayHost {
@@ -163,6 +208,7 @@ public fun CatalogApp() {
             val density = LocalDensity.current
             val snackbarBottomDp = when {
                 backStack.size > 1 -> 0.dp
+                widthClass != RuiWindowWidthClass.Compact -> 48.dp
                 floatingNavBarEnabled -> 88.dp
                 else -> 48.dp
             }
@@ -173,6 +219,28 @@ public fun CatalogApp() {
                 snackbarOffset.animateTo(snackbarBottomPx, snackbarMotion)
             }
             Box(Modifier.fillMaxSize()) {
+                // Adaptive root navigation: the bars own Compact widths; from
+                // Medium up a rail or sidebar leads the root page instead.
+                // Pushed pages take the full width again.
+                Row(Modifier.fillMaxSize()) {
+                    if (backStack.size == 1 && widthClass != RuiWindowWidthClass.Compact) {
+                        if (widthClass == RuiWindowWidthClass.Expanded) {
+                            RuiSidebar(
+                                items = rootNavItems,
+                                selected = tab,
+                                onSelect = { tab = it },
+                                modifier = Modifier.fillMaxHeight(),
+                            )
+                        } else {
+                            RuiNavigationRail(
+                                items = rootNavItems,
+                                selected = tab,
+                                onSelect = { tab = it },
+                                modifier = Modifier.fillMaxHeight(),
+                            )
+                        }
+                    }
+                    Box(Modifier.weight(1f)) {
                 RuiNavDisplay(backStack = backStack, onBack = { nav.pop() }) { page ->
                 val atRoot = page == CatalogPage.Root
                 // Top-level pages get the collapsing large title; pushed
@@ -207,23 +275,19 @@ public fun CatalogApp() {
                         }
                     },
                     bottomBar = {
-                        if (atRoot) {
+                        // The bars own Compact widths; from Medium up the rail
+                        // or sidebar leads the root page instead.
+                        if (atRoot && widthClass == RuiWindowWidthClass.Compact) {
                             if (floatingNavBarEnabled) {
                                 RuiFloatingNavigationBar(
-                                    items = listOf(
-                                        RuiNavigationBarItem("Components", RuiIcons.Grid),
-                                        RuiNavigationBarItem("Tokens", RuiIcons.Swatch),
-                                    ),
+                                    items = rootNavItems,
                                     selected = tab,
                                     onSelect = { tab = it },
                                     backdrop = backdrop,
                                 )
                             } else {
                                 RuiNavigationBar(
-                                    items = listOf(
-                                        RuiNavigationBarItem("Components", RuiIcons.Grid),
-                                        RuiNavigationBarItem("Tokens", RuiIcons.Swatch),
-                                    ),
+                                    items = rootNavItems,
                                     selected = tab,
                                     onSelect = { tab = it },
                                     backdrop = backdrop,
@@ -245,16 +309,25 @@ public fun CatalogApp() {
                             CatalogPage.Root -> when (tab) {
                                 0 -> ComponentsScreen(
                                     darkTheme = darkTheme,
-                                    onDarkThemeChange = { darkTheme = it },
+                                    onDarkThemeChange = { darkTheme = it; SampleSettings.putBoolean(KeyDarkTheme, it) },
                                     frostedEnabled = frostedEnabled,
-                                    onFrostedEnabledChange = { frostedEnabled = it },
+                                    onFrostedEnabledChange = { frostedEnabled = it; SampleSettings.putBoolean(KeyFrosted, it) },
                                     onOpen = { nav.push(it) },
                                     contentPadding = padding,
                                     floatingNavBarEnabled = floatingNavBarEnabled,
-                                    onFloatingNavBarEnabledChange = { floatingNavBarEnabled = it },
+                                    onFloatingNavBarEnabledChange = { floatingNavBarEnabled = it; SampleSettings.putBoolean(KeyFloatingNavBar, it) },
+                                )
+                                1 -> BlocksScreen(
+                                    onOpen = { nav.push(it) },
+                                    contentPadding = padding,
                                 )
                                 else -> TokensScreen(contentPadding = padding)
                             }
+                            CatalogPage.SignIn -> SignInScreen(contentPadding = padding)
+                            CatalogPage.Account -> AccountScreen(contentPadding = padding)
+                            CatalogPage.Cart -> CartScreen(contentPadding = padding)
+                            CatalogPage.Inbox -> InboxScreen(contentPadding = padding)
+                            CatalogPage.SearchResults -> SearchResultsScreen(contentPadding = padding)
                             CatalogPage.Buttons -> ButtonsScreen(contentPadding = padding)
                             CatalogPage.Chips -> ChipsScreen(contentPadding = padding)
                             CatalogPage.TextField -> TextFieldScreen(contentPadding = padding)
@@ -296,12 +369,16 @@ public fun CatalogApp() {
                             CatalogPage.InlineBanner -> BannerScreen(contentPadding = padding)
                             CatalogPage.Localization -> LocalizationScreen(
                                 languageChoice = languageChoice,
-                                onLanguageChoiceChange = { languageChoice = it },
+                                onLanguageChoiceChange = { languageChoice = it; SampleSettings.putString(KeyLanguage, it.name) },
                                 contentPadding = padding,
                             )
                             CatalogPage.Reorder -> ReorderScreen(contentPadding = padding)
+                            CatalogPage.ScrollBar -> ScrollBarScreen(contentPadding = padding)
+                            CatalogPage.NavigationRail -> NavigationRailScreen(contentPadding = padding)
                         }
                     }
+                }
+                }
                 }
                 }
                 Box(

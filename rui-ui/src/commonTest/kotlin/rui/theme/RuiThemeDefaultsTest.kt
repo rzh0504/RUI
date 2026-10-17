@@ -7,7 +7,7 @@ import androidx.compose.runtime.Recomposer
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.test.runTest
 import kotlin.coroutines.EmptyCoroutineContext
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -130,7 +130,7 @@ class RuiThemeDefaultsTest {
  * content awaits frames, so the run is cancelled as soon as it's applied.
  */
 private fun composeInTest(content: @Composable () -> Unit) {
-    runBlocking {
+    runTest {
         val recomposer = Recomposer(EmptyCoroutineContext)
         val runner = launch { recomposer.runRecomposeAndApplyChanges() }
         try {

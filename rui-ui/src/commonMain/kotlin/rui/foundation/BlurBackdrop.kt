@@ -5,7 +5,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.runtime.staticCompositionLocalOf
+import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawWithContent
@@ -31,8 +31,14 @@ import rui.foundation.platform.isBlurSupported
  * True while a navigation transition is running. Backdrop captures pause
  * re-recording during transitions — moving bars sample the last frame, which
  * is invisible in motion, and the animation keeps its full frame budget.
+ *
+ * Read-tracked ([compositionLocalOf], not a static local): the flag flips at
+ * the start and the end of every transition, and a static local would
+ * invalidate the whole provided subtree — the full rendered stack — at each
+ * flip, spending the transition's first and settle frames on recomposition
+ * instead of motion.
  */
-internal val LocalRuiTransitionActive = staticCompositionLocalOf { false }
+internal val LocalRuiTransitionActive = compositionLocalOf { false }
 
 /**
  * Captures the drawing of one composable so other surfaces can render it

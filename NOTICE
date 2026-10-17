@@ -40,10 +40,12 @@ License, Version 2.0.
 
   rui-ui/src/commonMain/kotlin/rui/components/RuiSlider.kt
     - Drag mechanics, progress/thumb springs and step haptics adapted from
-      miuix's basic/Slider.kt.
-    - Modified: no vertical or range variants, no key-point magnets or tick
-      marks; iOS UISlider visuals (jump to touch, white thumb with shadow)
-      on Rui's token system.
+      miuix's basic/Slider.kt; the range form's thumb selection (nearest on a
+      tie to start), no-cross pinning and the collapsed-pair hand-off adapted
+      from the same file's RangeSlider.
+    - Modified: no vertical variant, no key-point magnets or tick marks; iOS
+      UISlider visuals (jump to touch, white thumb with shadow) on Rui's
+      token system.
 
   rui-ui/src/commonMain/kotlin/rui/components/RuiPullToRefresh.kt
     - Pull-to-refresh state machine, nested-scroll coordination, damped-drag
@@ -59,6 +61,38 @@ License, Version 2.0.
     - Modified: built on Compose Unstyled's UnstyledProgress for semantics;
       iOS-adjacent visuals (4dp capsule linear bar, thin ring, animated fill)
       on Rui's token system; no third orbiting-dot variant.
+
+  rui-ui/src/commonMain/kotlin/rui/foundation/utils/NavSettleEasing.kt
+    - Duration-pinned navigation settle curve (underdamped spring step
+      response baked into an Easing) adapted from miuix-nav's
+      runtime/NavSettleEasing.kt (NavProgrammaticEasing).
+    - Modified: internal to Rui, exposed as the navigationDriver motion
+      token's default; no gesture-commit/cancel phase variants.
+
+  rui-ui/src/commonMain/kotlin/rui/components/RuiBadge.kt
+    - BadgedBox placement math (corner-relative badge offsets, anchor-only
+      baselines) adapted from miuix's basic/Badge.kt, following Material 3.
+    - Modified: RuiBadge exposes a text/dot API instead of an arbitrary
+      content slot; no placement rulers; sizes on Rui's token system.
+
+  rui-ui/src/commonMain/kotlin/rui/components/RuiNavigationRail.kt
+    - Rail layout concept and item structure adapted from miuix's
+      basic/NavigationRail.kt.
+    - Modified: static dual forms instead of the collapse/expand morph (no
+      expand-state machine, no label size interpolation); no badge slot; an
+      opaque page-background column with a hairline instead of an opaque
+      surface; Rui's primary-pill selection language; no Android insets
+      machinery.
+
+  rui-ui/src/commonMain/kotlin/rui/components/RuiScrollBar.kt
+    - Scrollbar adapter contract, thumb geometry (proportional length with a
+      minimum, reverse-layout flip), drag mapping with carried-over overshoot
+      and the lazy-list average-row estimation (including the stretched-first-
+      row skip) adapted from miuix's basic/ScrollBar.kt.
+    - Modified: drag engages only on mouse pointers (touch keeps the thumb a
+      pure indicator, like iOS); no hover highlight; fade timings, widths and
+      alphas retuned to Rui's tokens; the estimation and geometry math is
+      extracted as testable pure classes.
 
 A copy of the Apache License, Version 2.0 for that portion of the code is
 available at https://www.apache.org/licenses/LICENSE-2.0 and must be

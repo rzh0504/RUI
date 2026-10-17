@@ -117,6 +117,19 @@ public object RuiIcons {
         }
     }
 
+    public val Layers: ImageVector by lazy {
+        strokedIcon("RuiLayers") {
+            moveTo(12f, 4f)
+            lineTo(20f, 8.5f)
+            lineTo(12f, 13f)
+            lineTo(4f, 8.5f)
+            close()
+            moveTo(4.5f, 13.5f)
+            lineTo(12f, 17.5f)
+            lineTo(19.5f, 13.5f)
+        }
+    }
+
     private fun strokedIcon(name: String, path: PathBuilder.() -> Unit): ImageVector =
         ImageVector.Builder(
             name = name,

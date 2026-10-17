@@ -17,10 +17,13 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.unit.dp
 import kotlin.math.roundToInt
 import rui.components.RuiCheckbox
 import rui.components.RuiCheckboxState
+import rui.components.RuiColorPalette
 import rui.components.RuiTriStateCheckbox
 import rui.components.RuiDivider
 import rui.components.RuiListGroup
@@ -28,6 +31,7 @@ import rui.components.RuiListItem
 import rui.components.RuiRadioButton
 import rui.components.RuiRadioGroup
 import rui.components.RuiRadioRow
+import rui.components.RuiRangeSlider
 import rui.components.RuiSlider
 import rui.components.RuiStepper
 import rui.components.RuiSwitch
@@ -44,6 +48,8 @@ public fun TogglesScreen(contentPadding: PaddingValues = PaddingValues(0.dp)) {
     var stats by remember { mutableStateOf(false) }
     var volume by remember { mutableStateOf(0.6f) }
     var brightness by remember { mutableStateOf(0.25f) }
+    var priceRange by remember { mutableStateOf(0.25f..0.75f) }
+    var tagColor by remember { mutableStateOf<Color?>(TagColors[5]) }
     var guests by rememberSaveable { mutableStateOf(2) }
 
     ContentColumn(contentPadding = contentPadding) {
@@ -180,6 +186,59 @@ public fun TogglesScreen(contentPadding: PaddingValues = PaddingValues(0.dp)) {
                 Spacer(Modifier.height(RuiTheme.spacing.md))
                 RuiSlider(value = brightness, onValueChange = { brightness = it }, steps = 4)
             }
+            RuiDivider(inset = RuiTheme.spacing.lg)
+            Column(Modifier.padding(horizontal = RuiTheme.spacing.lg, vertical = RuiTheme.spacing.md)) {
+                Row(Modifier.fillMaxWidth()) {
+                    RuiText("Price range", style = RuiTheme.typography.titleSm)
+                    Spacer(Modifier.weight(1f))
+                    RuiText(
+                        "${(priceRange.start * 100).roundToInt()}–${(priceRange.endInclusive * 100).roundToInt()}%",
+                        style = RuiTheme.typography.bodySm,
+                        color = RuiTheme.colors.contentMuted,
+                    )
+                }
+                Spacer(Modifier.height(RuiTheme.spacing.md))
+                // Push the thumbs together and keep pushing — the drag hands
+                // over to the far thumb so the range spreads again.
+                RuiRangeSlider(value = priceRange, onValueChange = { priceRange = it })
+            }
+        }
+
+        SectionLabel("Color palette")
+        RuiListGroup {
+            Column(Modifier.padding(horizontal = RuiTheme.spacing.lg, vertical = RuiTheme.spacing.md)) {
+                Row(Modifier.fillMaxWidth()) {
+                    RuiText("Tag color", style = RuiTheme.typography.titleSm)
+                    Spacer(Modifier.weight(1f))
+                    RuiText(
+                        tagColor?.let { color ->
+                            "#" + (color.toArgb() and 0xFFFFFF).toString(16)
+                                .uppercase().padStart(6, '0')
+                        } ?: "None",
+                        style = RuiTheme.typography.bodySm,
+                        color = RuiTheme.colors.contentMuted,
+                    )
+                }
+                Spacer(Modifier.height(RuiTheme.spacing.md))
+                RuiColorPalette(
+                    colors = TagColors,
+                    selected = tagColor,
+                    onSelect = { tagColor = it },
+                )
+            }
         }
     }
 }
+
+private val TagColors = listOf(
+    Color(0xFFFF5A5F),
+    Color(0xFFFF9F45),
+    Color(0xFFF7CE46),
+    Color(0xFF34C77B),
+    Color(0xFF2AA8A0),
+    Color(0xFF3C87FF),
+    Color(0xFF6E6EF7),
+    Color(0xFFAF6BFF),
+    Color(0xFFF06EA9),
+    Color(0xFF8B7355),
+)

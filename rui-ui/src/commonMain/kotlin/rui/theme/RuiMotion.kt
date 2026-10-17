@@ -9,6 +9,8 @@ import androidx.compose.animation.core.TweenSpec
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.runtime.Immutable
+import androidx.compose.ui.graphics.Color
+import rui.foundation.utils.NavSettleEasing
 
 /**
  * Motion tokens. Rui keeps motion restrained: quick, small, spring-based where
@@ -78,11 +80,32 @@ public data class RuiMotion(
         stiffness = 450f,
     ),
     /**
-     * Navigation: screen-scale moves — critically damped, no bounce at page
-     * size.
+     * Navigation: screen-scale spring moves — critically damped, no bounce
+     * at page size (sheet detents, panel and snackbar slides).
      */
     public val navigation: SpringSpec<Float> = spring(
         dampingRatio = Spring.DampingRatioNoBouncy,
         stiffness = 550f,
+    ),
+    /**
+     * Navigation stack driver: the programmatic settle of the shared depth
+     * float (push/pop from rest). A fixed-duration tween with the step
+     * response of an underdamped spring baked into the easing — a live
+     * spring's settle time scales with distance and termination threshold,
+     * while a tween completes in exactly its configured duration, keeping
+     * the driver's end (which gates render-stack removal and backdrop
+     * recording) deterministic. Curve from miuix-nav (NOTICE).
+     */
+    public val navigationDriver: TweenSpec<Float> = tween(
+        durationMillis = 500,
+        easing = NavSettleEasing(response = 0.8f, damping = 0.95f),
+    ),
+    /**
+     * Color crossfade for state-driven tints — a selection pill sliding
+     * under labels reads best when the label colors trade places with it.
+     */
+    public val colorFade: TweenSpec<Color> = tween(
+        durationMillis = 120,
+        easing = FastOutSlowInEasing,
     ),
 )

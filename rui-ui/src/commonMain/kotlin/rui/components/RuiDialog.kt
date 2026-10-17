@@ -17,7 +17,9 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.backhandler.BackHandler
 import androidx.compose.ui.unit.dp
 import com.composeunstyled.DialogPanel
 import com.composeunstyled.Scrim
@@ -87,7 +89,7 @@ public fun RuiDialog(
     )
 }
 
-@OptIn(ExperimentalRuiApi::class)
+@OptIn(ExperimentalRuiApi::class, ExperimentalComposeUiApi::class)
 @Composable
 private fun RuiDialogPanel(
     visible: Boolean,
@@ -107,6 +109,16 @@ private fun RuiDialogPanel(
     val dimens = RuiTheme.dimens
 
     WarnWithoutRuiOverlayHost("RuiDialog")
+
+    // Unstyled dismisses on Back as a *key event* (Esc/backspace); Android's
+    // gesture back and the browser's back button go through the back
+    // dispatcher instead, which would pop the page beneath and leave this
+    // dialog animating out over the wrong screen. The nav display's back
+    // handler registers before page content, so this one wins while the
+    // dialog is up.
+    if (visible) {
+        BackHandler(onBack = onDismissRequest)
+    }
 
     UnstyledDialog(
         visible = visible,

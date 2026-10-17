@@ -127,6 +127,13 @@ public fun ComponentsScreen(
                 showChevron = true,
                 onClick = { onOpen(CatalogPage.LazyList) },
             )
+            RuiDivider(inset = RuiTheme.spacing.lg)
+            RuiListItem(
+                title = "Scroll bar",
+                subtitle = "Overlay indicator, draggable with a mouse",
+                showChevron = true,
+                onClick = { onOpen(CatalogPage.ScrollBar) },
+            )
         }
 
         SectionLabel("Identity")
@@ -143,6 +150,16 @@ public fun ComponentsScreen(
                 subtitle = "Network loading with skeleton and error slots",
                 showChevron = true,
                 onClick = { onOpen(CatalogPage.AsyncImage) },
+            )
+        }
+
+        SectionLabel("Navigation")
+        RuiListGroup {
+            RuiListItem(
+                title = "Navigation rail",
+                subtitle = "Collapsed strip and expanded rows",
+                showChevron = true,
+                onClick = { onOpen(CatalogPage.NavigationRail) },
             )
         }
 

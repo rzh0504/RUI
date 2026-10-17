@@ -1,8 +1,10 @@
 package rui.components
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.LazyListState
@@ -69,6 +71,10 @@ private class RuiLazyListScopeImpl(
  * @param state The hoisted scroll state, as on [LazyColumn].
  * @param contentPadding Viewport padding; merge the scaffold's padding into
  *   it rather than padding the list from outside.
+ * @param scrollBar Overlay a [RuiScrollBar] on the list's trailing edge,
+ *   sharing this list's scroll state. The thumb's track skips the list's
+ *   [contentPadding] so it never rides under the scaffold's bars; on touch it
+ *   is an indicator only, and a mouse can drag it.
  */
 @Composable
 public fun RuiLazyColumn(
@@ -79,19 +85,49 @@ public fun RuiLazyColumn(
     verticalArrangement: Arrangement.Vertical = Arrangement.Top,
     horizontalAlignment: Alignment.Horizontal = Alignment.Start,
     userScrollEnabled: Boolean = true,
+    scrollBar: Boolean = false,
     content: RuiLazyListScope.() -> Unit,
 ) {
-    LazyColumn(
-        modifier = modifier
-            .overScrollVertical()
-            .scrollEndHaptic(),
-        state = state,
-        contentPadding = contentPadding,
-        reverseLayout = reverseLayout,
-        verticalArrangement = verticalArrangement,
-        horizontalAlignment = horizontalAlignment,
-        userScrollEnabled = userScrollEnabled,
-    ) {
-        RuiLazyListScopeImpl(this).content()
+    if (!scrollBar) {
+        LazyColumn(
+            modifier = modifier
+                .overScrollVertical()
+                .scrollEndHaptic(),
+            state = state,
+            contentPadding = contentPadding,
+            reverseLayout = reverseLayout,
+            verticalArrangement = verticalArrangement,
+            horizontalAlignment = horizontalAlignment,
+            userScrollEnabled = userScrollEnabled,
+        ) {
+            RuiLazyListScopeImpl(this).content()
+        }
+        return
+    }
+
+    Box(modifier) {
+        LazyColumn(
+            modifier = Modifier
+                .fillMaxSize()
+                .overScrollVertical()
+                .scrollEndHaptic(),
+            state = state,
+            contentPadding = contentPadding,
+            reverseLayout = reverseLayout,
+            verticalArrangement = verticalArrangement,
+            horizontalAlignment = horizontalAlignment,
+            userScrollEnabled = userScrollEnabled,
+        ) {
+            RuiLazyListScopeImpl(this).content()
+        }
+        RuiScrollBar(
+            adapter = rememberRuiScrollBarAdapter(state),
+            modifier = Modifier.align(Alignment.CenterEnd),
+            reverseLayout = reverseLayout,
+            trackPadding = PaddingValues(
+                top = contentPadding.calculateTopPadding(),
+                bottom = contentPadding.calculateBottomPadding(),
+            ),
+        )
     }
 }

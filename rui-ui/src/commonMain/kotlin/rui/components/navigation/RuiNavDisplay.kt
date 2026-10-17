@@ -109,17 +109,27 @@ public fun <T : RuiNavKey> RuiNavDisplay(
     val renderStack = remember { mutableStateListOf(backStack.first()) }
     val animatedTop = remember { Animatable(0f) }
     var transitionRunning by remember { mutableStateOf(false) }
-    val transitionSpec = RuiTheme.motion.navigation
+    val transitionSpec = RuiTheme.motion.navigationDriver
 
     LaunchedEffect(backStack.size, backStack.lastOrNull()) {
         // Pushes join the render stack immediately so the new entry slides in.
         while (renderStack.size < backStack.size) {
             renderStack.add(backStack[renderStack.size])
         }
-        // Replaces swap the top entry in place (no transition in v1).
-        if (renderStack.isNotEmpty() && renderStack.last() != backStack.last()) {
+        // Replaces swap the top entry in place (no transition in v1). The
+        // size equality is what keeps this from also firing on a pop: a pop
+        // deliberately leaves the exiting entry composed (it has to slide
+        // out), so the two tops legitimately differ until the removal loop
+        // below runs — replacing it there would slide out a copy of the
+        // destination instead of the page being left.
+        if (renderStack.size == backStack.size && renderStack.last() != backStack.last()) {
             renderStack[renderStack.lastIndex] = backStack.last()
         }
+
+        // Already at target (initial launch, or an in-place replace): no
+        // motion to drive — running the tween would hold the transition flag
+        // up for its full duration over a zero distance.
+        if (animatedTop.value == (backStack.size - 1).toFloat()) return@LaunchedEffect
 
         transitionRunning = true
         animatedTop.animateTo(
