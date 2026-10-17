@@ -18,8 +18,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
-import androidx.compose.runtime.DisposableEffect
-import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -118,7 +116,9 @@ public fun RuiDropdownMenu(
 /**
  * One selectable row of a [RuiDropdownMenu]. The row spans the menu's width;
  * pass [leading] for an icon and [trailing] for a checkmark or shortcut.
- * Danger rows render in the destructive color, as on iOS.
+ * Danger rows render in the destructive color, as on iOS. Selecting a row
+ * closes the menu — [closeOnClick] = false keeps it open (how
+ * [RuiDropdownSubmenu] pushes its level).
  */
 @Composable
 public fun RuiDropdownMenuItem(
@@ -129,6 +129,7 @@ public fun RuiDropdownMenuItem(
     trailing: (@Composable () -> Unit)? = null,
     enabled: Boolean = true,
     danger: Boolean = false,
+    closeOnClick: Boolean = true,
 ) {
     val colors = RuiTheme.colors
     val typography = RuiTheme.typography
@@ -148,6 +149,7 @@ public fun RuiDropdownMenuItem(
     UnstyledDropdownMenuItem(
         onClick = onClick,
         enabled = enabled,
+        closeOnClick = closeOnClick,
         indication = indication,
         modifier = modifier,
     ) {
@@ -186,42 +188,25 @@ public typealias AnchorAlignment = com.composeunstyled.AnchorAlignment
 
 /**
  * The submenu path of one open [RuiDropdownMenu]. [RuiDropdownSubmenu] rows
- * register their children into [contents] for as long as they are composed
- * and push their id onto [path] when tapped; the panel renders the level the
- * path currently points at.
+ * push a level carrying their own children — the level owns its content, so
+ * the row that pushed it leaving composition (as the panel's level
+ * transition animates it out) cannot retract the push.
  *
- * Pure state, no composition: the path/registry decisions are unit tested.
+ * Pure state, no composition: the path decisions are unit tested.
  */
 internal class RuiCascadingMenuState {
 
-    data class Level internal constructor(val id: Any, val title: String)
+    data class Level internal constructor(
+        val id: Any,
+        val title: String,
+        val content: @Composable () -> Unit,
+    )
 
     var path by mutableStateOf(emptyList<Level>())
         private set
 
-    internal val contents = mutableMapOf<Any, @Composable () -> Unit>()
-    private val titles = mutableMapOf<Any, String>()
-
-    /** Re-registers a submenu's children; called on every recomposition of the row. */
-    fun register(id: Any, title: String, content: @Composable () -> Unit) {
-        titles[id] = title
-        contents[id] = content
-    }
-
-    fun unregister(id: Any) {
-        contents.remove(id)
-        titles.remove(id)
-        // A row leaving composition takes its level and everything pushed
-        // past it with it — descendants cannot outlive their parent.
-        val index = path.indexOfFirst { it.id == id }
-        if (index >= 0) {
-            path = path.take(index)
-        }
-    }
-
-    fun push(id: Any) {
-        val title = titles[id] ?: return
-        path = path + Level(id, title)
+    fun push(id: Any, title: String, content: @Composable () -> Unit) {
+        path = path + Level(id, title, content)
     }
 
     fun pop() {
@@ -267,7 +252,7 @@ internal fun MenuLevels(
                 rootContent()
             } else {
                 CascadingBackRow(title = level.title, onBack = { cascading.pop() })
-                cascading.contents[level.id]?.invoke()
+                level.content()
             }
         }
     }
@@ -339,20 +324,14 @@ public fun RuiDropdownSubmenu(
 ) {
     val cascading = LocalRuiCascadingMenu.current
     val id = remember { Any() }
-    // Keep the latest children/title so a push after any recomposition sees
-    // the current lambdas; the dispose removes the registration when the row
-    // leaves composition (its level leaves the path with it).
-    SideEffect { cascading?.register(id, text, content) }
-    DisposableEffect(id) {
-        onDispose { cascading?.unregister(id) }
-    }
 
     RuiDropdownMenuItem(
         text = text,
-        onClick = { cascading?.push(id) },
+        onClick = { cascading?.push(id, text, content) },
         modifier = modifier,
         leading = leading,
         enabled = enabled,
+        closeOnClick = false,
         trailing = {
             RuiIcon(
                 imageVector = RuiIcons.ChevronRight,

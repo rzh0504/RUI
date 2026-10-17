@@ -6,44 +6,35 @@ import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
 /**
- * The cascading menu's correctness lives in its path decisions: registration
- * feeds pushes, pops unwind, and a registration leaving composition pops its
- * own level if it was active. The panel's animation and focus handling need a
- * real frame — these cover the logic around them.
+ * The cascading menu's correctness lives in its path decisions: a push
+ * appends a level carrying its own children (so the pushing row leaving
+ * composition during the level transition cannot retract the push), and a
+ * pop unwinds one level at a time. The panel's animation and focus handling
+ * need a real frame — these cover the logic around them.
  */
 class RuiCascadingMenuStateTest {
 
-    @Test
-    fun pushBuildsThePathFromRegistrations() {
-        val state = RuiCascadingMenuState()
-        val child: @Composable () -> Unit = {}
-        val grandchild: @Composable () -> Unit = {}
-        state.register(childId, "Share to…", child)
-        state.register(grandchildId, "More…", grandchild)
-
-        state.push(childId)
-        state.push(grandchildId)
-
-        assertEquals(
-            listOf(
-                RuiCascadingMenuState.Level(childId, "Share to…"),
-                RuiCascadingMenuState.Level(grandchildId, "More…"),
-            ),
-            state.path,
-        )
-    }
+    private val childContent: @Composable () -> Unit = {}
 
     @Test
-    fun pushWithoutRegistrationIsIgnored() {
+    fun pushAppendsLevelsCarryingTheirContent() {
         val state = RuiCascadingMenuState()
-        state.push(neverRegistered)
-        assertTrue(state.path.isEmpty())
+        val deeper: @Composable () -> Unit = {}
+
+        state.push(childId, "Share to…", childContent)
+        state.push(deeperId, "More…", deeper)
+
+        assertEquals(2, state.path.size)
+        assertEquals("Share to…", state.path[0].title)
+        assertEquals(childContent, state.path[0].content)
+        assertEquals("More…", state.path[1].title)
+        assertEquals(deeperId, state.path[1].id)
     }
 
     @Test
     fun popUnwindsOneLevelAtATime() {
-        val state = singleLevelState()
-        state.push(childId)
+        val state = RuiCascadingMenuState()
+        state.push(childId, "Share to…", childContent)
 
         state.pop()
         assertTrue(state.path.isEmpty())
@@ -52,52 +43,18 @@ class RuiCascadingMenuStateTest {
     }
 
     @Test
-    fun unregisterPopsItsOwnLevelAndDropsDescendants() {
-        val state = singleLevelState()
-        val deeperId = Any()
-        state.register(deeperId, "Deeper…", {})
-        state.push(childId)
-        state.push(deeperId)
-        assertEquals(2, state.path.size)
-
-        // The child row leaves composition while two levels reference it:
-        // both the level and everything pushed past it go with it.
-        state.unregister(childId)
-        assertTrue(state.path.isEmpty())
-    }
-
-    @Test
-    fun unregisterKeepsUnrelatedLevels() {
+    fun levelsWithDistinctIdsCoexist() {
         val state = RuiCascadingMenuState()
-        val otherId = Any()
-        state.register(childId, "Share to…", {})
-        state.register(otherId, "Other…", {})
-        state.push(otherId)
+        val other: @Composable () -> Unit = {}
 
-        state.unregister(childId)
+        state.push(childId, "Share to…", childContent)
+        state.push(otherId, "Other…", other)
 
-        assertEquals(1, state.path.size)
-        assertEquals(otherId, state.path.single().id)
-    }
-
-    @Test
-    fun reregistrationReplacesTheContent() {
-        val state = RuiCascadingMenuState()
-        val first: @Composable () -> Unit = {}
-        val second: @Composable () -> Unit = {}
-        state.register(childId, "Share to…", first)
-        state.register(childId, "Share to…", second)
-
-        assertEquals(second, state.contents[childId])
+        assertEquals(childId, state.path[0].id)
+        assertEquals(otherId, state.path[1].id)
     }
 
     private val childId = Any()
-    private val grandchildId = Any()
-    private val neverRegistered = Any()
-
-    private fun singleLevelState(): RuiCascadingMenuState {
-        val state = RuiCascadingMenuState()
-        state.register(childId, "Share to…", {})
-        return state
-    }
+    private val otherId = Any()
+    private val deeperId = Any()
 }
