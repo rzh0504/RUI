@@ -41,10 +41,12 @@ License, Version 2.0.
 
   rui-ui/src/commonMain/kotlin/rui/components/RuiSlider.kt
     - Drag mechanics, progress/thumb springs and step haptics adapted from
-      miuix's basic/Slider.kt.
-    - Modified: no vertical or range variants, no key-point magnets or tick
-      marks; iOS UISlider visuals (jump to touch, white thumb with shadow)
-      on Rui's token system.
+      miuix's basic/Slider.kt; the range form's thumb selection (nearest on a
+      tie to start), no-cross pinning and the collapsed-pair hand-off adapted
+      from the same file's RangeSlider.
+    - Modified: no vertical variant, no key-point magnets or tick marks; iOS
+      UISlider visuals (jump to touch, white thumb with shadow) on Rui's
+      token system.
 
   rui-ui/src/commonMain/kotlin/rui/components/RuiPullToRefresh.kt
     - Pull-to-refresh state machine, nested-scroll coordination, damped-drag
