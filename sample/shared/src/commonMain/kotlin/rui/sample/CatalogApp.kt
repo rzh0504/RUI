@@ -3,6 +3,8 @@ package rui.sample
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.animation.core.Animatable
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.navigationBarsPadding
@@ -25,6 +27,8 @@ import rui.components.RuiOverlayHost
 import rui.components.RuiFloatingNavigationBar
 import rui.components.RuiNavigationBar
 import rui.components.RuiNavigationBarItem
+import rui.components.RuiNavigationRail
+import rui.components.RuiSidebar
 import rui.components.RuiScaffold
 import rui.components.RuiTopAppBar
 import rui.components.navigation.RuiNavDisplay
@@ -73,7 +77,9 @@ import rui.sample.screens.LocalizationScreen
 import rui.sample.screens.ReorderScreen
 import rui.sample.screens.ScrollBarScreen
 import rui.sample.screens.NavigationRailScreen
+import rui.sample.screens.SidebarScreen
 import rui.theme.RuiTheme
+import rui.theme.RuiWindowWidthClass
 
 /** The catalog's routes. */
 public sealed interface CatalogPage : RuiNavKey {
@@ -188,6 +194,12 @@ public fun CatalogApp() {
         // In-app theme toggle: push the appearance to the system bars in the
         // same frame, so icons stay visible over the switched background.
         StatusBarAppearance(darkIcons = !darkTheme)
+        val widthClass = RuiTheme.windowWidthClass
+        val rootNavItems = listOf(
+            RuiNavigationBarItem("Components", RuiIcons.Grid),
+            RuiNavigationBarItem("Blocks", RuiIcons.Layers),
+            RuiNavigationBarItem("Tokens", RuiIcons.Swatch),
+        )
         // Dialogs and bottom sheets portal above the navigation stack —
         // both through the one overlay host.
         RuiOverlayHost {
@@ -196,6 +208,7 @@ public fun CatalogApp() {
             val density = LocalDensity.current
             val snackbarBottomDp = when {
                 backStack.size > 1 -> 0.dp
+                widthClass != RuiWindowWidthClass.Compact -> 48.dp
                 floatingNavBarEnabled -> 88.dp
                 else -> 48.dp
             }
@@ -206,6 +219,28 @@ public fun CatalogApp() {
                 snackbarOffset.animateTo(snackbarBottomPx, snackbarMotion)
             }
             Box(Modifier.fillMaxSize()) {
+                // Adaptive root navigation: the bars own Compact widths; from
+                // Medium up a rail or sidebar leads the root page instead.
+                // Pushed pages take the full width again.
+                Row(Modifier.fillMaxSize()) {
+                    if (backStack.size == 1 && widthClass != RuiWindowWidthClass.Compact) {
+                        if (widthClass == RuiWindowWidthClass.Expanded) {
+                            RuiSidebar(
+                                items = rootNavItems,
+                                selected = tab,
+                                onSelect = { tab = it },
+                                modifier = Modifier.fillMaxHeight(),
+                            )
+                        } else {
+                            RuiNavigationRail(
+                                items = rootNavItems,
+                                selected = tab,
+                                onSelect = { tab = it },
+                                modifier = Modifier.fillMaxHeight(),
+                            )
+                        }
+                    }
+                    Box(Modifier.weight(1f)) {
                 RuiNavDisplay(backStack = backStack, onBack = { nav.pop() }) { page ->
                 val atRoot = page == CatalogPage.Root
                 // Top-level pages get the collapsing large title; pushed
@@ -240,25 +275,19 @@ public fun CatalogApp() {
                         }
                     },
                     bottomBar = {
-                        if (atRoot) {
+                        // The bars own Compact widths; from Medium up the rail
+                        // or sidebar leads the root page instead.
+                        if (atRoot && widthClass == RuiWindowWidthClass.Compact) {
                             if (floatingNavBarEnabled) {
                                 RuiFloatingNavigationBar(
-                                    items = listOf(
-                                        RuiNavigationBarItem("Components", RuiIcons.Grid),
-                                        RuiNavigationBarItem("Blocks", RuiIcons.Layers),
-                                        RuiNavigationBarItem("Tokens", RuiIcons.Swatch),
-                                    ),
+                                    items = rootNavItems,
                                     selected = tab,
                                     onSelect = { tab = it },
                                     backdrop = backdrop,
                                 )
                             } else {
                                 RuiNavigationBar(
-                                    items = listOf(
-                                        RuiNavigationBarItem("Components", RuiIcons.Grid),
-                                        RuiNavigationBarItem("Blocks", RuiIcons.Layers),
-                                        RuiNavigationBarItem("Tokens", RuiIcons.Swatch),
-                                    ),
+                                    items = rootNavItems,
                                     selected = tab,
                                     onSelect = { tab = it },
                                     backdrop = backdrop,
@@ -348,6 +377,8 @@ public fun CatalogApp() {
                             CatalogPage.NavigationRail -> NavigationRailScreen(contentPadding = padding)
                         }
                     }
+                }
+                }
                 }
                 }
                 Box(
