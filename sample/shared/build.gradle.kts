@@ -47,6 +47,12 @@ kotlin {
             // actuals; Rui itself never touches browser APIs.
             implementation(libs.kotlinx.browser)
         }
+
+        // Same iOS shared-set wiring as :rui-ui — see the note there. The
+        // template also leaves iosMain disconnected from commonMain here.
+        iosMain.get().dependsOn(commonMain.get())
+        iosArm64Main.get().dependsOn(iosMain.get())
+        iosSimulatorArm64Main.get().dependsOn(iosMain.get())
     }
 
     targets.withType<KotlinNativeTarget> {
