@@ -11,7 +11,6 @@ import rui.components.RuiAvatarDefaults
 import rui.components.RuiAvatarSize
 import rui.components.RuiBadge
 import rui.components.RuiBadgeDefaults
-import rui.components.RuiDivider
 import rui.components.RuiListGroup
 import rui.components.RuiListItem
 import rui.foundation.RuiText
@@ -24,14 +23,10 @@ import rui.theme.RuiTheme
 public fun InboxScreen(contentPadding: PaddingValues = PaddingValues(0.dp)) {
     ContentColumn(contentPadding = contentPadding) {
         RuiListGroup {
-            InboxRow("MK", "Mia Kim", "Re: the squircle radii", "2m", unread = true)
-            RuiDivider(inset = RuiTheme.spacing.lg)
-            InboxRow("JT", "Jon Törn", "Shipped the wheel picker fix", "1h", unread = true)
-            RuiDivider(inset = RuiTheme.spacing.lg)
-            InboxRow("AS", "Ana Silva", "Lunch tomorrow?", "Tue", unread = false)
-            RuiDivider(inset = RuiTheme.spacing.lg)
-            InboxRow("DP", "Dana Park", "Tokens page looks great now", "Mon", unread = false)
-            RuiDivider(inset = RuiTheme.spacing.lg)
+            InboxRow("MK", "Mia Kim", "Re: the squircle radii", "2m", unread = true, showDividerAfter = true)
+            InboxRow("JT", "Jon Törn", "Shipped the wheel picker fix", "1h", unread = true, showDividerAfter = true)
+            InboxRow("AS", "Ana Silva", "Lunch tomorrow?", "Tue", unread = false, showDividerAfter = true)
+            InboxRow("DP", "Dana Park", "Tokens page looks great now", "Mon", unread = false, showDividerAfter = true)
             InboxRow("RL", "Robin Lee", "Release notes draft", "Mon", unread = false)
         }
     }
@@ -44,6 +39,7 @@ private fun InboxRow(
     message: String,
     time: String,
     unread: Boolean,
+    showDividerAfter: Boolean = false,
 ) {
     RuiListItem(
         title = name,
@@ -74,5 +70,6 @@ private fun InboxRow(
                 color = if (unread) RuiTheme.colors.primary else RuiTheme.colors.contentMuted,
             )
         },
+        showDividerAfter = showDividerAfter,
     )
 }

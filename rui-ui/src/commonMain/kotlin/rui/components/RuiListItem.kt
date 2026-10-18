@@ -39,62 +39,68 @@ public fun RuiListItem(
     showChevron: Boolean = false,
     onClick: (() -> Unit)? = null,
     trailing: (@Composable RowScope.() -> Unit)? = null,
+    showDividerAfter: Boolean = false,
 ) {
     val colors = RuiTheme.colors
     val spacing = RuiTheme.spacing
     val interactionSource = remember { MutableInteractionSource() }
 
-    Row(
-        modifier = modifier
-            .fillMaxWidth()
-            .heightIn(min = RuiTheme.dimens.touchTarget)
-            .then(
-                if (onClick != null) {
-                    Modifier.clickable(
-                        interactionSource = interactionSource,
-                        indication = rememberRuiIndication(),
-                        onClick = onClick,
+    Column(modifier = modifier.fillMaxWidth()) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .heightIn(min = RuiTheme.dimens.touchTarget)
+                .then(
+                    if (onClick != null) {
+                        Modifier.clickable(
+                            interactionSource = interactionSource,
+                            indication = rememberRuiIndication(),
+                            onClick = onClick,
+                        )
+                    } else {
+                        Modifier
+                    },
+                )
+                .padding(horizontal = spacing.lg, vertical = spacing.md),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(spacing.md),
+        ) {
+            leading?.invoke(this)
+            Column(modifier = Modifier.weight(1f)) {
+                RuiText(text = title, style = RuiTheme.typography.titleSm)
+                if (subtitle != null) {
+                    RuiText(
+                        text = subtitle,
+                        style = RuiTheme.typography.bodySm,
+                        color = colors.contentMuted,
                     )
-                } else {
-                    Modifier
-                },
-            )
-            .padding(horizontal = spacing.lg, vertical = spacing.md),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(spacing.md),
-    ) {
-        leading?.invoke(this)
-        Column(modifier = Modifier.weight(1f)) {
-            RuiText(text = title, style = RuiTheme.typography.titleSm)
-            if (subtitle != null) {
+                }
+            }
+            if (value != null) {
                 RuiText(
-                    text = subtitle,
-                    style = RuiTheme.typography.bodySm,
+                    text = value,
+                    style = RuiTheme.typography.bodyMd,
                     color = colors.contentMuted,
                 )
             }
+            trailing?.invoke(this)
+            if (showChevron) {
+                RuiIcon(
+                    imageVector = RuiIcons.ChevronRight,
+                    contentDescription = null,
+                    tint = colors.contentDisabled,
+                )
+            }
         }
-        if (value != null) {
-            RuiText(
-                text = value,
-                style = RuiTheme.typography.bodyMd,
-                color = colors.contentMuted,
-            )
-        }
-        trailing?.invoke(this)
-        if (showChevron) {
-            RuiIcon(
-                imageVector = RuiIcons.ChevronRight,
-                contentDescription = null,
-                tint = colors.contentDisabled,
-            )
+        if (showDividerAfter) {
+            RuiDivider(inset = spacing.lg)
         }
     }
 }
 
 /**
  * The grouped container of [RuiListItem]s: a token-shaped surface card.
- * Separate rows with [RuiDivider] (inset to the row's leading edge).
+ * Rows can opt into an inset separator with [RuiListItem.showDividerAfter].
  */
 @Composable
 public fun RuiListGroup(

@@ -8,7 +8,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.unit.dp
 import rui.components.RuiAvatar
-import rui.components.RuiDivider
 import rui.components.RuiListGroup
 import rui.components.RuiListItem
 import rui.components.RuiSwitch
@@ -29,18 +28,18 @@ public fun AccountScreen(contentPadding: PaddingValues = PaddingValues(0.dp)) {
                 leading = { RuiAvatar(initials = "RL") },
                 showChevron = true,
                 onClick = {},
+                showDividerAfter = true,
             )
-            RuiDivider(inset = RuiTheme.spacing.lg)
             RuiListItem(
                 title = "Push notifications",
                 trailing = { RuiSwitch(checked = notifications, onCheckedChange = { notifications = it }) },
+                showDividerAfter = true,
             )
-            RuiDivider(inset = RuiTheme.spacing.lg)
             RuiListItem(
                 title = "Usage analytics",
                 trailing = { RuiSwitch(checked = analytics, onCheckedChange = { analytics = it }) },
+                showDividerAfter = true,
             )
-            RuiDivider(inset = RuiTheme.spacing.lg)
             RuiListItem(
                 title = "Storage",
                 value = "128 MB",

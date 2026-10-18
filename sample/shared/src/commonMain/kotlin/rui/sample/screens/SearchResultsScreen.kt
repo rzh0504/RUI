@@ -13,7 +13,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import rui.components.RuiAvatar
-import rui.components.RuiDivider
 import rui.components.RuiEmptyState
 import rui.components.RuiListGroup
 import rui.components.RuiListItem
@@ -45,9 +44,7 @@ public fun SearchResultsScreen(contentPadding: PaddingValues = PaddingValues(0.d
         } else {
             RuiListGroup {
                 ResultRow("Squircle radii, revisited", "Design notes · 6 min read", "RL")
-                RuiDivider(inset = RuiTheme.spacing.lg)
                 ResultRow("Wheel picker physics", "Engineering · 11 min read", "JT")
-                RuiDivider(inset = RuiTheme.spacing.lg)
                 ResultRow("Tokens on a 4dp grid", "Foundations · 4 min read", "MK")
             }
             RuiText(

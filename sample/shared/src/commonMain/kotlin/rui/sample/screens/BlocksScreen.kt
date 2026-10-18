@@ -3,60 +3,72 @@ package rui.sample.screens
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.unit.dp
-import rui.components.RuiDivider
+import rui.components.RuiAvatar
 import rui.components.RuiListGroup
 import rui.components.RuiListItem
+import rui.foundation.RuiIcon
+import rui.foundation.RuiIcons
 import rui.sample.CatalogPage
 import rui.sample.ui.ContentColumn
 import rui.sample.ui.SectionLabel
 import rui.theme.RuiTheme
 
-/**
- * The Blocks tab's index: real-world app screens composed purely from Rui
- * components, one pushed page per block — the Components tab's pattern
- * applied to whole screens instead of single components.
- */
+/** Real-world screen blocks composed from Rui components. */
 @Composable
 public fun BlocksScreen(
     onOpen: (CatalogPage) -> Unit,
     contentPadding: PaddingValues = PaddingValues(0.dp),
 ) {
-    val spacing = RuiTheme.spacing
+    val colors = RuiTheme.colors
 
     ContentColumn(contentPadding = contentPadding) {
-        SectionLabel("App blocks")
+        SectionLabel("Account")
         RuiListGroup {
             RuiListItem(
                 title = "Sign in",
-                subtitle = "Form with inline validation and one action",
+                subtitle = "Identity form with inline feedback",
+                leading = { RuiIcon(RuiIcons.Check, contentDescription = null, tint = colors.primary) },
                 showChevron = true,
                 onClick = { onOpen(CatalogPage.SignIn) },
+                showDividerAfter = true,
             )
-            RuiDivider(inset = spacing.lg)
             RuiListItem(
                 title = "Account",
-                subtitle = "Profile row and grouped preferences",
+                subtitle = "Profile, preferences and privacy controls",
+                leading = { RuiAvatar(initials = "RL") },
                 showChevron = true,
                 onClick = { onOpen(CatalogPage.Account) },
             )
-            RuiDivider(inset = spacing.lg)
+        }
+
+        SectionLabel("Shopping")
+        RuiListGroup {
             RuiListItem(
                 title = "Cart",
-                subtitle = "Steppers with a live order summary",
+                subtitle = "Editable quantities, totals and checkout",
+                leading = { RuiIcon(RuiIcons.Grid, contentDescription = null, tint = colors.primary) },
                 showChevron = true,
                 onClick = { onOpen(CatalogPage.Cart) },
             )
-            RuiDivider(inset = spacing.lg)
+        }
+
+        SectionLabel("Communication")
+        RuiListGroup {
             RuiListItem(
                 title = "Inbox",
-                subtitle = "Notification rows with unread badges",
+                subtitle = "Unread markers, previews and timestamps",
+                leading = { RuiAvatar(initials = "MK") },
                 showChevron = true,
                 onClick = { onOpen(CatalogPage.Inbox) },
             )
-            RuiDivider(inset = spacing.lg)
+        }
+
+        SectionLabel("Discovery")
+        RuiListGroup {
             RuiListItem(
                 title = "Search results",
-                subtitle = "Empty state with a populate action",
+                subtitle = "Empty state that transitions to results",
+                leading = { RuiIcon(RuiIcons.Search, contentDescription = null, tint = colors.primary) },
                 showChevron = true,
                 onClick = { onOpen(CatalogPage.SearchResults) },
             )
