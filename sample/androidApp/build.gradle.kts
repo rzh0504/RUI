@@ -10,7 +10,8 @@ android {
 
     defaultConfig {
         applicationId = "rui.sample.android"
-        minSdk = 23
+        // Accompanist lyrics-ui's transitive gaze-capsule declares minSdk 24.
+        minSdk = 24
         targetSdk = 36
         versionCode = 1
         versionName = "0.1.0"

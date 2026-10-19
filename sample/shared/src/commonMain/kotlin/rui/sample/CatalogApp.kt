@@ -78,6 +78,7 @@ import rui.sample.screens.ReorderScreen
 import rui.sample.screens.ScrollBarScreen
 import rui.sample.screens.NavigationRailScreen
 import rui.sample.screens.SidebarScreen
+import rui.sample.screens.LyricsScreen
 import rui.theme.RuiTheme
 import rui.theme.RuiWindowWidthClass
 
@@ -118,6 +119,7 @@ public sealed interface CatalogPage : RuiNavKey {
     public data object Reorder : CatalogPage
     public data object ScrollBar : CatalogPage
     public data object NavigationRail : CatalogPage
+    public data object Lyrics : CatalogPage
 }
 
 private fun CatalogPage.title(): String = when (this) {
@@ -156,6 +158,7 @@ private fun CatalogPage.title(): String = when (this) {
     CatalogPage.Reorder -> "Reorder"
     CatalogPage.ScrollBar -> "Scroll bar"
     CatalogPage.NavigationRail -> "Navigation rail"
+    CatalogPage.Lyrics -> "Lyrics"
 }
 
 /**
@@ -375,6 +378,7 @@ public fun CatalogApp() {
                             CatalogPage.Reorder -> ReorderScreen(contentPadding = padding)
                             CatalogPage.ScrollBar -> ScrollBarScreen(contentPadding = padding)
                             CatalogPage.NavigationRail -> NavigationRailScreen(contentPadding = padding)
+                            CatalogPage.Lyrics -> LyricsScreen(contentPadding = padding)
                         }
                     }
                 }

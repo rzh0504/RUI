@@ -36,6 +36,11 @@ kotlin {
             api(compose.foundation)
             api(compose.ui)
             api(libs.composeunstyled)
+            // The synced-lyrics data model is part of RuiKaraokeLyricsView's
+            // public API, so consumers parse lyrics themselves without an
+            // explicit Accompanist declaration. lyrics-core publishes a
+            // wasm-js artifact, so every Rui target sees the model.
+            api(libs.accompanist.lyrics.core)
             implementation(libs.compose.ui.backhandler)
             implementation(libs.composeunstyled.colored.indication)
             implementation(libs.coil.compose)
@@ -43,11 +48,17 @@ kotlin {
         }
         androidMain.dependencies {
             implementation(libs.ktor.client.okhttp)
+            // Accompanist's karaoke lyrics renderer. It ships only an
+            // android / jvm / ios-arm64 triple — no wasm-js and no
+            // ios-simulator artifacts — so the web browser and iOS simulator
+            // fall back to the Compose-MeasureText renderer in commonMain.
+            implementation(libs.accompanist.lyrics.ui)
         }
         jvmMain.dependencies {
             // OkHttp works on the desktop JVM, so the desktop engine matches
             // Android's.
             implementation(libs.ktor.client.okhttp)
+            implementation(libs.accompanist.lyrics.ui)
         }
         wasmJsMain.dependencies {
             // In Ktor 3.x the fetch-based Js engine ships inside
@@ -56,6 +67,9 @@ kotlin {
         }
         iosMain.dependencies {
             implementation(libs.ktor.client.darwin)
+        }
+        iosArm64Main.dependencies {
+            implementation(libs.accompanist.lyrics.ui)
         }
         commonTest.dependencies {
             implementation(kotlin("test"))

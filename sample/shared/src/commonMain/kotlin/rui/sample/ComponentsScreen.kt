@@ -120,6 +120,12 @@ public fun ComponentsScreen(
                 showChevron = true,
                 onClick = { onOpen(CatalogPage.ScrollBar) },
             )
+            RuiListItem(
+                title = "Lyrics",
+                subtitle = "Synced karaoke playback over artwork",
+                showChevron = true,
+                onClick = { onOpen(CatalogPage.Lyrics) },
+            )
         }
 
         SectionLabel("Identity")
