@@ -17,11 +17,10 @@ import androidx.compose.runtime.Composable
  * without owned status bars stay no-ops).
  *
  * On Android this drives the window's light status/navigation bar appearance.
- * On iOS the style is owned by the view controller level (the binding keeps
- * `preferredStatusBarStyle` final, so Compose cannot override it); the
- * actual publishes the request to [IosStatusBarAppearance], which a host
- * applies itself — the sample's window-root controller does it by
- * overriding `preferredStatusBarStyle`.
+ * On iOS the style is owned by the view controller level and the Obj-C
+ * binding keeps the `preferredStatusBarStyle` hook final, so the platform
+ * actual currently accepts the request without applying it — flipping the
+ * bars there waits for a host-side consumer of the look.
  */
 @Composable
 public expect fun StatusBarAppearance(darkIcons: Boolean)
