@@ -169,7 +169,14 @@ internal fun FallbackKaraokeLyricsView(
             val now = provider.value()
             position.value = now
             val scrolling = listState.isScrollInProgress
-            if (scrolling && !programmaticScroll) followWindow.noteManualGesture()
+            if (scrolling && !programmaticScroll) {
+                // Invalidate the last auto anchor: a stale baseline equal to
+                // the current target would block re-following that same line
+                // once the cooldown expires — the documented resume behavior
+                // returns to the active line even when it never changed.
+                followWindow.noteManualGesture()
+                lastAnchor = -1
+            }
             if (!scrolling && followWindow.canFollow()) {
                 val anchor = FallbackKaraokeModel.targetIndex(lyrics, now)
                 if (anchor >= 0 && anchor != lastAnchor) {
@@ -268,15 +275,31 @@ private fun FallbackLineItem(
             is KaraokeLine.MainKaraokeLine -> {
                 MainVocalRow(line, active, colors, normalLineTextStyle, textAlign, position)
                 line.accompanimentLines?.forEach { accompaniment ->
-                    RuiText(
-                        text = accompaniment.syllables.joinToString("") { it.content },
-                        style = accompanimentLineTextStyle,
-                        color = colors.text.copy(alpha = AccompanimentRowAlpha * UnfocusedRowAlpha),
-                        textAlign = textAlign,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = AccompanimentIndent),
-                    )
+                    // Nested vocals ride the same timed path as standalone
+                    // accompaniment rows: syllable fill while focused, the
+                    // dimmed read otherwise.
+                    if (active) {
+                        KaraokeProgressText(
+                            syllables = accompaniment.syllables,
+                            baseStyle = accompanimentLineTextStyle,
+                            baseColor = colors.text.copy(alpha = AccompanimentRowAlpha),
+                            textAlign = textAlign,
+                            position = position,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = AccompanimentIndent),
+                        )
+                    } else {
+                        RuiText(
+                            text = accompaniment.syllables.joinToString("") { it.content },
+                            style = accompanimentLineTextStyle,
+                            color = colors.text.copy(alpha = AccompanimentRowAlpha * UnfocusedRowAlpha),
+                            textAlign = textAlign,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = AccompanimentIndent),
+                        )
+                    }
                 }
                 Caption(line.phonetic, showPhonetic, phoneticTextStyle, colors.text, active, textAlign)
                 Caption(line.translation, showTranslation, translationTextStyle, colors.text, active, textAlign)
