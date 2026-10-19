@@ -11,6 +11,12 @@ import androidx.compose.runtime.remember
  * `preferredStatusBarStyle` final, so the composable side can only request.
  * A host reads the published look and applies it — with SwiftUI's
  * `statusBarStyle` modifier, for example.
+ *
+ * The publication is process-wide: Compose exposes no host identity on iOS,
+ * so this describes the composed content of the app as a whole. Apps that
+ * host several live Compose compositions in parallel scenes need to scope
+ * the look per scene before this fits them (the Android actual's per-window
+ * stack shows the richer pattern).
  */
 public object IosStatusBarAppearance {
     /**

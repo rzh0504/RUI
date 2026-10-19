@@ -24,7 +24,8 @@ struct iOSApp: App {
 /// `StatusBarBridge` and applies it with the `statusBarStyle` modifier.
 /// `TimelineView` ticks on a light cadence so the modifier re-evaluates when
 /// the request changes (a page override joining or leaving); with no call
-/// composed the sample falls back to dark content.
+/// composed the sample falls back to dark content. The bridge publishes one
+/// process-wide look: this sample hosts exactly one Compose composition.
 struct StatusStyleHost: View {
     var body: some View {
         TimelineView(.animation(minimumInterval: 0.25)) { _ in
