@@ -130,21 +130,22 @@ public object RuiIcons {
         }
     }
 
+    /** Solid play triangle — the transport glyphs read filled, not stroked. */
     public val Play: ImageVector by lazy {
-        strokedIcon("RuiPlay") {
-            moveTo(8.5f, 5.5f)
-            lineTo(18.5f, 12f)
-            lineTo(8.5f, 18.5f)
+        filledIcon("RuiPlay") {
+            moveTo(8.8f, 5.8f)
+            lineTo(8.8f, 18.2f)
+            lineTo(19f, 12f)
             close()
         }
     }
 
     public val Pause: ImageVector by lazy {
-        strokedIcon("RuiPause") {
-            moveTo(9f, 5.5f)
-            lineTo(9f, 18.5f)
-            moveTo(15f, 5.5f)
-            lineTo(15f, 18.5f)
+        strokedIcon("RuiPause", width = 3.6f) {
+            moveTo(9.4f, 6.2f)
+            lineTo(9.4f, 17.8f)
+            moveTo(14.6f, 6.2f)
+            lineTo(14.6f, 17.8f)
         }
     }
 
@@ -156,29 +157,15 @@ public object RuiIcons {
         }
     }
 
-    public val SkipBack: ImageVector by lazy {
-        strokedIcon("RuiSkipBack") {
-            moveTo(18f, 5.5f)
-            lineTo(8f, 12f)
-            lineTo(18f, 18.5f)
-            close()
-            moveTo(5.5f, 5.5f)
-            lineTo(5.5f, 18.5f)
-        }
-    }
+    public val SkipBack: ImageVector by lazy { transportIcon("RuiSkipBack", forward = false) }
 
-    public val SkipForward: ImageVector by lazy {
-        strokedIcon("RuiSkipForward") {
-            moveTo(6f, 5.5f)
-            lineTo(16f, 12f)
-            lineTo(6f, 18.5f)
-            close()
-            moveTo(18.5f, 5.5f)
-            lineTo(18.5f, 18.5f)
-        }
-    }
+    public val SkipForward: ImageVector by lazy { transportIcon("RuiSkipForward", forward = true) }
 
-    private fun strokedIcon(name: String, path: PathBuilder.() -> Unit): ImageVector =
+    private fun strokedIcon(
+        name: String,
+        width: Float = 2.2f,
+        path: PathBuilder.() -> Unit,
+    ): ImageVector =
         ImageVector.Builder(
             name = name,
             defaultWidth = 24.dp,
@@ -189,9 +176,71 @@ public object RuiIcons {
             addPath(
                 pathData = PathData { path() },
                 stroke = SolidColor(Color.Black),
-                strokeLineWidth = 2.2f,
+                strokeLineWidth = width,
                 strokeLineCap = StrokeCap.Round,
                 strokeLineJoin = StrokeJoin.Round,
+            )
+        }.build()
+
+    /** A filled glyph whose corners stay round: fill plus a matching stroke. */
+    private fun filledIcon(name: String, path: PathBuilder.() -> Unit): ImageVector =
+        ImageVector.Builder(
+            name = name,
+            defaultWidth = 24.dp,
+            defaultHeight = 24.dp,
+            viewportWidth = 24f,
+            viewportHeight = 24f,
+        ).apply {
+            addPath(
+                pathData = PathData { path() },
+                fill = SolidColor(Color.Black),
+                stroke = SolidColor(Color.Black),
+                strokeLineWidth = 1.2f,
+                strokeLineJoin = StrokeJoin.Round,
+            )
+        }.build()
+
+    /** The music transport's filled triangle plus bar, mirrored without transforms. */
+    private fun transportIcon(name: String, forward: Boolean): ImageVector =
+        ImageVector.Builder(
+            name = name,
+            defaultWidth = 24.dp,
+            defaultHeight = 24.dp,
+            viewportWidth = 24f,
+            viewportHeight = 24f,
+        ).apply {
+            addPath(
+                pathData = PathData {
+                    if (forward) {
+                        moveTo(6.9f, 5.9f)
+                        lineTo(6.9f, 18.1f)
+                        lineTo(16.2f, 12f)
+                        close()
+                    } else {
+                        moveTo(17.1f, 5.9f)
+                        lineTo(17.1f, 18.1f)
+                        lineTo(7.8f, 12f)
+                        close()
+                    }
+                },
+                fill = SolidColor(Color.Black),
+                stroke = SolidColor(Color.Black),
+                strokeLineWidth = 1.2f,
+                strokeLineJoin = StrokeJoin.Round,
+            )
+            addPath(
+                pathData = PathData {
+                    if (forward) {
+                        moveTo(19.4f, 5.9f)
+                        lineTo(19.4f, 18.1f)
+                    } else {
+                        moveTo(4.6f, 5.9f)
+                        lineTo(4.6f, 18.1f)
+                    }
+                },
+                stroke = SolidColor(Color.Black),
+                strokeLineWidth = 2.6f,
+                strokeLineCap = StrokeCap.Round,
             )
         }.build()
 }
