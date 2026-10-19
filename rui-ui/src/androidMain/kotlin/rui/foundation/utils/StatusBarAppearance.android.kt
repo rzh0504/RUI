@@ -12,6 +12,7 @@ import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalView
+import androidx.compose.ui.window.DialogWindowProvider
 
 /** One alive caller of [StatusBarAppearance], holding its requested look. */
 private class AppearanceRequest {
@@ -19,53 +20,56 @@ private class AppearanceRequest {
 }
 
 /**
- * Alive callers in call order, with one stack per host window: decorations
- * of different windows (a dialog's own window, split-screen activities) are
- * independent, so a process-global stack would interleave them — a
- * recomposition in one window could be suppressed by another window owning
- * the tail, and disposal would hand one window's bars to another's caller.
- * Within a window the theme's call joins the stack first, an overriding page
- * joins after it and therefore wins.
+ * Alive callers in call order, with one stack per resolved window — not per
+ * View: an Android window can host several independent ComposeView roots,
+ * and all of them mutate the same system bars, so every controlling root of
+ * a window must share one ordering and one restoration. Within a window the
+ * theme's call joins the stack first, an overriding page joins after it and
+ * therefore wins.
  */
-private val requestsByWindow = mutableMapOf<View, MutableList<AppearanceRequest>>()
+private val requestsByWindow = mutableMapOf<Window, MutableList<AppearanceRequest>>()
 
 @Composable
 @Suppress("DEPRECATION")
 public actual fun StatusBarAppearance(darkIcons: Boolean) {
     val view = LocalView.current
     val request = remember { AppearanceRequest() }
+    val window = remember(view) { view.findWindow() }
 
-    // Keep this call's look current. Only the window stack's top may touch
-    // its bars, so a background caller's recomposition never stomps an
-    // overlapping page's override.
-    SideEffect {
-        request.darkIcons = darkIcons
-        if (requestsByWindow[view]?.lastOrNull() === request) {
-            applyStatusBarAppearance(view, darkIcons)
+    if (window != null) {
+        // Keep this call's look current. Only the window stack's top may
+        // touch its bars, so a background caller's recomposition never
+        // stomps an overlapping page's override.
+        SideEffect {
+            request.darkIcons = darkIcons
+            if (requestsByWindow[window]?.lastOrNull() === request) {
+                applyStatusBarAppearance(window, darkIcons)
+            }
         }
-    }
 
-    // Join this window's stack for as long as this call is composed, and
-    // hand the bars back to the caller underneath on leaving — the
-    // SideEffect-only form left an override behind once its scope stopped
-    // recomposing.
-    DisposableEffect(view) {
-        val stack = requestsByWindow.getOrPut(view) { mutableListOf() }
-        stack.remove(request) // re-join cleanly after a view swap
-        stack.add(request)
-        applyStatusBarAppearance(view, request.darkIcons)
-        onDispose {
-            if (stack.remove(request)) {
-                stack.lastOrNull()?.let { applyStatusBarAppearance(view, it.darkIcons) }
-                if (stack.isEmpty()) requestsByWindow.remove(view)
+        // Join this window's stack for as long as this call is composed, and
+        // hand the bars back to the caller underneath on leaving — the
+        // SideEffect-only form left an override behind once its scope
+        // stopped recomposing.
+        DisposableEffect(window) {
+            val stack = requestsByWindow.getOrPut(window) { mutableListOf() }
+            stack.remove(request) // re-join cleanly after a window swap
+            stack.add(request)
+            applyStatusBarAppearance(window, request.darkIcons)
+            onDispose {
+                if (stack.remove(request)) {
+                    stack.lastOrNull()?.let {
+                        applyStatusBarAppearance(window, it.darkIcons)
+                    }
+                    if (stack.isEmpty()) requestsByWindow.remove(window)
+                }
             }
         }
     }
 }
 
 @Suppress("DEPRECATION")
-private fun applyStatusBarAppearance(view: View, darkIcons: Boolean) {
-    val window = view.context.findWindow() ?: return
+private fun applyStatusBarAppearance(window: Window, darkIcons: Boolean) {
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
         val controller = window.insetsController ?: return
         controller.setSystemBarsAppearance(
@@ -92,6 +96,26 @@ private fun applyStatusBarAppearance(view: View, darkIcons: Boolean) {
         }
         window.decorView.systemUiVisibility = flags
     }
+}
+
+/**
+ * The bars this composition decorates: a dialog's own window when hosted in
+ * one ([DialogWindowProvider] reachable from the view tree), else the
+ * nearest activity window up the context chain.
+ */
+private fun View.findWindow(): Window? {
+    var cursor: View = this
+    while (true) {
+        if (cursor is DialogWindowProvider) return cursor.window
+        val parent = cursor.parent
+        if (parent is DialogWindowProvider) return parent.window
+        if (parent is View) {
+            cursor = parent
+        } else {
+            break
+        }
+    }
+    return context.findWindow()
 }
 
 private tailrec fun Context.findWindow(): Window? = when (this) {
