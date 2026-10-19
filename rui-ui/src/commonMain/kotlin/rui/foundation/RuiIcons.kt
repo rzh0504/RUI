@@ -130,6 +130,54 @@ public object RuiIcons {
         }
     }
 
+    public val Play: ImageVector by lazy {
+        strokedIcon("RuiPlay") {
+            moveTo(8.5f, 5.5f)
+            lineTo(18.5f, 12f)
+            lineTo(8.5f, 18.5f)
+            close()
+        }
+    }
+
+    public val Pause: ImageVector by lazy {
+        strokedIcon("RuiPause") {
+            moveTo(9f, 5.5f)
+            lineTo(9f, 18.5f)
+            moveTo(15f, 5.5f)
+            lineTo(15f, 18.5f)
+        }
+    }
+
+    public val ChevronDown: ImageVector by lazy {
+        strokedIcon("RuiChevronDown") {
+            moveTo(6f, 9.5f)
+            lineTo(12f, 15.5f)
+            lineTo(18f, 9.5f)
+        }
+    }
+
+    public val SkipBack: ImageVector by lazy {
+        strokedIcon("RuiSkipBack") {
+            moveTo(18f, 5.5f)
+            lineTo(8f, 12f)
+            lineTo(18f, 18.5f)
+            close()
+            moveTo(5.5f, 5.5f)
+            lineTo(5.5f, 18.5f)
+        }
+    }
+
+    public val SkipForward: ImageVector by lazy {
+        strokedIcon("RuiSkipForward") {
+            moveTo(6f, 5.5f)
+            lineTo(16f, 12f)
+            lineTo(6f, 18.5f)
+            close()
+            moveTo(18.5f, 5.5f)
+            lineTo(18.5f, 18.5f)
+        }
+    }
+
     private fun strokedIcon(name: String, path: PathBuilder.() -> Unit): ImageVector =
         ImageVector.Builder(
             name = name,

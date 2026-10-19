@@ -123,7 +123,9 @@ public object RuiKaraokeLyricsDefaults {
  * Gestures: tapping a line scrolls to it and reports it via
  * [onLineClicked]; long-pressing reports it via [onLinePressed] for actions
  * like copy or share. A manual swipe pauses auto-follow for
- * Accompanist's default 2.5 s before re-engaging.
+ * Accompanist's default 2.5 s before re-engaging. Translation and phonetic
+ * captions are hidden by default; turn [showTranslation] and
+ * [showPhonetic] on per screen.
  *
  * The view fills its [modifier]; give it a bounded height sized to the
  * container (a player page, a frosted panel or the screen). Native-device
@@ -144,8 +146,8 @@ public fun RuiKaraokeLyricsView(
     translationTextStyle: TextStyle = RuiKaraokeLyricsDefaults.translationTextStyle(),
     phoneticTextStyle: TextStyle = RuiKaraokeLyricsDefaults.phoneticTextStyle(),
     blendMode: BlendMode = RuiKaraokeLyricsDefaults.blendMode(),
-    showTranslation: Boolean = true,
-    showPhonetic: Boolean = true,
+    showTranslation: Boolean = false,
+    showPhonetic: Boolean = false,
 ) {
     PlatformKaraokeLyricsView(
         lyrics = lyrics,
