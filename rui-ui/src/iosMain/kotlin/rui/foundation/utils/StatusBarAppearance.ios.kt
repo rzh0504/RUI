@@ -7,11 +7,10 @@ import androidx.compose.runtime.remember
 
 /**
  * The iOS host contract of [StatusBarAppearance]: iOS owns status bar
- * styling at the view controller level, so the composable side can only
- * request — not apply. A host that wants Compose-driven status bars
- * implements the request itself, typically by overriding
- * `preferredStatusBarStyle` on the composition's root view controller and
- * calling `setNeedsStatusBarAppearanceUpdate` from [onChanged].
+ * styling at the view controller level and the Obj-C binding keeps
+ * `preferredStatusBarStyle` final, so the composable side can only request.
+ * A host reads the published look and applies it — with SwiftUI's
+ * `statusBarStyle` modifier, for example.
  */
 public object IosStatusBarAppearance {
     /**
@@ -22,19 +21,11 @@ public object IosStatusBarAppearance {
     public val darkIconsRequested: Boolean?
         get() = requested
 
-    /**
-     * Fired on the main thread whenever [darkIconsRequested] changes, so
-     * the host can refresh its status bar appearance.
-     */
-    public var onChanged: () -> Unit = {}
+    private var requested: Boolean? = null
 
     internal fun publish(top: Boolean?) {
-        if (requested == top) return
         requested = top
-        onChanged()
     }
-
-    private var requested: Boolean? = null
 }
 
 /** One alive iOS caller of [StatusBarAppearance], holding its look. */
