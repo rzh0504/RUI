@@ -18,14 +18,17 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Rect
+import androidx.compose.ui.geometry.RoundRect
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.drawscope.clipPath
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.LayoutDirection
@@ -52,7 +55,7 @@ public data class RuiProgressColors(
 )
 
 public object RuiProgressDefaults {
-    /** Thickness of the linear track capsule. */
+    /** Thickness of the linear progress track. */
     public val LinearTrackHeight: Dp = 4.dp
 
     /** Diameter of the circular indicator. */
@@ -76,7 +79,7 @@ public object RuiProgressDefaults {
 }
 
 /**
- * A thin capsule progress bar. A [progress] in 0..1 renders a fill capsule
+ * A linear progress bar. A [progress] in 0..1 renders a half-round-ended fill
  * anchored to the start edge (mirrored in RTL); `null` renders the
  * indeterminate state — a segment sweeping across the track. Semantics come
  * from Compose Unstyled's [UnstyledProgress] primitive.
@@ -84,6 +87,7 @@ public object RuiProgressDefaults {
  * @param progress Current progress in 0..1, or `null` for indeterminate.
  * @param enabled When false, the disabled colors apply.
  * @param colors Visual colors, see [RuiProgressDefaults.colors].
+ * @param height Track and fill thickness.
  */
 @Composable
 public fun RuiLinearProgress(
@@ -91,6 +95,7 @@ public fun RuiLinearProgress(
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
     colors: RuiProgressColors = RuiProgressDefaults.colors(),
+    height: Dp = RuiProgressDefaults.LinearTrackHeight,
 ) {
     val fill = if (enabled) colors.fill else colors.disabledFill
     val track = if (enabled) colors.track else colors.disabledTrack
@@ -111,24 +116,24 @@ public fun RuiLinearProgress(
             Canvas(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(RuiProgressDefaults.LinearTrackHeight)
-                    // Drawing is not clipped to bounds by default; the sweep
-                    // segment enters and exits past the track's edges.
-                    .clipToBounds(),
+                    .height(height),
             ) {
-                drawRoundRect(
-                    color = track,
-                    cornerRadius = CornerRadius(size.height / 2f),
-                )
+                val radius = CornerRadius(size.height / 2f)
+                val trackClip = Path().apply {
+                    addRoundRect(RoundRect(Rect(Offset.Zero, size), radius))
+                }
                 val segmentWidth = size.width * LinearSweepSegmentFraction
                 val x = -segmentWidth + (size.width + segmentWidth) * position
                 val left = if (isRtl) size.width - x - segmentWidth else x
-                drawRoundRect(
-                    color = fill,
-                    topLeft = Offset(left, 0f),
-                    size = Size(segmentWidth, size.height),
-                    cornerRadius = CornerRadius(size.height / 2f),
-                )
+                drawRoundRect(color = track, cornerRadius = radius)
+                clipPath(trackClip) {
+                    drawRoundRect(
+                        color = fill,
+                        topLeft = Offset(left, 0f),
+                        size = Size(segmentWidth, size.height),
+                        cornerRadius = radius,
+                    )
+                }
             }
         }
     } else {
@@ -142,8 +147,7 @@ public fun RuiLinearProgress(
             Canvas(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(RuiProgressDefaults.LinearTrackHeight)
-                    .clipToBounds(),
+                    .height(height),
             ) {
                 drawRoundRect(
                     color = track,

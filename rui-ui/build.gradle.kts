@@ -63,17 +63,12 @@ kotlin {
             implementation(libs.kotlinx.coroutines.test)
         }
 
-        // The default hierarchy template does not link the iOS shared source
-        // set into the iOS compilations in this setup (lazy source sets under
-        // AGP 9's KMP library plugin — surfaced the first time iOS CI
-        // compiled): the platform actuals live in src/iosMain, so connect it
-        // explicitly — to commonMain and to both iOS compilations.
+        // Connect platform actuals to commonMain for the iOS compilations.
         iosMain.get().dependsOn(commonMain.get())
         iosArm64Main.get().dependsOn(iosMain.get())
         iosSimulatorArm64Main.get().dependsOn(iosMain.get())
 
-        // Shared by the Skiko-rendered non-Android targets (desktop JVM and
-        // WebAssembly): actuals that need no platform-specific API.
+        // Shared actuals for Skiko-rendered targets (desktop JVM and WebAssembly).
         val skikoMain by creating {
             dependsOn(commonMain.get())
         }
