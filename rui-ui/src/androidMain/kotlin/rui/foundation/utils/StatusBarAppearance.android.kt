@@ -19,12 +19,15 @@ private class AppearanceRequest {
 }
 
 /**
- * Alive callers in call order: the theme's call joins the stack first, an
- * overriding page joins after it and therefore wins. A caller that leaves
- * composition is removed and the predecessor's look is re-applied, so an
- * override never outlives its composable.
+ * Alive callers in call order, with one stack per host window: decorations
+ * of different windows (a dialog's own window, split-screen activities) are
+ * independent, so a process-global stack would interleave them — a
+ * recomposition in one window could be suppressed by another window owning
+ * the tail, and disposal would hand one window's bars to another's caller.
+ * Within a window the theme's call joins the stack first, an overriding page
+ * joins after it and therefore wins.
  */
-private val requests = mutableListOf<AppearanceRequest>()
+private val requestsByWindow = mutableMapOf<View, MutableList<AppearanceRequest>>()
 
 @Composable
 @Suppress("DEPRECATION")
@@ -32,26 +35,29 @@ public actual fun StatusBarAppearance(darkIcons: Boolean) {
     val view = LocalView.current
     val request = remember { AppearanceRequest() }
 
-    // Keep this call's look current. Only the stack's top may touch the
-    // bars, so a background caller's recomposition never stomps an
+    // Keep this call's look current. Only the window stack's top may touch
+    // its bars, so a background caller's recomposition never stomps an
     // overlapping page's override.
     SideEffect {
         request.darkIcons = darkIcons
-        if (requests.lastOrNull() === request) {
+        if (requestsByWindow[view]?.lastOrNull() === request) {
             applyStatusBarAppearance(view, darkIcons)
         }
     }
 
-    // Join the stack for as long as this call is composed, and hand the
-    // bars back to the caller underneath on leaving — the SideEffect-only
-    // form left an override behind once its scope stopped recomposing.
+    // Join this window's stack for as long as this call is composed, and
+    // hand the bars back to the caller underneath on leaving — the
+    // SideEffect-only form left an override behind once its scope stopped
+    // recomposing.
     DisposableEffect(view) {
-        requests.remove(request) // re-join cleanly after a view swap
-        requests.add(request)
+        val stack = requestsByWindow.getOrPut(view) { mutableListOf() }
+        stack.remove(request) // re-join cleanly after a view swap
+        stack.add(request)
         applyStatusBarAppearance(view, request.darkIcons)
         onDispose {
-            if (requests.remove(request)) {
-                requests.lastOrNull()?.let { applyStatusBarAppearance(view, it.darkIcons) }
+            if (stack.remove(request)) {
+                stack.lastOrNull()?.let { applyStatusBarAppearance(view, it.darkIcons) }
+                if (stack.isEmpty()) requestsByWindow.remove(view)
             }
         }
     }

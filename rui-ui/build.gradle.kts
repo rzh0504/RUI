@@ -11,7 +11,9 @@ kotlin {
     android {
         namespace = "rui.ui"
         compileSdk = 37
-        minSdk = 23
+        // Accompanist lyrics-ui (transitively gaze-capsule) declares minSdk
+        // 24, and this library cannot ship below a hard dependency.
+        minSdk = 24
 
         withHostTest {
             // Compose's runtime logs through android.util.Log; on the JVM host
