@@ -1,7 +1,6 @@
 package rui.sample.screens
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -19,172 +18,42 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.withFrameNanos
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-import com.mocharealm.accompanist.lyrics.core.model.SyncedLyrics
-import com.mocharealm.accompanist.lyrics.core.model.karaoke.KaraokeAlignment
-import com.mocharealm.accompanist.lyrics.core.model.karaoke.KaraokeLine
-import com.mocharealm.accompanist.lyrics.core.model.karaoke.KaraokeSyllable
-import com.mocharealm.accompanist.lyrics.core.model.synced.SyncedLine
 import kotlin.math.roundToInt
-import rui.components.RuiButton
-import rui.components.RuiButtonVariant
 import rui.components.RuiDivider
+import rui.components.RuiIconButton
 import rui.components.RuiKaraokeLyricsColors
 import rui.components.RuiKaraokeLyricsView
 import rui.components.RuiListGroup
 import rui.components.RuiListItem
 import rui.components.RuiSlider
 import rui.components.RuiSwitch
+import rui.components.RuiButtonVariant
+import rui.foundation.RuiIcon
+import rui.foundation.RuiIcons
 import rui.foundation.RuiText
 import rui.sample.ui.ContentColumn
 import rui.sample.ui.SectionLabel
 import rui.theme.RuiTheme
 
-/** Full length of the demo track the fake player runs the clock for. */
-private const val TrackDurationMs: Int = 50_000
-
-private fun phrase(text: String, start: Int, end: Int) = KaraokeSyllable(text, start, end)
-
-/** `m:ss` readout of a position in milliseconds, manually padded for KMP. */
-private fun clockLabel(ms: Int): String {
-    val totalSeconds = ms / 1_000
-    val minutes = totalSeconds / 60
-    val seconds = (totalSeconds % 60).toString().padStart(2, '0')
-    return "$minutes:$seconds"
-}
-
 /**
- * A small song that exercises the view's vocabulary: a phonetic + translation
- * main line, a main line carrying a nested accompaniment hook, plain synced
- * rows, and two right-aligned accompaniment interjections (the second one
- * syllable-timed). Times are deliberately gapped so the breathing dots and
- * the follow-vs-pause logic both appear while the track plays.
- */
-private val DemoLyrics = SyncedLyrics(
-    id = "demo",
-    lines = listOf(
-        KaraokeLine.MainKaraokeLine(
-            syllables = listOf(
-                phrase("晨", 5_000, 5_600),
-                phrase("光", 5_600, 6_100),
-                phrase("落", 6_100, 6_500),
-                phrase("在", 6_500, 6_800),
-                phrase("窗台", 6_800, 7_300),
-            ),
-            translation = "Morning light spills on the windowsill",
-            alignment = KaraokeAlignment.Unspecified,
-            start = 5_000,
-            end = 7_300,
-            phonetic = "chén guāng luò zài chuāng tái",
-        ),
-        KaraokeLine.MainKaraokeLine(
-            syllables = listOf(
-                phrase("揉", 8_000, 8_500),
-                phrase("醒", 8_500, 9_000),
-                phrase("沉", 9_000, 9_600),
-                phrase("睡", 9_600, 10_100),
-                phrase("的", 10_100, 10_400),
-                phrase("台钟", 10_400, 10_800),
-            ),
-            translation = "Winding up the sleeping clock",
-            alignment = KaraokeAlignment.Unspecified,
-            start = 8_000,
-            end = 10_800,
-            accompanimentLines = listOf(
-                KaraokeLine.AccompanimentKaraokeLine(
-                    syllables = listOf(phrase("yeah", 8_600, 9_300), phrase("yeah", 9_600, 10_600)),
-                    translation = null,
-                    alignment = KaraokeAlignment.Unspecified,
-                    start = 8_600,
-                    end = 10_600,
-                ),
-            ),
-        ),
-        SyncedLine(
-            content = "旧街的梧桐还没记住这阵风",
-            translation = "The old street's poplar hasn't caught the wind",
-            start = 11_400,
-            end = 14_400,
-        ),
-        KaraokeLine.AccompanimentKaraokeLine(
-            syllables = listOf(phrase("哦", 15_000, 16_700), phrase("哦——", 16_700, 18_000)),
-            translation = null,
-            alignment = KaraokeAlignment.End,
-            start = 15_000,
-            end = 18_000,
-        ),
-        KaraokeLine.MainKaraokeLine(
-            syllables = listOf(
-                phrase("把", 19_500, 20_000),
-                phrase("黄", 20_000, 20_500),
-                phrase("昏", 20_500, 21_000),
-                phrase("拧", 21_000, 21_500),
-                phrase("成", 21_500, 21_800),
-                phrase("发条", 21_800, 22_300),
-            ),
-            translation = null,
-            alignment = KaraokeAlignment.Unspecified,
-            start = 19_500,
-            end = 22_300,
-            phonetic = "bǎ huáng hūn nǐng chéng fā tiáo",
-        ),
-        KaraokeLine.MainKaraokeLine(
-            syllables = listOf(phrase("等", 23_000, 23_800), phrase("月亮过河", 23_800, 26_200)),
-            translation = "Waiting for the moon to cross the river",
-            alignment = KaraokeAlignment.Unspecified,
-            start = 23_000,
-            end = 26_200,
-        ),
-        SyncedLine(
-            content = "有一段旋律还没有名字",
-            translation = "There is a melody still unnamed",
-            start = 27_500,
-            end = 31_500,
-            phonetic = "yǒu yī duàn xuán lǜ hái méi yǒu míng zi",
-        ),
-        KaraokeLine.AccompanimentKaraokeLine(
-            syllables = listOf(
-                phrase("la", 33_000, 34_100),
-                phrase("la", 34_100, 35_200),
-                phrase("la", 35_200, 36_500),
-            ),
-            translation = null,
-            alignment = KaraokeAlignment.End,
-            start = 33_000,
-            end = 36_500,
-        ),
-        KaraokeLine.MainKaraokeLine(
-            syllables = listOf(phrase("名字", 38_000, 38_900), phrase("写进", 38_900, 39_500), phrase("第二段", 39_500, 41_200)),
-            translation = "The name finds the second verse",
-            alignment = KaraokeAlignment.Unspecified,
-            start = 38_000,
-            end = 41_200,
-        ),
-        KaraokeLine.MainKaraokeLine(
-            syllables = listOf(phrase("而风", 42_500, 43_500), phrase("还在", 43_500, 44_200), phrase("写落款", 44_200, 45_500)),
-            translation = "While the wind keeps writing the signature",
-            alignment = KaraokeAlignment.Unspecified,
-            start = 42_500,
-            end = 45_500,
-        ),
-    ),
-)
-
-/**
- * The lyrics demo: a dark player panel runs the view as a fake player — a
- * frame-driven clock playing the demo track — with transport controls and
- * the two caption toggles beneath it.
+ * The lyrics demo: a token-shaped dark artwork panel holds the view while the
+ * card above it runs the fake player — a frame-driven clock feeding the view's
+ * position provider, a play/pause toggle, and a labeled transport slider.
+ * Caption toggles sit below. The track data lives in [DemoTracks].
  */
 @Composable
 public fun LyricsScreen(contentPadding: PaddingValues = PaddingValues(0.dp)) {
+    val track = DemoTracks.first()
     var positionMs by remember { mutableIntStateOf(0) }
     var playing by remember { mutableStateOf(true) }
-    var showTranslation by remember { mutableStateOf(true) }
-    var showPhonetic by remember { mutableStateOf(true) }
+    var showTranslation by remember { mutableStateOf(false) }
+    var showPhonetic by remember { mutableStateOf(false) }
 
     // The fake player's clock: one frame-time delta per frame, so
     // RuiKaraokeLyricsView's provider observes state that actually advances
@@ -193,10 +62,10 @@ public fun LyricsScreen(contentPadding: PaddingValues = PaddingValues(0.dp)) {
         var lastFrame = 0L
         while (playing) {
             withFrameNanos { frameTime ->
-                if (lastFrame != 0L && positionMs < TrackDurationMs) {
+                if (lastFrame != 0L && positionMs < track.durationMs) {
                     positionMs =
                         (positionMs + ((frameTime - lastFrame) / 1_000_000L).toInt())
-                            .coerceAtMost(TrackDurationMs)
+                            .coerceAtMost(track.durationMs)
                 }
                 lastFrame = frameTime
             }
@@ -206,78 +75,96 @@ public fun LyricsScreen(contentPadding: PaddingValues = PaddingValues(0.dp)) {
     ContentColumn(contentPadding = contentPadding) {
         SectionLabel("Player")
         RuiListGroup {
-            Column(
+            Row(
                 Modifier.padding(
                     horizontal = RuiTheme.spacing.lg,
                     vertical = RuiTheme.spacing.md,
                 ),
+                verticalAlignment = Alignment.CenterVertically,
             ) {
-                Row {
-                    Column {
-                        RuiText("Dawn by the window", style = RuiTheme.typography.titleMd)
-                        RuiText(
-                            "Demo track · 50 s",
-                            style = RuiTheme.typography.bodySm,
-                            color = RuiTheme.colors.contentMuted,
-                        )
-                    }
-                    Spacer(Modifier.weight(1f))
-                    RuiText(
-                        "${clockLabel(positionMs)} / ${clockLabel(TrackDurationMs)}",
-                        style = RuiTheme.typography.labelMd,
-                        color = RuiTheme.colors.contentMuted,
-                    )
-                }
-
-                Spacer(Modifier.height(RuiTheme.spacing.md))
-                // Lyrics are designed to sit on dark artwork: the panel paints
-                // a dim gradient and passes the white text + additive blend.
-                Box(
-                    Modifier
-                        .fillMaxWidth()
-                        .height(480.dp)
-                        .background(
-                            Brush.verticalGradient(listOf(Color(0xFF101018), Color(0xFF1E1E2C))),
-                        ),
+                RuiIconButton(
+                    onClick = {
+                        if (!playing && positionMs >= track.durationMs) positionMs = 0
+                        playing = !playing
+                    },
+                    variant = RuiButtonVariant.Primary,
                 ) {
-                    RuiKaraokeLyricsView(
-                        lyrics = DemoLyrics,
-                        currentPosition = { positionMs },
-                        onLineClicked = { line -> positionMs = line.start },
-                        colors = RuiKaraokeLyricsColors(text = Color.White),
-                        blendMode = androidx.compose.ui.graphics.BlendMode.Plus,
-                        showTranslation = showTranslation,
-                        showPhonetic = showPhonetic,
-                        modifier = Modifier.fillMaxSize(),
+                    RuiIcon(
+                        imageVector = if (playing) RuiIcons.Pause else RuiIcons.Play,
+                        contentDescription = if (playing) "Pause" else "Play",
                     )
                 }
-
-                Spacer(Modifier.height(RuiTheme.spacing.md))
-                RuiSlider(
-                    value = positionMs.toFloat() / TrackDurationMs,
-                    onValueChange = { positionMs = (it * TrackDurationMs).roundToInt() },
-                    modifier = Modifier.fillMaxWidth(),
-                )
-                Spacer(Modifier.height(RuiTheme.spacing.sm))
-                Row {
-                    RuiButton(
-                        onClick = {
-                            if (positionMs >= TrackDurationMs) positionMs = 0
-                            playing = !playing
-                        },
-                        variant = RuiButtonVariant.Primary,
-                    ) {
-                        RuiText(if (playing) "Pause" else "Play")
-                    }
-                    Spacer(Modifier.weight(1f))
+                Column(Modifier.padding(start = RuiTheme.spacing.md)) {
+                    RuiText(track.title, style = RuiTheme.typography.titleSm)
                     RuiText(
-                        "Tap a line to seek · long-press to act",
-                        style = RuiTheme.typography.labelMd,
+                        "Demo track · ${clockLabel(track.durationMs)}",
+                        style = RuiTheme.typography.bodySm,
                         color = RuiTheme.colors.contentMuted,
                     )
                 }
+                Spacer(Modifier.weight(1f))
+                RuiText(
+                    "${clockLabel(positionMs)} / ${clockLabel(track.durationMs)}",
+                    style = RuiTheme.typography.labelMd,
+                    color = RuiTheme.colors.contentMuted,
+                )
+            }
+            RuiDivider(inset = RuiTheme.spacing.lg)
+            Row(
+                Modifier.padding(
+                    horizontal = RuiTheme.spacing.lg,
+                    vertical = RuiTheme.spacing.md,
+                ),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                RuiText(
+                    clockLabel(positionMs),
+                    style = RuiTheme.typography.labelSm,
+                    color = RuiTheme.colors.contentMuted,
+                )
+                RuiSlider(
+                    value = positionMs.toFloat() / track.durationMs,
+                    onValueChange = { positionMs = (it * track.durationMs).roundToInt() },
+                    modifier = Modifier
+                        .weight(1f)
+                        .padding(horizontal = RuiTheme.spacing.md),
+                )
+                RuiText(
+                    clockLabel(track.durationMs),
+                    style = RuiTheme.typography.labelSm,
+                    color = RuiTheme.colors.contentMuted,
+                )
             }
         }
+
+        // The artwork panel: clipped to the same token shape as the cards
+        // above it, dark album gradient, lyrics in white with the additive
+        // glow the view is designed for.
+        Box(
+            Modifier
+                .fillMaxWidth()
+                .height(440.dp)
+                .clip(RuiTheme.shapes.md)
+                .background(track.background),
+        ) {
+            RuiKaraokeLyricsView(
+                lyrics = track.lyrics,
+                currentPosition = { positionMs },
+                onLineClicked = { line -> positionMs = line.start },
+                colors = RuiKaraokeLyricsColors(text = Color.White),
+                blendMode = BlendMode.Plus,
+                showTranslation = showTranslation,
+                showPhonetic = showPhonetic,
+                modifier = Modifier.fillMaxSize(),
+            )
+        }
+
+        RuiText(
+            "Tap a line to seek · long-press to act",
+            style = RuiTheme.typography.labelMd,
+            color = RuiTheme.colors.contentMuted,
+            modifier = Modifier.padding(start = RuiTheme.spacing.lg),
+        )
 
         SectionLabel("Captions")
         RuiListGroup {
@@ -289,18 +176,6 @@ public fun LyricsScreen(contentPadding: PaddingValues = PaddingValues(0.dp)) {
             RuiListItem(
                 title = "Phonetic",
                 trailing = { RuiSwitch(checked = showPhonetic, onCheckedChange = { showPhonetic = it }) },
-            )
-        }
-
-        SectionLabel("How it renders")
-        RuiListGroup {
-            RuiListItem(
-                title = "Native renderer",
-                subtitle = "Accompanist PreparedText engine on Android, desktop and iOS device",
-            )
-            RuiListItem(
-                title = "Compose fallback",
-                subtitle = "Per-syllable fill and the same follow rules on the browser and iOS simulator",
             )
         }
     }

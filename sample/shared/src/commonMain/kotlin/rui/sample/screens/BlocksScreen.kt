@@ -73,5 +73,16 @@ public fun BlocksScreen(
                 onClick = { onOpen(CatalogPage.SearchResults) },
             )
         }
+
+        SectionLabel("Music")
+        RuiListGroup {
+            RuiListItem(
+                title = "Now playing",
+                subtitle = "Apple Music-style karaoke player page",
+                leading = { RuiIcon(RuiIcons.Play, contentDescription = null, tint = colors.primary) },
+                showChevron = true,
+                onClick = { onOpen(CatalogPage.NowPlaying) },
+            )
+        }
     }
 }
