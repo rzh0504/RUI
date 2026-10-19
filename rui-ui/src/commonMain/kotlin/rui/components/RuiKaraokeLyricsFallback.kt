@@ -345,7 +345,9 @@ private fun FallbackLineItem(
                         KaraokeProgressText(
                             syllables = accompaniment.syllables,
                             baseStyle = accompanimentLineTextStyle,
-                            baseColor = colors.text.copy(alpha = AccompanimentRowAlpha),
+                            baseColor = colors.text.copy(
+                                alpha = colors.text.alpha * AccompanimentRowAlpha,
+                            ),
                             textAlign = textAlign,
                             position = position,
                             modifier = Modifier
@@ -356,7 +358,9 @@ private fun FallbackLineItem(
                         RuiText(
                             text = accompaniment.syllables.joinToString("") { it.content },
                             style = accompanimentLineTextStyle,
-                            color = colors.text.copy(alpha = AccompanimentRowAlpha * UnfocusedRowAlpha),
+                            color = colors.text.copy(
+                                alpha = colors.text.alpha * AccompanimentRowAlpha * UnfocusedRowAlpha,
+                            ),
                             textAlign = textAlign,
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -373,7 +377,9 @@ private fun FallbackLineItem(
                     KaraokeProgressText(
                         syllables = line.syllables,
                         baseStyle = accompanimentLineTextStyle,
-                        baseColor = colors.text.copy(alpha = AccompanimentRowAlpha),
+                        baseColor = colors.text.copy(
+                            alpha = colors.text.alpha * AccompanimentRowAlpha,
+                        ),
                         textAlign = textAlign,
                         position = position,
                         modifier = Modifier
@@ -384,7 +390,9 @@ private fun FallbackLineItem(
                     RuiText(
                         text = line.syllables.joinToString("") { it.content },
                         style = accompanimentLineTextStyle,
-                        color = colors.text.copy(alpha = AccompanimentRowAlpha * UnfocusedRowAlpha),
+                        color = colors.text.copy(
+                            alpha = colors.text.alpha * AccompanimentRowAlpha * UnfocusedRowAlpha,
+                        ),
                         textAlign = textAlign,
                         modifier = Modifier
                             .fillMaxWidth()
@@ -401,7 +409,9 @@ private fun FallbackLineItem(
                     RuiText(
                         text = synced.content,
                         style = normalLineTextStyle,
-                        color = colors.text.copy(alpha = if (active) 1f else UnfocusedRowAlpha),
+                        color = colors.text.copy(
+                            alpha = colors.text.alpha * if (active) 1f else UnfocusedRowAlpha,
+                        ),
                         textAlign = textAlign,
                         modifier = Modifier.fillMaxWidth(),
                     )
@@ -435,7 +445,7 @@ private fun MainVocalRow(
         RuiText(
             text = line.syllables.joinToString("") { it.content },
             style = style,
-            color = colors.text.copy(alpha = UnfocusedRowAlpha),
+            color = colors.text.copy(alpha = colors.text.alpha * UnfocusedRowAlpha),
             textAlign = textAlign,
             modifier = Modifier.fillMaxWidth(),
         )
@@ -499,7 +509,9 @@ private fun Caption(
     RuiText(
         text = text,
         style = style,
-        color = color.copy(alpha = CaptionRowAlpha * if (active) 1f else UnfocusedRowAlpha),
+        color = color.copy(
+            alpha = color.alpha * CaptionRowAlpha * if (active) 1f else UnfocusedRowAlpha,
+        ),
         textAlign = textAlign,
         modifier = Modifier.fillMaxWidth(),
     )
@@ -537,7 +549,8 @@ private fun BreathingDots(color: Color, modifier: Modifier = Modifier) {
                 Modifier
                     .size(BreathingDotSize)
                     .graphicsLayer {
-                        alpha = BreathingDotAlphaFloor + (1f - BreathingDotAlphaFloor) * lift
+                        alpha = color.alpha *
+                            (BreathingDotAlphaFloor + (1f - BreathingDotAlphaFloor) * lift)
                         scaleX = 0.6f + 0.4f * lift
                         scaleY = scaleX
                     }

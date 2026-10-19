@@ -30,7 +30,11 @@ import rui.theme.RuiTheme
  */
 @Immutable
 public data class RuiKaraokeLyricsColors(
-    /** Base lyric color: text, translations and breathing dots. */
+    /**
+     * Base lyric color: text, translations and breathing dots. The renderer
+     * scales every alpha it paints (ramps, focus dimming, captions) onto
+     * this color's own alpha rather than replacing it.
+     */
     public val text: Color,
 )
 
