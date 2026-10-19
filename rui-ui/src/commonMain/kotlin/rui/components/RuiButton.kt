@@ -1,10 +1,10 @@
 package rui.components
 
 import androidx.compose.animation.AnimatedContent
-import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.Spring
-import androidx.compose.animation.togetherWith
+import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.spring
+import androidx.compose.animation.togetherWith
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
@@ -186,7 +186,8 @@ public fun RuiButton(
  * A [RuiButton] with loading and completion feedback: while [isLoading] the
  * button is disabled and an indeterminate spinner replaces the leading slot;
  * when loading finishes a check mark pops in briefly before the button
- * returns to normal. The label stays visible; width changes are animated.
+ * returns to normal. The status icon appears in a leading slot that expands
+ * from zero width, keeping the idle button compact.
  *
  * Note the completion beat plays for any loading-to-idle transition — model
  * failures should return to idle without going through [isLoading] = true.
@@ -207,6 +208,11 @@ public fun RuiLoadingButton(
 ) {
     val motion = RuiTheme.motion
     var state by remember { mutableStateOf(LoadingButtonState.Normal) }
+    val statusSlotSize by animateDpAsState(
+        targetValue = if (state == LoadingButtonState.Normal) 0.dp else spinnerSize(size),
+        animationSpec = spring(dampingRatio = Spring.DampingRatioNoBouncy, stiffness = 550f),
+        label = "RuiLoadingButtonWidth",
+    )
 
     LaunchedEffect(isLoading) {
         when {
@@ -221,9 +227,7 @@ public fun RuiLoadingButton(
 
     RuiButton(
         onClick = onClick,
-        modifier = modifier.animateContentSize(
-            animationSpec = spring(dampingRatio = Spring.DampingRatioNoBouncy, stiffness = 550f),
-        ),
+        modifier = modifier,
         variant = variant,
         size = size,
         enabled = enabled && state == LoadingButtonState.Normal,
@@ -243,7 +247,7 @@ public fun RuiLoadingButton(
                 label = "RuiLoadingButtonLeading",
             ) { leadingState ->
                 when (leadingState) {
-                    LoadingButtonState.Normal -> Box(modifier = Modifier.size(0.dp))
+                    LoadingButtonState.Normal -> Box(modifier = Modifier.size(statusSlotSize))
                     LoadingButtonState.Loading -> RuiCircularProgress(
                         colors = RuiProgressColors(
                             fill = colors.content,
@@ -252,6 +256,7 @@ public fun RuiLoadingButton(
                             disabledTrack = Color.Transparent,
                         ),
                         modifier = Modifier.size(spinnerSize(size)),
+                        strokeWidth = spinnerStrokeWidth(size),
                     )
                     LoadingButtonState.Success -> RuiIcon(
                         imageVector = RuiIcons.Check,
@@ -266,12 +271,15 @@ public fun RuiLoadingButton(
     )
 }
 
-/** Spinner diameter per button tier; the stroke stays the shared 4dp. */
+/** Leading status icon diameter per button tier. */
 private fun spinnerSize(size: RuiButtonSize): Dp = when (size) {
     RuiButtonSize.Sm -> 16.dp
     RuiButtonSize.Md -> 18.dp
     RuiButtonSize.Lg -> 20.dp
 }
+
+/** Matches the shared icon path stroke after scaling to the spinner diameter. */
+private fun spinnerStrokeWidth(size: RuiButtonSize): Dp = spinnerSize(size) * (2.2f / 24f)
 
 /** Visual state of [RuiLoadingButton]'s leading slot. */
 private enum class LoadingButtonState { Normal, Loading, Success }

@@ -177,6 +177,7 @@ public fun RuiLinearProgress(
  * @param progress Current progress in 0..1, or `null` for indeterminate.
  * @param enabled When false, the disabled colors apply.
  * @param colors Visual colors, see [RuiProgressDefaults.colors].
+ * @param strokeWidth Ring stroke width.
  */
 @Composable
 public fun RuiCircularProgress(
@@ -184,6 +185,7 @@ public fun RuiCircularProgress(
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
     colors: RuiProgressColors = RuiProgressDefaults.colors(),
+    strokeWidth: Dp = RuiProgressDefaults.CircularStrokeWidth,
 ) {
     val fill = if (enabled) colors.fill else colors.disabledFill
     val track = if (enabled) colors.track else colors.disabledTrack
@@ -214,7 +216,7 @@ public fun RuiCircularProgress(
         )
         UnstyledProgress(modifier = modifier.size(RuiProgressDefaults.CircularSize)) {
             Canvas(modifier = Modifier.fillMaxSize()) {
-                drawRing(fill, track, startAngle = rotation, sweepAngle = sweep)
+                drawRing(fill, track, startAngle = rotation, sweepAngle = sweep, strokeWidth = strokeWidth)
             }
         }
     } else {
@@ -226,15 +228,21 @@ public fun RuiCircularProgress(
         )
         UnstyledProgress(progress = target, modifier = modifier.size(RuiProgressDefaults.CircularSize)) {
             Canvas(modifier = Modifier.fillMaxSize()) {
-                drawRing(fill, track, startAngle = -90f, sweepAngle = 360f * animated)
+                drawRing(fill, track, startAngle = -90f, sweepAngle = 360f * animated, strokeWidth = strokeWidth)
             }
         }
     }
 }
 
 /** Shared ring drawing: a faint full track and a round-capped fill arc. */
-private fun DrawScope.drawRing(fillColor: Color, trackColor: Color, startAngle: Float, sweepAngle: Float) {
-    val stroke = RuiProgressDefaults.CircularStrokeWidth.toPx()
+private fun DrawScope.drawRing(
+    fillColor: Color,
+    trackColor: Color,
+    startAngle: Float,
+    sweepAngle: Float,
+    strokeWidth: Dp,
+) {
+    val stroke = strokeWidth.toPx()
     val radius = (size.minDimension - stroke) / 2f
     drawCircle(
         color = trackColor,

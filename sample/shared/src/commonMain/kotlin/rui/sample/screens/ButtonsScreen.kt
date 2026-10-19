@@ -194,15 +194,22 @@ public fun ButtonsScreen(contentPadding: PaddingValues = PaddingValues(0.dp)) {
             RuiListItem(
                 title = "Simulate submit",
                 subtitle = "Disables and shows a spinner for two seconds",
-                trailing = {
-                    RuiLoadingButton(
-                        onClick = { submitting = true },
-                        isLoading = submitting,
-                    ) {
-                        RuiText("Submit")
-                    }
-                },
             )
+            RuiDivider(inset = RuiTheme.spacing.lg)
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = RuiTheme.spacing.md),
+                horizontalArrangement = Arrangement.Center,
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                RuiLoadingButton(
+                    onClick = { submitting = true },
+                    isLoading = submitting,
+                ) {
+                    RuiText("Submit")
+                }
+            }
         }
     }
 }
