@@ -9,8 +9,8 @@ import androidx.compose.runtime.remember
  * The iOS host contract of [StatusBarAppearance]: iOS owns status bar
  * styling at the view controller level and the Obj-C binding keeps
  * `preferredStatusBarStyle` final, so the composable side can only request.
- * A host reads the published look and applies it — with SwiftUI's
- * `statusBarStyle` modifier, for example.
+ * A host reads the published look and applies it — by overriding
+ * `preferredStatusBarStyle`, for example.
  *
  * The publication is process-wide: Compose exposes no host identity on iOS,
  * so this describes the composed content of the app as a whole. Apps that
