@@ -94,6 +94,9 @@ public fun NowPlayingScreen(onBack: () -> Unit = {}) {
                 if (lastFrame != 0L && positionMs < track.durationMs) {
                     positionMs = (positionMs + ((frameTime - lastFrame) / 1_000_000L).toInt())
                         .coerceAtMost(track.durationMs)
+                    // Natural completion stops the fake player, so the Play
+                    // icon returns and one press restarts the track.
+                    if (positionMs >= track.durationMs) playing = false
                 }
                 lastFrame = frameTime
             }
