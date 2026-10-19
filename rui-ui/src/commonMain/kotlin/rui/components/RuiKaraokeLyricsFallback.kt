@@ -1,15 +1,25 @@
 package rui.components
 
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
+import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.text.BasicText
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.Stable
@@ -22,6 +32,7 @@ import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.Color
@@ -42,6 +53,8 @@ import com.mocharealm.accompanist.lyrics.core.model.synced.SyncedLine
 import com.mocharealm.accompanist.lyrics.core.model.synced.UncheckedSyncedLine
 import kotlinx.coroutines.launch
 import rui.foundation.RuiText
+import kotlin.math.PI
+import kotlin.math.sin
 import kotlin.time.Duration.Companion.seconds
 import kotlin.time.TimeMark
 import kotlin.time.TimeSource
@@ -57,6 +70,21 @@ private val FallbackItemSpacing = 16.dp
 
 /** Horizontal indent of accompaniment rows, per the native renderer. */
 private val AccompanimentIndent = 16.dp
+
+/** Breathing dots share the row inset, riding where the next line lands. */
+private val BreathingDotsIndent = AccompanimentIndent
+
+/** Diameter of one breathing dot. */
+private val BreathingDotSize = 8.dp
+
+/** Gap between the three breathing dots. */
+private val BreathingDotSpacing = 10.dp
+
+/** Rest alpha of a breathing dot at the low end of its sine wave. */
+private const val BreathingDotAlphaFloor = 0.3f
+
+/** Duration of one full breathing cycle of a dot, in milliseconds. */
+private const val BreathingCycleMs = 1600
 
 /** Alpha of rows outside the focus window. */
 internal const val UnfocusedRowAlpha = 0.35f
@@ -107,6 +135,18 @@ internal object FallbackKaraokeModel {
             lyrics.lines.last().end < time -> lyrics.lines.lastIndex
             else -> -1
         }
+    }
+
+    /**
+     * True while playback sits in an intro or an interlude: no line is
+     * active and lyrics are still ahead of the cursor — the window where
+     * the fallback shows its breathing dots. The quiet tail after the song
+     * is not a breathing window.
+     */
+    public fun isIntroOrInterlude(lyrics: SyncedLyrics, time: Int): Boolean {
+        val lines = lyrics.lines
+        if (lines.isEmpty()) return false
+        return time < lines.last().end && activeIndices(lyrics, time).isEmpty()
     }
 }
 
@@ -199,41 +239,64 @@ internal fun FallbackKaraokeLyricsView(
             FallbackKaraokeModel.activeIndices(lyrics, position.value).toSet()
         }
     }
+    // The intro/interlude state rides its own frame-independent derived
+    // value: the dots show exactly when no line is active and lyrics are
+    // still ahead of the cursor — and they return when scrubbing back.
+    val breathing by remember(lyrics) {
+        derivedStateOf { FallbackKaraokeModel.isIntroOrInterlude(lyrics, position.value) }
+    }
 
-    LazyColumn(
-        state = listState,
-        contentPadding = PaddingValues(top = FallbackTopPadding, bottom = FallbackBottomPadding),
-        verticalArrangement = Arrangement.spacedBy(FallbackItemSpacing),
+    // The root carries the artwork-overlay request and clips its children:
+    // the scrolling rows and the breathing dots share one blended layer,
+    // so Plus / Screen glow like the native view applies to both.
+    Box(
         modifier = modifier
             .fillMaxSize()
             .clipToBounds()
             .graphicsLayer {
-                // The artwork-overlay request: composite the rows with the
-                // caller's blend so Plus / Screen glow like the native view.
                 if (blendMode != BlendMode.SrcOver) {
                     compositingStrategy = CompositingStrategy.Offscreen
                     this.blendMode = blendMode
                 }
             },
     ) {
-        items(count = lines.size, key = { it }) { index ->
-            val line = lines[index]
-            FallbackLineItem(
-                line = line,
-                active = index in active,
-                colors = colors,
-                normalLineTextStyle = normalLineTextStyle,
-                accompanimentLineTextStyle = accompanimentLineTextStyle,
-                translationTextStyle = translationTextStyle,
-                phoneticTextStyle = phoneticTextStyle,
-                showTranslation = showTranslation,
-                showPhonetic = showPhonetic,
-                position = { position.value },
-                clicked = {
-                    scope.launch { listState.animateScrollToItem(index) }
-                    onLineClicked(line)
-                },
-                pressed = { onLinePressed(line) },
+        LazyColumn(
+            state = listState,
+            contentPadding = PaddingValues(top = FallbackTopPadding, bottom = FallbackBottomPadding),
+            verticalArrangement = Arrangement.spacedBy(FallbackItemSpacing),
+            modifier = Modifier
+                .fillMaxSize()
+                .clipToBounds(),
+        ) {
+            items(count = lines.size, key = { it }) { index ->
+                val line = lines[index]
+                FallbackLineItem(
+                    line = line,
+                    active = index in active,
+                    colors = colors,
+                    normalLineTextStyle = normalLineTextStyle,
+                    accompanimentLineTextStyle = accompanimentLineTextStyle,
+                    translationTextStyle = translationTextStyle,
+                    phoneticTextStyle = phoneticTextStyle,
+                    showTranslation = showTranslation,
+                    showPhonetic = showPhonetic,
+                    position = { position.value },
+                    clicked = {
+                        scope.launch { listState.animateScrollToItem(index) }
+                        onLineClicked(line)
+                    },
+                    pressed = { onLinePressed(line) },
+                )
+            }
+        }
+        if (breathing) {
+            // Dots park at the viewport head — the anchor point where the
+            // next line lands once the follower re-engages.
+            BreathingDots(
+                color = colors.text,
+                modifier = Modifier
+                    .align(Alignment.TopStart)
+                    .padding(top = FallbackTopPadding, start = BreathingDotsIndent),
             )
         }
     }
@@ -399,8 +462,11 @@ private fun KaraokeProgressText(
             cursor += syllable.content.length
             addStyle(
                 SpanStyle(
+                    // Scale, don't replace, the base color's own alpha: an
+                    // accompaniment row's caller hands a pre-dimmed color,
+                    // and its highlight must keep that opacity.
                     color = baseColor.copy(
-                        alpha = FallbackKaraokeModel.syllableHighlightAlpha(
+                        alpha = baseColor.alpha * FallbackKaraokeModel.syllableHighlightAlpha(
                             syllable.progress(position()),
                         ),
                     ),
@@ -437,4 +503,46 @@ private fun Caption(
         textAlign = textAlign,
         modifier = Modifier.fillMaxWidth(),
     )
+}
+
+/**
+ * The native view's intro/interlude state: three dots breathing in a
+ * staggered sine wave, riding [RuiKaraokeLyricsColors.text] like the lyric
+ * rows and dimming rather than vanishing between waves. The dots scale
+ * with their brightness so the wave reads as a compositing layer, not as
+ * blinking rectangles.
+ */
+@Composable
+private fun BreathingDots(color: Color, modifier: Modifier = Modifier) {
+    val cycle = rememberInfiniteTransition(label = "ruiBreathing")
+    val phase by cycle.animateFloat(
+        initialValue = 0f,
+        targetValue = 1f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(durationMillis = BreathingCycleMs, easing = LinearEasing),
+        ),
+        label = "phase",
+    )
+    Row(
+        modifier = modifier,
+        horizontalArrangement = Arrangement.spacedBy(BreathingDotSpacing),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        repeat(3) { index ->
+            // Each dot trails its neighbor by a third of the cycle, so one
+            // crest travels across the row without a jump at the wrap.
+            val t = (phase - index / 3f + 3f) % 1f
+            val lift = (sin(2f * PI.toFloat() * t) + 1f) / 2f
+            Box(
+                Modifier
+                    .size(BreathingDotSize)
+                    .graphicsLayer {
+                        alpha = BreathingDotAlphaFloor + (1f - BreathingDotAlphaFloor) * lift
+                        scaleX = 0.6f + 0.4f * lift
+                        scaleY = scaleX
+                    }
+                    .background(color, CircleShape),
+            )
+        }
+    }
 }

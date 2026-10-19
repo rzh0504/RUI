@@ -7,6 +7,7 @@ import com.mocharealm.accompanist.lyrics.core.model.karaoke.KaraokeSyllable
 import kotlin.test.Test
 import kotlin.test.assertContentEquals
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
 /**
@@ -72,6 +73,19 @@ class RuiKaraokeLyricsFallbackTest {
     fun emptyLyricsHaveNoTarget() {
         val empty = SyncedLyrics(lines = emptyList())
         assertEquals(-1, FallbackKaraokeModel.targetIndex(empty, 100))
+    }
+
+    @Test
+    fun breathingWindowCoversIntroAndInterludeOnly() {
+        // Intro before the first line and the interlude gap breathe; a
+        // playing span and the quiet tail after the song do not.
+        assertTrue(FallbackKaraokeModel.isIntroOrInterlude(duet, -50))
+        assertTrue(FallbackKaraokeModel.isIntroOrInterlude(duet, 350))
+        assertFalse(FallbackKaraokeModel.isIntroOrInterlude(duet, 250))
+        assertFalse(FallbackKaraokeModel.isIntroOrInterlude(duet, 450))
+        assertFalse(FallbackKaraokeModel.isIntroOrInterlude(duet, 950))
+        val empty = SyncedLyrics(lines = emptyList())
+        assertFalse(FallbackKaraokeModel.isIntroOrInterlude(empty, 100))
     }
 
     @Test
