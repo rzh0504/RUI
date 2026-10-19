@@ -16,9 +16,11 @@ import androidx.compose.runtime.Composable
  * (the Android actual implements this with one stack per window; platforms
  * without owned status bars stay no-ops).
  *
- * On Android this drives the window's light status/navigation bar appearance;
- * on platforms where the status bar style is owned by the host view
- * controller (iOS) this is currently a no-op — style it via Info.plist.
+ * On Android this drives the window's light status/navigation bar appearance.
+ * On iOS the style is owned by the host view controller, so the actual
+ * publishes the request to [IosStatusBarAppearance]; a host (
+ * e.g. the sample's `MainViewController`) applies it through
+ * `preferredStatusBarStyle` and `setNeedsStatusBarAppearanceUpdate`.
  */
 @Composable
 public expect fun StatusBarAppearance(darkIcons: Boolean)
