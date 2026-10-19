@@ -338,9 +338,15 @@ private fun FallbackLineItem(
             is KaraokeLine.MainKaraokeLine -> {
                 MainVocalRow(line, active, colors, normalLineTextStyle, textAlign, position)
                 line.accompanimentLines?.forEach { accompaniment ->
-                    // Nested vocals ride the same timed path as standalone
-                    // accompaniment rows: syllable fill while focused, the
-                    // dimmed read otherwise.
+                    // Standalone accompaniment rows honor their own line's
+                    // alignment; the nested pair must too, since its value
+                    // may differ from the parent main line's.
+                    val nestedAlign =
+                        if (accompaniment.alignment == KaraokeAlignment.End) {
+                            TextAlign.End
+                        } else {
+                            TextAlign.Start
+                        }
                     if (active) {
                         KaraokeProgressText(
                             syllables = accompaniment.syllables,
@@ -348,7 +354,7 @@ private fun FallbackLineItem(
                             baseColor = colors.text.copy(
                                 alpha = colors.text.alpha * AccompanimentRowAlpha,
                             ),
-                            textAlign = textAlign,
+                            textAlign = nestedAlign,
                             position = position,
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -361,7 +367,7 @@ private fun FallbackLineItem(
                             color = colors.text.copy(
                                 alpha = colors.text.alpha * AccompanimentRowAlpha * UnfocusedRowAlpha,
                             ),
-                            textAlign = textAlign,
+                            textAlign = nestedAlign,
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .padding(horizontal = AccompanimentIndent),
@@ -549,12 +555,14 @@ private fun BreathingDots(color: Color, modifier: Modifier = Modifier) {
                 Modifier
                     .size(BreathingDotSize)
                     .graphicsLayer {
+                        // The brush is painted opaque: color.alpha carries
+                        // into the layer exactly once, scaled by the wave.
                         alpha = color.alpha *
                             (BreathingDotAlphaFloor + (1f - BreathingDotAlphaFloor) * lift)
                         scaleX = 0.6f + 0.4f * lift
                         scaleY = scaleX
                     }
-                    .background(color, CircleShape),
+                    .background(color.copy(alpha = 1f), CircleShape),
             )
         }
     }
