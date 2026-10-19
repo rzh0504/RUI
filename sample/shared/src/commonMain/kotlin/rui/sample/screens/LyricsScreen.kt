@@ -128,6 +128,12 @@ public fun LyricsScreen(contentPadding: PaddingValues = PaddingValues(0.dp)) {
                 RuiSlider(
                     value = positionMs.toFloat() / track.durationMs,
                     onValueChange = { positionMs = (it * track.durationMs).roundToInt() },
+                    onValueChangeFinished = {
+                        // Releasing on the tail ends the demo, like natural
+                        // completion — the clock's advance guard alone can
+                        // never observe a seek that already jumped there.
+                        if (positionMs >= track.durationMs) playing = false
+                    },
                     modifier = Modifier
                         .weight(1f)
                         .padding(horizontal = RuiTheme.spacing.md),

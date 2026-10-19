@@ -174,7 +174,12 @@ public fun NowPlayingScreen(onBack: () -> Unit = {}) {
             TransportScrubber(
                 fraction = { positionMs.toFloat() / track.durationMs },
                 onScrub = { positionMs = (it * track.durationMs).roundToInt() },
-                onScrubFinished = {},
+                onScrubFinished = {
+                    // Releasing the scrubber on the tail ends the demo, like
+                    // natural completion — the clock's advance guard alone
+                    // can never observe a seek that already jumped there.
+                    if (positionMs >= track.durationMs) playing = false
+                },
             )
             Row(Modifier.fillMaxWidth()) {
                 RuiText(
