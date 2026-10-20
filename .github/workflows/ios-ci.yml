@@ -7,7 +7,36 @@ on:
 
 jobs:
   build:
-    runs-on: macos-15
+    runs-on: ${{ matrix.runs-on }}
+    timeout-minutes: 90
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # iOS 26 stable line: macos-26 image ships Xcode 26.0.1 … 26.6 and
+          # the iOS 26.2/26.4/26.5 simulator runtimes. Pin 26.6 explicitly —
+          # "latest Xcode on the box" picks betas stale-ish images and silently
+          # changes the SDK between runs.
+          - name: ios-26
+            runs-on: macos-26
+            xcode-path: /Applications/Xcode_26.6.app
+            ios-runtime: '26.5'
+            simulator-device: 'iPhone 17 Pro'
+
+          # iOS 27: the new per-Xcode image label (GA 2026-10-15) — macOS 27,
+          # GA Xcode 27, iOS 27.0/27.1 runtimes preinstalled. Use the image's
+          # default Xcode here; nothing else is verified against an SDK this
+          # fresh.
+          - name: ios-27
+            runs-on: xcode-27
+            ios-runtime: '27.0'
+            simulator-device: 'iPhone 18 Pro'
+
+    env:
+      BUNDLE_ID: rui.sample.ios
+      APP_PATH: sample/iosApp/build/Products/iosApp.app
+
     steps:
       - uses: actions/checkout@v4
 
@@ -20,17 +49,18 @@ jobs:
 
       - uses: gradle/actions/setup-gradle@v4
 
+      - name: Select the matrix Xcode
+        run: |
+          if [ -n '${{ matrix.xcode-path }}' ]; then
+            sudo xcode-select -s '${{ matrix.xcode-path }}'
+          fi
+          xcodebuild -version
+          xcrun simctl list runtimes | grep -F 'iOS'
+
       - name: Compile Kotlin for iOS
         run: |
           chmod +x gradlew
           ./gradlew :rui-ui:compileKotlinIosSimulatorArm64 :sample:shared:compileKotlinIosSimulatorArm64
-
-      - name: Select the latest Xcode on the runner
-        run: |
-          LATEST_XCODE=$(ls -d /Applications/Xcode*.app | sort -V | tail -1)
-          echo "Selecting $LATEST_XCODE"
-          sudo xcode-select -s "$LATEST_XCODE"
-          xcodebuild -version
 
       - name: Build iOS app (includes framework link + embed)
         run: |
@@ -38,8 +68,7 @@ jobs:
           # the products in a known place via CONFIGURATION_BUILD_DIR. ARCHS
           # pins the simulator to arm64 — the KMP framework targets only
           # register iosSimulatorArm64, and the run-script Gradle call fails
-          # on the x86_64 slice Xcode would otherwise include. The app is
-          # built but not launched: CI validates the build, not the UI.
+          # on the x86_64 slice Xcode would otherwise include.
           xcodebuild \
             -project sample/iosApp/iosApp.xcodeproj \
             -target iosApp \
@@ -50,11 +79,111 @@ jobs:
             build \
             CODE_SIGNING_ALLOWED=NO
 
+      # The app is actually launched here. A crash reproduces on the runner
+      # and the kernel writes ~/Library/Logs/DiagnosticReports/iosApp*.ips;
+      # kotlin-side traces come out of the app's stderr (K/N prints
+      # "Uncaught Kotlin exception: ..." with file:line). Everything is
+      # uploaded regardless of outcome so a red job still carries evidence.
+      - name: Launch app on simulator and capture diagnostics
+        continue-on-error: true
+        run: |
+          set -euo pipefail
+
+          RUNTIME_ID=$(xcrun simctl list runtimes -j |
+            jq -r --arg v "${{ matrix.ios-runtime }}" \
+              '.runtimes[] | select(.platform=="iOS" and (.version|startswith($v))) | .identifier' |
+            head -n 1)
+          if [ -z "$RUNTIME_ID" ]; then
+            echo "::error::No iOS ${{ matrix.ios-runtime }} simulator runtime on this image"
+            xcrun simctl list runtimes
+            exit 1
+          fi
+          echo "Runtime: $RUNTIME_ID"
+
+          UDID=$(xcrun simctl create "Rui-CI-${{ matrix.name }}" \
+            '${{ matrix.simulator-device }}' "$RUNTIME_ID")
+          xcrun simctl boot "$UDID" 2>/dev/null || true
+          xcrun simctl bootstatus "$UDID" -b
+
+          xcrun simctl install "$UDID" "$APP_PATH"
+
+          # Follow the app's unified-log lines in the background; the console
+          # stream ends the moment the process dies, this one keeps running
+          # and explains what happened before the exit.
+          xcrun simctl spawn "$UDID" log stream \
+            --style compact \
+            --predicate 'process == "iosApp"' \
+            > simulator-log.txt 2>&1 &
+          LOG_PID=$!
+
+          # --console-pty binds the app's stdout/stderr to this step; a Kotlin
+          # runtime crash prints its stack trace straight into console.txt.
+          xcrun simctl launch --console-pty "$UDID" "$BUNDLE_ID" \
+            > console.txt 2>&1 &
+          LAUNCH_PID=$!
+
+          sleep 45
+          xcrun simctl io "$UDID" screenshot screenshot.png 2>/dev/null || true
+
+          STATUS=alive
+          if kill -0 "$LAUNCH_PID" 2>/dev/null; then
+            xcrun simctl terminate "$UDID" "$BUNDLE_ID" 2>/dev/null || true
+          else
+            wait "$LAUNCH_PID" || true
+            STATUS=exited
+          fi
+          sleep 3
+          kill "$LOG_PID" 2>/dev/null || true
+
+          echo "STATUS=$STATUS" | tee launch-summary.txt
+          if [ "$STATUS" = exited ]; then
+            echo "::warning::App exited within 45s of launch — crash captured, see artifacts"
+          fi
+
+          mkdir -p crash-reports
+          # Destination-side reports first (the .ips the kernel wrote), then
+          # any legacy .crash copies inside the simulator's own logs dir.
+          cp ~/Library/Logs/DiagnosticReports/iosApp*.ips crash-reports/ 2>/dev/null || true
+          SUIDIR="$HOME/Library/Developer/CoreSimulator/Devices/$UDID/data/Library/Logs"
+          find "$SUIDIR" -name '*iosApp*' -newer "$APP_PATH" -exec cp {} crash-reports/ \; 2>/dev/null || true
+
+          (xcrun simctl shutdown "$UDID" && xcrun simctl delete "$UDID") 2>/dev/null || true
+
+      - name: Crash gate
+        if: always()
+        run: |
+          set -e
+          if [ ! -f launch-summary.txt ]; then
+            # The capture step died before writing a summary (e.g. no
+            # matching runtime) — it already emitted a ::error::.
+            exit 0
+          fi
+          if grep -q 'STATUS=exited' launch-summary.txt; then
+            echo "::error::App process died after launch — inspect console.txt / crash-reports artifacts"
+            exit 1
+          fi
+          echo "App stayed alive after launch."
+
       - name: Upload iOS app
         uses: actions/upload-artifact@v4
         # Artifact-only delivery: the simulator .app is uploaded for
         # download and manual install on a simulator. Nothing is ever
         # published to a GitHub release.
         with:
-          name: iosApp-simulator-debug
+          name: iosApp-simulator-debug-${{ matrix.name }}
           path: sample/iosApp/build/Products/*.app
+
+      - name: Upload diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ios-diagnostics-${{ matrix.name }}
+          # if-no-files-found keeps a green-ish upload even when the app never
+          # crashed; the emptiness itself is then the signal.
+          if-no-files-found: warn
+          path: |
+            console.txt
+            simulator-log.txt
+            launch-summary.txt
+            screenshot.png
+            crash-reports/
