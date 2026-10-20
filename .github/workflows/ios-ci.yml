@@ -49,3 +49,12 @@ jobs:
             CONFIGURATION_BUILD_DIR="$PWD/sample/iosApp/build/Products" \
             build \
             CODE_SIGNING_ALLOWED=NO
+
+      - name: Upload iOS app
+        uses: actions/upload-artifact@v4
+        # Artifact-only delivery: the simulator .app is uploaded for
+        # download and manual install on a simulator. Nothing is ever
+        # published to a GitHub release.
+        with:
+          name: iosApp-simulator-debug
+          path: sample/iosApp/build/Products/*.app

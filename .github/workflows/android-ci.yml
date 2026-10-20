@@ -25,9 +25,3 @@ jobs:
         run: |
           chmod +x gradlew
           ./gradlew :rui-ui:allTests :sample:androidApp:assembleDebug
-
-      - name: Upload APK
-        uses: actions/upload-artifact@v4
-        with:
-          name: androidApp-debug
-          path: sample/androidApp/build/outputs/apk/debug/*.apk
