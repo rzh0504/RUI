@@ -1,25 +1,18 @@
 package rui.components
 
-import androidx.compose.animation.core.LinearEasing
-import androidx.compose.animation.core.animateFloat
-import androidx.compose.animation.core.infiniteRepeatable
-import androidx.compose.animation.core.rememberInfiniteTransition
-import androidx.compose.animation.core.tween
-import androidx.compose.foundation.background
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.text.BasicText
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.Stable
@@ -32,18 +25,22 @@ import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.clipToBounds
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.CompositingStrategy
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.layout.layout
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.isUnspecified
+import androidx.compose.ui.unit.sp
 import com.mocharealm.accompanist.lyrics.core.model.ISyncedLine
 import com.mocharealm.accompanist.lyrics.core.model.SyncedLyrics
 import com.mocharealm.accompanist.lyrics.core.model.karaoke.KaraokeAlignment
@@ -54,7 +51,8 @@ import com.mocharealm.accompanist.lyrics.core.model.synced.UncheckedSyncedLine
 import kotlinx.coroutines.launch
 import rui.foundation.RuiText
 import kotlin.math.PI
-import kotlin.math.sin
+import kotlin.math.cos
+import kotlin.math.roundToInt
 import kotlin.time.Duration.Companion.seconds
 import kotlin.time.TimeMark
 import kotlin.time.TimeSource
@@ -74,17 +72,42 @@ private val AccompanimentIndent = 16.dp
 /** Breathing dots share the row inset, riding where the next line lands. */
 private val BreathingDotsIndent = AccompanimentIndent
 
-/** Diameter of one breathing dot. */
-private val BreathingDotSize = 8.dp
+/** Three dots breathe, mirroring KaraokeBreathingDotsDefaults. */
+private const val BreathingDotNumber = 3
 
-/** Gap between the three breathing dots. */
-private val BreathingDotSpacing = 10.dp
+/** Diameter of one breathing dot, per KaraokeBreathingDotsDefaults. */
+private val BreathingDotSize = 16.dp
 
-/** Rest alpha of a breathing dot at the low end of its sine wave. */
-private const val BreathingDotAlphaFloor = 0.3f
+/** Gap between the breathing dots, per KaraokeBreathingDotsDefaults. */
+private val BreathingDotSpacing = 12.dp
 
-/** Duration of one full breathing cycle of a dot, in milliseconds. */
-private const val BreathingCycleMs = 1600
+/** Enter ramp of the dots, per KaraokeBreathingDotsDefaults, in ms. */
+private const val BreathingEnterMs = 3000
+
+/** Pre-exit dip and rise, per KaraokeBreathingDotsDefaults, in ms. */
+private const val BreathingDipMs = 3000
+
+/** The still moment between the dip and the exit, in ms. */
+private const val BreathingStillMs = 200
+
+/** Exit ramp of the dots, per KaraokeBreathingDotsDefaults, in ms. */
+private const val BreathingExitMs = 200
+
+/** Smoothstep the slot height collapses along, in ms. */
+private const val BreathingSlotRampMs = 220
+
+/** Em-box estimate the dot slot rides on when line height is unspecified. */
+private const val BreathingSlotFontScale = 1.35f
+
+/** Main-vocal size the slot falls back to when the style is unspecified. */
+private val BreathingSlotFallbackFontSize = 34.sp
+
+/**
+ * Interludes and intros at most this wide never breathe, mirroring the
+ * native timeline's strict five-second gate — both engines show dots on
+ * the same windows on platforms that render natively.
+ */
+internal const val BreathingMinGapMs = 5000
 
 /** Alpha of rows outside the focus window. */
 internal const val UnfocusedRowAlpha = 0.35f
@@ -121,9 +144,11 @@ internal object FallbackKaraokeModel {
 
     /**
      * The item to anchor at the viewport top, or `-1` to keep following the
-     * current position (interludes only drift the clock). During a leading
-     * intro and after the song the target is the first/last item so the
-     * viewport parks itself instead of trailing the cursor off-list.
+     * current position (short interludes only drift the clock). During a
+     * leading intro and after the song the target is the first/last item so
+     * the viewport parks itself instead of trailing the cursor off-list; a
+     * wide interlude parks ahead on the line its dots are waiting for, as
+     * the native follow does.
      */
     public fun targetIndex(lyrics: SyncedLyrics, time: Int): Int {
         val indices = activeIndices(lyrics, time)
@@ -131,22 +156,167 @@ internal object FallbackKaraokeModel {
 
         val first = lyrics.lines.firstOrNull() ?: return -1
         return when {
-            time <= first.start -> 0
-            lyrics.lines.last().end < time -> lyrics.lines.lastIndex
-            else -> -1
+            time <= aggregateStart(first) -> 0
+            aggregateEnd(lyrics.lines.last()) < time -> lyrics.lines.lastIndex
+            else -> activeInterludeIndex(lyrics, time)
         }
     }
 
     /**
-     * True while playback sits in an intro or an interlude: no line is
-     * active and lyrics are still ahead of the cursor — the window where
-     * the fallback shows its breathing dots. The quiet tail after the song
-     * is not a breathing window.
+     * True while playback sits in a wide intro ahead of the first line —
+     * the native timeline's `activeIntro`: the wait must exceed
+     * [BreathingMinGapMs] strictly, and the tail before zero does not
+     * breathe.
      */
-    public fun isIntroOrInterlude(lyrics: SyncedLyrics, time: Int): Boolean {
+    public fun isIntroBreathing(lyrics: SyncedLyrics, time: Int): Boolean {
+        val first = lyrics.lines.firstOrNull() ?: return false
+        val introEnd = aggregateStart(first)
+        if (introEnd <= BreathingMinGapMs) return false
+        return time in 0 until introEnd
+    }
+
+    /**
+     * The item index a live interlude window waits for, or `-1` when none:
+     * the gap from the previous line's aggregate end to the next line's
+     * aggregate start must exceed [BreathingMinGapMs], and the window runs
+     * from the instant the previous line ends — the native timeline's
+     * `activeInterludeIndex`.
+     */
+    public fun activeInterludeIndex(lyrics: SyncedLyrics, time: Int): Int {
         val lines = lyrics.lines
-        if (lines.isEmpty()) return false
-        return time < lines.last().end && activeIndices(lyrics, time).isEmpty()
+        if (lines.size < 2) return -1
+        var best = -1
+        for (index in 1 until lines.size) {
+            val start = aggregateEnd(lines[index - 1])
+            val end = aggregateStart(lines[index])
+            if (start <= time && time < end && end - start > BreathingMinGapMs) best = index
+        }
+        return best
+    }
+
+    /**
+     * The breathing slot each item can lead with: item 0 during a wide
+     * intro, item i above the line a wide interlude waits on. Windows the
+     * native gate would skip are absent — both engines then keep the rows
+     * flowing without dots.
+     */
+    public fun breathingSlots(lyrics: SyncedLyrics): Map<Int, BreathingSlot> {
+        val lines = lyrics.lines
+        if (lines.isEmpty()) return emptyMap()
+        val slots = mutableMapOf<Int, BreathingSlot>()
+        val introEnd = aggregateStart(lines.first())
+        if (introEnd > BreathingMinGapMs) slots[0] = BreathingSlot(0, introEnd)
+        for (index in 1 until lines.size) {
+            val start = aggregateEnd(lines[index - 1])
+            val end = aggregateStart(lines[index])
+            if (end - start > BreathingMinGapMs) slots[index] = BreathingSlot(start, end)
+        }
+        return slots
+    }
+
+    /**
+     * A line's playback start, pulled earlier by a leading nested
+     * accompaniment exactly as the native timeline aggregates its bounds.
+     */
+    private fun aggregateStart(line: ISyncedLine): Int =
+        minOf(
+            line.start,
+            (line as? KaraokeLine.MainKaraokeLine)?.accompanimentLines?.minOfOrNull {
+                it.start
+            } ?: line.start,
+        )
+
+    /** A line's playback end, pushed later by a trailing nested accompaniment. */
+    private fun aggregateEnd(line: ISyncedLine): Int =
+        maxOf(
+            line.end,
+            (line as? KaraokeLine.MainKaraokeLine)?.accompanimentLines?.maxOfOrNull {
+                it.end
+            } ?: line.end,
+        )
+}
+
+/**
+ * One breathing window: the intro ahead of the song's first line, or the
+ * interlude above the line it waits for. The slot canvas reads the
+ * playback envelope built from these bounds.
+ */
+internal data class BreathingSlot(val startMs: Int, val endMs: Int)
+
+/**
+ * Playback envelope of the breathing dots, ported from the native
+ * renderer's PreparedBreathingDots phase boundaries: a smooth enter ramp, a
+ * gentle cosine breathing, a pre-exit dip and rise, then a smooth exit —
+ * with the row height riding quick smoothsteps at both ends of the window.
+ * Everything is a pure function of playback time, so a paused player
+ * freezes the dots exactly like the native layer does.
+ */
+internal class BreathingEnvelope(private val startMs: Int, endMs: Int) {
+    private val duration = (endMs.toLong() - startMs).coerceAtLeast(1).toFloat()
+    private val valid = endMs > startMs
+
+    // Wide windows breathe at full phase length; short ones scale the
+    // phases down proportionally so the envelope never overruns the gap.
+    private val factor =
+        (duration / (BreathingEnterMs + BreathingDipMs + BreathingStillMs + BreathingExitMs).toFloat())
+            .coerceAtMost(1f)
+    private val enterEnd = BreathingEnterMs * factor
+    private val exitStart = duration - BreathingExitMs * factor
+    private val stillStart = exitStart - BreathingStillMs * factor
+    private val dipStart = stillStart - BreathingDipMs * factor
+    private val breathingDuration = (dipStart - enterEnd).coerceAtLeast(0f)
+    private val hasBreathing = breathingDuration > 16f
+    private val halfCycles =
+        (breathingDuration / 1500f)
+            .roundToInt()
+            .coerceAtLeast(1)
+            .let { if (it % 2 == 0) it + 1 else it }
+    private val period = 2f * breathingDuration / halfCycles
+    private val dotSpan = (exitStart - enterEnd).coerceAtLeast(1f) / BreathingDotNumber
+
+    fun elapsed(timeMs: Int): Float = (timeMs.toLong() - startMs).toFloat()
+
+    fun scale(time: Float): Float =
+        when {
+            !valid -> 0f
+            time < enterEnd -> smooth(time / enterEnd) * if (hasBreathing) 0.8f else 1f
+            hasBreathing && time < dipStart ->
+                0.9f - 0.1f * cos((time - enterEnd) / period * 2f * PI.toFloat())
+            time < dipStart -> 1f
+            time < stillStart ->
+                0.8f + 0.2f * cos(
+                    ((time - dipStart) / (stillStart - dipStart).coerceAtLeast(0.000001f))
+                        .coerceIn(0f, 1f) * 2f * PI.toFloat(),
+                )
+            time < exitStart -> 1f
+            else -> smooth((duration - time) / (duration - exitStart).coerceAtLeast(0.000001f))
+        }
+
+    fun alpha(time: Float): Float =
+        when {
+            !valid -> 0f
+            time < enterEnd -> smooth(time / enterEnd)
+            time < exitStart -> 1f
+            else -> smooth((duration - time) / (duration - exitStart).coerceAtLeast(0.000001f))
+        }
+
+    fun dotAlpha(index: Int, time: Float): Float =
+        0.2f + 0.8f * ((time - enterEnd - dotSpan * index) / dotSpan).coerceIn(0f, 1f)
+
+    /** Slot height factor: invisible outside the window, one slot inside. */
+    fun visibility(time: Float): Float =
+        if (!valid || time < 0f || time >= duration) {
+            0f
+        } else {
+            minOf(
+                smooth(time / BreathingSlotRampMs),
+                smooth((duration - time) / BreathingSlotRampMs),
+            )
+        }
+
+    private fun smooth(value: Float): Float {
+        val t = value.coerceIn(0f, 1f)
+        return t * t * (3f - 2f * t)
     }
 }
 
@@ -239,16 +409,15 @@ internal fun FallbackKaraokeLyricsView(
             FallbackKaraokeModel.activeIndices(lyrics, position.value).toSet()
         }
     }
-    // The intro/interlude state rides its own frame-independent derived
-    // value: the dots show exactly when no line is active and lyrics are
-    // still ahead of the cursor — and they return when scrubbing back.
-    val breathing by remember(lyrics) {
-        derivedStateOf { FallbackKaraokeModel.isIntroOrInterlude(lyrics, position.value) }
-    }
+    // The breathing slots stay fixed per lyrics — every window the native
+    // gate allows, keyed by the item whose line it leads in front of. The
+    // slot canvas itself reads playback, so the dots behave exactly like
+    // the native view: frozen while paused, collapsed outside the window.
+    val breathingSlots = remember(lyrics) { FallbackKaraokeModel.breathingSlots(lyrics) }
 
     // The root carries the artwork-overlay request and clips its children:
-    // the scrolling rows and the breathing dots share one blended layer,
-    // so Plus / Screen glow like the native view applies to both.
+    // the scrolling rows and their breathing slots share one blended
+    // layer, so Plus / Screen glow like the native view applies to both.
     Box(
         modifier = modifier
             .fillMaxSize()
@@ -270,6 +439,18 @@ internal fun FallbackKaraokeLyricsView(
         ) {
             items(count = lines.size, key = { it }) { index ->
                 val line = lines[index]
+                // The slot rides above its line, inside the same >5 s windows
+                // the native view breathes in — the line beneath rises into
+                // the anchor once the singing starts.
+                breathingSlots[index]?.let { slot ->
+                    BreathingDots(
+                        slot = slot,
+                        alignedEnd = line is KaraokeLine && line.alignment == KaraokeAlignment.End,
+                        color = colors.text,
+                        slotStyle = normalLineTextStyle,
+                        position = { position.value },
+                    )
+                }
                 FallbackLineItem(
                     line = line,
                     active = index in active,
@@ -288,16 +469,6 @@ internal fun FallbackKaraokeLyricsView(
                     pressed = { onLinePressed(line) },
                 )
             }
-        }
-        if (breathing) {
-            // Dots park at the viewport head — the anchor point where the
-            // next line lands once the follower re-engages.
-            BreathingDots(
-                color = colors.text,
-                modifier = Modifier
-                    .align(Alignment.TopStart)
-                    .padding(top = FallbackTopPadding, start = BreathingDotsIndent),
-            )
         }
     }
 }
@@ -524,46 +695,74 @@ private fun Caption(
 }
 
 /**
- * The native view's intro/interlude state: three dots breathing in a
- * staggered sine wave, riding [RuiKaraokeLyricsColors.text] like the lyric
- * rows and dimming rather than vanishing between waves. The dots scale
- * with their brightness so the wave reads as a compositing layer, not as
- * blinking rectangles.
+ * The native view's breathing slot collapsed into the fallback renderer:
+ * one canvas whose height, dot scale and alpha all follow the playback
+ * envelope, mirroring KaraokeBreathingDots — the dots sit [BreathingDotNumber]
+ * abreast, [BreathingDotsIndent] inside the row, centered in a
+ * main-vocal-line-high slot whose trailing spacing collapses with it, so the
+ * line beneath rises into the anchor without a residual gap.
  */
 @Composable
-private fun BreathingDots(color: Color, modifier: Modifier = Modifier) {
-    val cycle = rememberInfiniteTransition(label = "ruiBreathing")
-    val phase by cycle.animateFloat(
-        initialValue = 0f,
-        targetValue = 1f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(durationMillis = BreathingCycleMs, easing = LinearEasing),
-        ),
-        label = "phase",
-    )
-    Row(
-        modifier = modifier,
-        horizontalArrangement = Arrangement.spacedBy(BreathingDotSpacing),
-        verticalAlignment = Alignment.CenterVertically,
+private fun BreathingDots(
+    slot: BreathingSlot,
+    alignedEnd: Boolean,
+    color: Color,
+    slotStyle: TextStyle,
+    position: () -> Int,
+) {
+    val envelope = remember(slot) { BreathingEnvelope(slot.startMs, slot.endMs) }
+    val time by rememberUpdatedState(position)
+    val visibility = remember(envelope) {
+        derivedStateOf { envelope.visibility(envelope.elapsed(time())) }
+    }
+    val slotHeight = with(LocalDensity.current) {
+        // One main-vocal em box, per the native view's breathing line height
+        // (the tallest main-vocal row), so the slot rhythm reads like a line.
+        val lineHeight = slotStyle.lineHeight.takeIf { !it.isUnspecified && it.isSp }
+        val fontSize = slotStyle.fontSize.takeIf { !it.isUnspecified && it.isSp }
+        ((lineHeight ?: fontSize ?: BreathingSlotFallbackFontSize) * BreathingSlotFontScale)
+            .toDp()
+    }.coerceAtLeast(BreathingDotSize)
+    Canvas(
+        Modifier
+            .fillMaxWidth()
+            .layout { measurable, constraints ->
+                val placeable = measurable.measure(constraints)
+                // The slot's height follows playback: invisible outside the
+                // window, one full line slot inside it — the native view's
+                // collapsing row, so the entrance and exit never pop.
+                layout(placeable.width, (placeable.height * visibility.value).roundToInt()) {
+                    placeable.place(0, 0)
+                }
+            }
+            .padding(horizontal = BreathingDotsIndent)
+            // Trailing spacing collapses with the slot, so hidden dots leave
+            // no residual list gap.
+            .padding(bottom = FallbackItemSpacing)
+            .height(slotHeight),
     ) {
-        repeat(3) { index ->
-            // Each dot trails its neighbor by a third of the cycle, so one
-            // crest travels across the row without a jump at the wrap.
-            val t = (phase - index / 3f + 3f) % 1f
-            val lift = (sin(2f * PI.toFloat() * t) + 1f) / 2f
-            Box(
-                Modifier
-                    .size(BreathingDotSize)
-                    .graphicsLayer {
-                        // The brush is painted opaque: color.alpha carries
-                        // into the layer exactly once, scaled by the wave.
-                        alpha = color.alpha *
-                            (BreathingDotAlphaFloor + (1f - BreathingDotAlphaFloor) * lift)
-                        scaleX = 0.6f + 0.4f * lift
-                        scaleY = scaleX
-                    }
-                    .background(color.copy(alpha = 1f), CircleShape),
-            )
+        val now = envelope.elapsed(time())
+        val scale = envelope.scale(now)
+        val alpha = envelope.alpha(now)
+        if (scale > 0f && alpha > 0f) {
+            val diameter = BreathingDotSize.toPx().coerceAtLeast(1f)
+            val margin = BreathingDotSpacing.toPx().coerceAtLeast(0f)
+            val totalWidth = diameter * BreathingDotNumber + margin * (BreathingDotNumber - 1)
+            val origin = if (alignedEnd) size.width - totalWidth else 0f
+            val center = origin + totalWidth / 2f
+            val radius = diameter / 2f * scale
+            repeat(BreathingDotNumber) { index ->
+                val baseX = origin + diameter / 2f + (diameter + margin) * index
+                drawCircle(
+                    color = color,
+                    radius = radius,
+                    center = Offset(
+                        x = center + (baseX - center) * scale,
+                        y = size.height / 2f,
+                    ),
+                    alpha = alpha * envelope.dotAlpha(index, now),
+                )
+            }
         }
     }
 }
