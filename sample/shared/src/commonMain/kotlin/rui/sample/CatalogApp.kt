@@ -78,6 +78,8 @@ import rui.sample.screens.ReorderScreen
 import rui.sample.screens.ScrollBarScreen
 import rui.sample.screens.NavigationRailScreen
 import rui.sample.screens.SidebarScreen
+import rui.sample.screens.LyricsScreen
+import rui.sample.screens.NowPlayingScreen
 import rui.theme.RuiTheme
 import rui.theme.RuiWindowWidthClass
 
@@ -118,6 +120,8 @@ public sealed interface CatalogPage : RuiNavKey {
     public data object Reorder : CatalogPage
     public data object ScrollBar : CatalogPage
     public data object NavigationRail : CatalogPage
+    public data object Lyrics : CatalogPage
+    public data object NowPlaying : CatalogPage
 }
 
 private fun CatalogPage.title(): String = when (this) {
@@ -156,6 +160,8 @@ private fun CatalogPage.title(): String = when (this) {
     CatalogPage.Reorder -> "Reorder"
     CatalogPage.ScrollBar -> "Scroll bar"
     CatalogPage.NavigationRail -> "Navigation rail"
+    CatalogPage.Lyrics -> "Lyrics"
+    CatalogPage.NowPlaying -> "Now playing"
 }
 
 /**
@@ -193,6 +199,9 @@ public fun CatalogApp() {
     RuiTheme(darkTheme = darkTheme, strings = languageChoice.resolveStrings()) {
         // In-app theme toggle: push the appearance to the system bars in the
         // same frame, so icons stay visible over the switched background.
+        // Pages that drive the bars themselves (the immersive player) hand
+        // control back to this call when they leave composition — the util's
+        // caller-stack restore, no re-key needed.
         StatusBarAppearance(darkIcons = !darkTheme)
         val widthClass = RuiTheme.windowWidthClass
         val rootNavItems = listOf(
@@ -259,7 +268,10 @@ public fun CatalogApp() {
                 RuiScaffold(
                     backdrop = backdrop,
                     topBar = {
-                        if (atRoot) {
+                        if (page == CatalogPage.NowPlaying) {
+                            // The music block is fully immersive: it owns
+                            // its chrome and draws behind the status bar.
+                        } else if (atRoot) {
                             RuiTopAppBar(
                                 title = page.title(),
                                 backdrop = backdrop,
@@ -375,6 +387,8 @@ public fun CatalogApp() {
                             CatalogPage.Reorder -> ReorderScreen(contentPadding = padding)
                             CatalogPage.ScrollBar -> ScrollBarScreen(contentPadding = padding)
                             CatalogPage.NavigationRail -> NavigationRailScreen(contentPadding = padding)
+                            CatalogPage.Lyrics -> LyricsScreen(contentPadding = padding)
+                            CatalogPage.NowPlaying -> NowPlayingScreen(onBack = { nav.pop() })
                         }
                     }
                 }

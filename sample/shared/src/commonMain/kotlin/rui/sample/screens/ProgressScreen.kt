@@ -20,6 +20,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import kotlin.math.roundToInt
 import rui.components.RuiCircularProgress
@@ -52,11 +53,11 @@ public fun ProgressScreen(contentPadding: PaddingValues = PaddingValues(0.dp)) {
         RuiListGroup {
             Column(Modifier.padding(horizontal = RuiTheme.spacing.lg, vertical = RuiTheme.spacing.md)) {
                 Row(Modifier.fillMaxWidth()) {
-                    RuiText("Downloading", style = RuiTheme.typography.titleSm)
+                    RuiText("Downloading", style = RuiTheme.typography.bodyMd)
                     Spacer(Modifier.weight(1f))
                     RuiText(
                         "65%",
-                        style = RuiTheme.typography.bodySm,
+                        style = RuiTheme.typography.labelLg,
                         color = RuiTheme.colors.contentMuted,
                     )
                 }
@@ -65,13 +66,19 @@ public fun ProgressScreen(contentPadding: PaddingValues = PaddingValues(0.dp)) {
             }
             RuiDivider(inset = RuiTheme.spacing.lg)
             Column(Modifier.padding(horizontal = RuiTheme.spacing.lg, vertical = RuiTheme.spacing.md)) {
-                RuiText("Indeterminate", style = RuiTheme.typography.titleSm)
+                RuiText("Emphasized", style = RuiTheme.typography.bodyMd)
+                Spacer(Modifier.height(RuiTheme.spacing.md))
+                RuiLinearProgress(progress = 0.65f, height = 10.dp)
+            }
+            RuiDivider(inset = RuiTheme.spacing.lg)
+            Column(Modifier.padding(horizontal = RuiTheme.spacing.lg, vertical = RuiTheme.spacing.md)) {
+                RuiText("Indeterminate", style = RuiTheme.typography.bodyMd)
                 Spacer(Modifier.height(RuiTheme.spacing.md))
                 RuiLinearProgress()
             }
             RuiDivider(inset = RuiTheme.spacing.lg)
             Column(Modifier.padding(horizontal = RuiTheme.spacing.lg, vertical = RuiTheme.spacing.md)) {
-                RuiText("Unavailable", style = RuiTheme.typography.titleSm)
+                RuiText("Unavailable", style = RuiTheme.typography.bodyMd)
                 Spacer(Modifier.height(RuiTheme.spacing.md))
                 RuiLinearProgress(progress = 0.65f, enabled = false)
             }
@@ -80,8 +87,8 @@ public fun ProgressScreen(contentPadding: PaddingValues = PaddingValues(0.dp)) {
         SectionLabel("Load simulation")
         RuiListGroup {
             RuiListItem(
-                title = "Tap to load",
-                subtitle = "Animates the bar below from 0 to 100%",
+                title = "Start loading",
+                subtitle = "Animated progress",
                 showChevron = true,
                 onClick = {
                     loadProgress = 0f
@@ -91,11 +98,11 @@ public fun ProgressScreen(contentPadding: PaddingValues = PaddingValues(0.dp)) {
             RuiDivider(inset = RuiTheme.spacing.lg)
             Column(Modifier.padding(horizontal = RuiTheme.spacing.lg, vertical = RuiTheme.spacing.md)) {
                 Row(Modifier.fillMaxWidth()) {
-                    RuiText("Progress", style = RuiTheme.typography.titleSm)
+                    RuiText("Progress", style = RuiTheme.typography.bodyMd)
                     Spacer(Modifier.weight(1f))
                     RuiText(
                         "${(loadProgress * 100).roundToInt()}%",
-                        style = RuiTheme.typography.bodySm,
+                        style = RuiTheme.typography.labelLg,
                         color = RuiTheme.colors.contentMuted,
                     )
                 }
@@ -110,25 +117,38 @@ public fun ProgressScreen(contentPadding: PaddingValues = PaddingValues(0.dp)) {
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = RuiTheme.spacing.lg, vertical = RuiTheme.spacing.md),
-                horizontalArrangement = Arrangement.SpaceEvenly,
             ) {
-                CircularDemo(progress = 0.65f, caption = "65%")
-                CircularDemo(progress = null, caption = "Indeterminate")
-                CircularDemo(progress = 0.65f, caption = "Unavailable", enabled = false)
+                CircularDemo(progress = 0.65f, caption = "65%", modifier = Modifier.weight(1f))
+                CircularDemo(progress = null, caption = "Indeterminate", modifier = Modifier.weight(1f))
+                CircularDemo(
+                    progress = 0.65f,
+                    caption = "Unavailable",
+                    enabled = false,
+                    modifier = Modifier.weight(1f),
+                )
             }
         }
     }
 }
 
 @Composable
-private fun CircularDemo(progress: Float?, caption: String, enabled: Boolean = true) {
-    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+private fun CircularDemo(
+    progress: Float?,
+    caption: String,
+    enabled: Boolean = true,
+    modifier: Modifier = Modifier,
+) {
+    Column(
+        modifier = modifier,
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
         RuiCircularProgress(progress = progress, enabled = enabled)
         Spacer(Modifier.height(RuiTheme.spacing.sm))
         RuiText(
             text = caption,
             style = RuiTheme.typography.bodySm,
             color = RuiTheme.colors.contentMuted,
+            textAlign = TextAlign.Center,
         )
     }
 }

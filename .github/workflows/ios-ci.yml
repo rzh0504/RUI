@@ -14,7 +14,9 @@ jobs:
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: 17
+          # Same dependency-bytecode story as android-ci: the test JVMs and
+          # the Kotlin toolchain must be able to load Java 21 class files.
+          java-version: 21
 
       - uses: gradle/actions/setup-gradle@v4
 
@@ -36,7 +38,8 @@ jobs:
           # the products in a known place via CONFIGURATION_BUILD_DIR. ARCHS
           # pins the simulator to arm64 — the KMP framework targets only
           # register iosSimulatorArm64, and the run-script Gradle call fails
-          # on the x86_64 slice Xcode would otherwise include.
+          # on the x86_64 slice Xcode would otherwise include. The app is
+          # built but not launched: CI validates the build, not the UI.
           xcodebuild \
             -project sample/iosApp/iosApp.xcodeproj \
             -target iosApp \
@@ -46,21 +49,3 @@ jobs:
             CONFIGURATION_BUILD_DIR="$PWD/sample/iosApp/build/Products" \
             build \
             CODE_SIGNING_ALLOWED=NO
-
-      - name: Launch in simulator and capture screenshot
-        run: |
-          DEVICE=$(xcrun simctl list devices available | grep -m1 -o '[A-F0-9-]\{36\}')
-          echo "Booting simulator $DEVICE"
-          xcrun simctl boot "$DEVICE" || true
-          APP="sample/iosApp/build/Products/iosApp.app"
-          xcrun simctl install "$DEVICE" "$APP"
-          xcrun simctl launch "$DEVICE" rui.sample.ios
-          sleep 8
-          xcrun simctl io "$DEVICE" screenshot rui-ios-catalog.png || true
-
-      - name: Upload screenshot
-        uses: actions/upload-artifact@v4
-        with:
-          name: ios-screenshot
-          path: rui-ios-catalog.png
-          if-no-files-found: ignore
