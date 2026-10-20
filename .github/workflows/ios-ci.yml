@@ -140,6 +140,7 @@ jobs:
             echo "::warning::App exited within 45s of launch — crash captured, see artifacts"
           fi
 
+          sleep 6
           mkdir -p crash-reports
           # Destination-side reports first (the .ips the kernel wrote), then
           # any legacy .crash copies inside the simulator's own logs dir.
