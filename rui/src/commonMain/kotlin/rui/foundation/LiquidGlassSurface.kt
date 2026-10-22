@@ -84,6 +84,13 @@ public val LocalRuiLiquidGlassTuning = compositionLocalOf { RuiLiquidGlassTuning
  * @param tint The wash color; its alpha is replaced by the tuning's
  *   [RuiLiquidGlassTuning.tintAlpha], so hosts retune the translucency
  *   globally.
+ * @param edgeEffects Whether the edge treatments draw — the specular
+ *   highlight and the lens refraction at the shape's boundary. Strips
+ *   attached to the screen's edges ([rui.components.RuiTopAppBar], the
+ *   docked [rui.components.RuiNavigationBar]) pass false, following iOS's
+ *   bar treatment: a bar is pure material, edge glass belongs to floating
+ *   elements — a highlight along a screen-wide rectangle reads as a glowing
+ *   frame, especially in dark themes.
  * @param positionOverride The sampling position — this node's position in
  *   the capture's coordinate space — same contract as [blurSurface]'s: use
  *   it when the node is placed by a mechanism whose placement changes don't
@@ -97,6 +104,7 @@ public fun Modifier.liquidGlassSurface(
     tint: Color = Color.Transparent,
     shape: Shape = RectangleShape,
     enabled: Boolean = isBlurSupported,
+    edgeEffects: Boolean = true,
     tuning: RuiLiquidGlassTuning = LocalRuiLiquidGlassTuning.current,
     positionOverride: (() -> Offset)? = null,
 ): Modifier {
@@ -115,7 +123,7 @@ public fun Modifier.liquidGlassSurface(
             blur(tuning.blurRadius.toPx())
             // The lens shader needs corner radii; an arbitrary Shape would
             // throw inside the library, so it degrades to saturation + blur.
-            if (shape is CornerBasedShape) {
+            if (edgeEffects && shape is CornerBasedShape) {
                 val height = tuning.refractionHeight.toPx()
                 lens(
                     refractionHeight = height,
@@ -125,7 +133,7 @@ public fun Modifier.liquidGlassSurface(
             }
         },
         highlight = {
-            if (tuning.highlightAlpha > 0f) {
+            if (edgeEffects && tuning.highlightAlpha > 0f) {
                 Highlight.Default.copy(alpha = tuning.highlightAlpha)
             } else {
                 null

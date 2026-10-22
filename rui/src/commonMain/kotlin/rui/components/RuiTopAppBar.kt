@@ -106,6 +106,10 @@ public fun RuiTopAppBar(
             Modifier.liquidGlassSurface(
                 backdrop = backdrop,
                 tint = colors.background,
+                // A strip attached to the screen's edges carries no edge
+                // glass — the highlight would read as a glowing frame
+                // (iOS's bar treatment).
+                edgeEffects = false,
             )
         backdrop != null && isBlurSupported ->
             Modifier.blurSurface(
