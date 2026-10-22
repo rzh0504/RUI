@@ -84,7 +84,7 @@ public fun RuiDropdownMenu(
     // visibly in solid mode where the opaque panel otherwise melts into
     // the content behind it.
     val menuShadow = Modifier.shadow(
-        elevation = 16.dp,
+        elevation = 8.dp,
         shape = shapes.xl,
         clip = false,
     )
@@ -127,11 +127,14 @@ public fun RuiDropdownMenu(
                     .width(IntrinsicSize.Max)
                     .then(menuShadow)
                     .then(panelBackground),
-                enter = fadeIn(motion.normal) + scaleIn(
+                // Scale only, no fade: an alpha'd layer composites offscreen
+                // and crops the shadow square for the whole animation — the
+                // snackbar's lesson, same as the floating bar's shadow fade.
+                enter = scaleIn(
                     initialScale = 0.94f,
                     animationSpec = motion.pop,
                 ),
-                exit = fadeOut(motion.fast) + scaleOut(targetScale = 0.96f),
+                exit = scaleOut(targetScale = 0.96f),
             ) {
                 val cascading = remember { RuiCascadingMenuState() }
                 CompositionLocalProvider(LocalRuiCascadingMenu provides cascading) {
