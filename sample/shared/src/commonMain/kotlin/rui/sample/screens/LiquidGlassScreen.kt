@@ -41,15 +41,43 @@ import rui.foundation.RuiGlassMaterial
 import rui.foundation.RuiIcon
 import rui.foundation.RuiIcons
 import rui.foundation.RuiText
+import rui.foundation.blurBackdrop
+import rui.foundation.rememberBlurBackdrop
 import rui.sample.ui.ContentColumn
 import rui.sample.ui.SectionLabel
 import rui.theme.RuiTheme
 
 /** A vivid field the glass samples — a flat page color shows refraction and
- *  saturation as nothing. */
+ *  saturation as nothing. The field owns its own capture, recorded from the
+ *  pure-gradient layer beneath the glass: a glass element must never sample
+ *  a capture whose recorded subtree contains the element itself — the
+ *  capture's re-record references the glass's layer which references the
+ *  capture, and the render thread walks the cycle to death. */
 private val DemoField = Brush.linearGradient(
     listOf(Color(0xFF3C87FF), Color(0xFF34C77B), Color(0xFFFF9F45)),
 )
+
+@Composable
+private fun DemoField(
+    height: Dp,
+    content: @Composable (BlurBackdrop) -> Unit,
+) {
+    val fieldBackdrop = rememberBlurBackdrop(liquid = true)
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(height),
+        contentAlignment = Alignment.Center,
+    ) {
+        Box(
+            modifier = Modifier
+                .matchParentSize()
+                .blurBackdrop(fieldBackdrop)
+                .background(DemoField),
+        )
+        content(fieldBackdrop)
+    }
+}
 
 @OptIn(ExperimentalRuiApi::class)
 @Composable
@@ -71,13 +99,7 @@ public fun LiquidGlassScreen(
         )
 
         SectionLabel("Frosted vs liquid")
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(200.dp)
-                .background(DemoField),
-            contentAlignment = Alignment.Center,
-        ) {
+        DemoField(height = 200.dp) { fieldBackdrop ->
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -88,14 +110,14 @@ public fun LiquidGlassScreen(
                     title = "Frosted",
                     detail = "72% tint, heavy blur,\nhairline border",
                     material = RuiGlassMaterial.Frosted,
-                    backdrop = backdrop,
+                    backdrop = fieldBackdrop,
                     modifier = Modifier.weight(1f),
                 )
                 GlassPanel(
                     title = "Liquid",
                     detail = "30% tint, edge refraction,\nspecular highlight",
                     material = RuiGlassMaterial.Liquid,
-                    backdrop = backdrop,
+                    backdrop = fieldBackdrop,
                     modifier = Modifier.weight(1f),
                 )
             }
@@ -109,17 +131,17 @@ public fun LiquidGlassScreen(
             color = RuiTheme.colors.contentMuted,
         )
         Spacer(Modifier.height(8.dp))
-        GlassField {
+        DemoField(height = 76.dp) { fieldBackdrop ->
             MiniCapsule(
-                backdrop = backdrop,
+                backdrop = fieldBackdrop,
                 barWidth = 200.dp,
                 items = listOf(RuiIcons.Grid to "Browse", RuiIcons.Layers to "Blocks"),
             )
         }
         Spacer(Modifier.height(10.dp))
-        GlassField {
+        DemoField(height = 76.dp) { fieldBackdrop ->
             MiniCapsule(
-                backdrop = backdrop,
+                backdrop = fieldBackdrop,
                 barWidth = 320.dp,
                 items = listOf(
                     RuiIcons.Grid to "Browse",
@@ -238,19 +260,6 @@ private fun GlassPanel(
                 color = RuiTheme.colors.contentMuted,
             )
         }
-    }
-}
-
-@Composable
-private fun GlassField(content: @Composable () -> Unit) {
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(76.dp)
-            .background(DemoField),
-        contentAlignment = Alignment.Center,
-    ) {
-        content()
     }
 }
 

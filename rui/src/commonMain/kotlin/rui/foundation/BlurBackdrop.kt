@@ -82,6 +82,15 @@ internal val BlurBackdrop.liquidSource: LayerBackdrop?
  * so pages stacked on top of each other sharing a backdrop would sample the
  * wrong content at the wrong offset.
  *
+ * Keep glass consumers OUT of the recorded subtree. The recorder re-records
+ * its layer after drawing the content; a glass element inside that content
+ * re-executes inside the record and leaves the layer graph cyclical (glass
+ * layer references the capture, the capture references the glass layer),
+ * which the render thread walks until it dies. Bars and popup panels are
+ * safe — [RuiScaffold] records only its content Box, and popups live in
+ * their own windows. For glass inside a page, record a pure-background
+ * layer beneath the glass instead (see the catalog's liquid-glass tab).
+ *
  * Set [liquid] to also record a second capture into the Backdrop library's
  * [com.kyant.backdrop.backdrops.LayerBackdrop] — the source the
  * [RuiGlassMaterial.Liquid] surfaces consume (see
