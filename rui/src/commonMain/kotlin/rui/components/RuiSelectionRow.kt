@@ -54,7 +54,6 @@ public fun <T> RuiSelectionRow(
         expanded = expanded,
         onDismissRequest = { expanded = false },
         modifier = modifier,
-        matchAnchorWidth = true,
         backdrop = backdrop,
         material = material,
         anchor = {

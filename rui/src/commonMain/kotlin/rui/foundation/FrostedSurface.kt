@@ -29,7 +29,8 @@ public annotation class ExperimentalRuiApi
  * material with `material = RuiGlassMaterial.Liquid` (lighter tint, edge
  * refraction, specular highlight; needs the capture created with
  * `rememberBlurBackdrop(liquid = true)`); without a backdrop it is an
- * honest translucent panel — tint plus hairline border, no blur.
+ * honest opaque panel — flat tint plus hairline border, no blur, no
+ * translucency.
  *
  * Pass a [BlurBackdrop] from [rememberBlurBackdrop] + [blurBackdrop] to get
  * the glass look; see the catalog app for the wiring.
@@ -54,7 +55,7 @@ public fun FrostedSurface(
         // Liquid: alpha comes from the tuning, surfaces pass the raw color.
         useLiquid -> tint
         useBlur -> tint.copy(alpha = 0.72f)
-        else -> tint.copy(alpha = 0.85f)
+        else -> tint
     }
 
     CompositionLocalProvider(LocalContentColor provides contentColor) {

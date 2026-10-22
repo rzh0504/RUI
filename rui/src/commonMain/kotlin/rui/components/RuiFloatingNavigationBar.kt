@@ -122,7 +122,7 @@ public object RuiFloatingNavigationBarDefaults {
  *
  * The capsule itself is frosted like the docked [RuiNavigationBar] — with a
  * [backdrop] it blurs the content behind itself; without one it is an
- * honest translucent stadium. Place inside [RuiScaffold]'s `bottomBar`
+ * honest opaque stadium. Place inside [RuiScaffold]'s `bottomBar`
  * slot; the scaffold reports the capsule, its surrounding air and the
  * scrim's rise as content padding, so lists scroll under the floating bar
  * and never end up hidden behind it.
@@ -202,14 +202,14 @@ public fun RuiFloatingNavigationBar(
 
     // The glass recipes of FrostedSurface: with a backdrop, liquid glass
     // (tuning alpha, refraction, no border) or the frosted blur + 72% tint;
-    // an honest 85% translucent tint without a capture.
+    // without a capture, an honest opaque stadium — no glass, no translucency.
     val useLiquid = material == RuiGlassMaterial.Liquid &&
         backdrop != null && backdrop.liquidSource != null && isBlurSupported
     val useBlur = backdrop != null && isBlurSupported && !useLiquid
     val tint = when {
         useLiquid -> containerColor
         useBlur -> containerColor.copy(alpha = 0.72f)
-        else -> containerColor.copy(alpha = 0.85f)
+        else -> containerColor
     }
 
     // The block spans to the screen's bottom edge so the scrim can cover the

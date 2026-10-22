@@ -10,13 +10,14 @@ import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
@@ -27,10 +28,7 @@ import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.layout.onSizeChanged
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalLayoutDirection
-import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import com.composeunstyled.DropdownMenuPanel
@@ -73,7 +71,6 @@ public fun RuiDropdownMenu(
     modifier: Modifier = Modifier,
     side: AnchorSide = AnchorSide.Bottom,
     alignment: AnchorAlignment = AnchorAlignment.Start,
-    matchAnchorWidth: Boolean = false,
     backdrop: BlurBackdrop? = null,
     material: RuiGlassMaterial = RuiGlassMaterial.Frosted,
     anchor: @Composable () -> Unit,
@@ -82,8 +79,6 @@ public fun RuiDropdownMenu(
     val colors = RuiTheme.colors
     val shapes = RuiTheme.shapes
     val motion = RuiTheme.motion
-    val density = LocalDensity.current
-    var anchorWidthPx by remember { mutableStateOf(IntSize.Zero) }
 
     val panelBackground = when {
         backdrop != null && material == RuiGlassMaterial.Liquid && backdrop.liquidSource != null && isBlurSupported ->
@@ -111,24 +106,17 @@ public fun RuiDropdownMenu(
         modifier = modifier,
         side = side,
         alignment = alignment,
-        anchor = {
-            Box(Modifier.onSizeChanged { anchorWidthPx = it }) {
-                anchor()
-            }
-        },
+        anchor = anchor,
         panel = {
-            // Fixed width by default: the panel layer measures content with
-            // unbounded constraints, so min-width would leave item rows
-            // unbounded too (weighted text collapses). Same approach as
-            // Unstyled's demo. Menu rows that pick a value span the anchor
-            // row instead, so the menu reads as part of the settings card.
-            val widthModifier = if (matchAnchorWidth && anchorWidthPx != IntSize.Zero) {
-                Modifier.width(with(density) { anchorWidthPx.width.toDp() })
-            } else {
-                Modifier.width(MenuMinWidth)
-            }
+            // Content-adaptive with a floor: the panel takes its content's
+            // minimum intrinsic width (the widest option label), floored at
+            // the menu minimum — children still measure with bounded width,
+            // so the weighted cascading arrows keep their layout.
             DropdownMenuPanel(
-                modifier = widthModifier.then(panelBackground),
+                modifier = Modifier
+                    .width(IntrinsicSize.Min)
+                    .widthIn(min = MenuMinWidth)
+                    .then(panelBackground),
                 enter = fadeIn(motion.normal) + scaleIn(
                     initialScale = 0.94f,
                     animationSpec = motion.pop,
