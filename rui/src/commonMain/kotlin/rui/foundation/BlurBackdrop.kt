@@ -4,6 +4,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.ui.Modifier
@@ -107,12 +108,20 @@ public fun rememberBlurBackdrop(
     onDraw: ContentDrawScope.() -> Unit = { drawContent() },
 ): BlurBackdrop {
     val graphicsLayer = rememberGraphicsLayer()
+    // Callers commonly pass an inline capture body; keying the recorder on
+    // the lambda's identity would rebuild the backdrop — and reset the
+    // library's layer coordinates — on every recomposition. Keep one stable
+    // recorder and read the latest body at draw time.
+    val latestOnDraw = rememberUpdatedState(onDraw)
+    val recorder: ContentDrawScope.() -> Unit = remember { { latestOnDraw.value(this) } }
     val liquidSource = if (liquid) {
-        rememberLayerBackdrop(onDraw = onDraw)
+        rememberLayerBackdrop(onDraw = recorder)
     } else {
         null
     }
-    return remember(onDraw, liquidSource) { BlurBackdropImpl(graphicsLayer, onDraw, liquidSource) }
+    return remember(graphicsLayer, recorder, liquidSource) {
+        BlurBackdropImpl(graphicsLayer, recorder, liquidSource)
+    }
 }
 
 /**
