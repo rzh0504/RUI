@@ -34,7 +34,6 @@ import com.composeunstyled.UnstyledDropdownMenu
 import com.composeunstyled.UnstyledDropdownMenuItem
 import com.composeunstyled.theme.ColoredIndication
 import rui.foundation.BlurBackdrop
-import rui.foundation.LiquidGlassTintAlpha
 import rui.foundation.RuiGlassMaterial
 import rui.foundation.RuiIcon
 import rui.foundation.RuiIcons
@@ -83,7 +82,7 @@ public fun RuiDropdownMenu(
         backdrop != null && material == RuiGlassMaterial.Liquid && backdrop.liquidSource != null && isBlurSupported ->
             Modifier.liquidGlassSurface(
                 backdrop = backdrop,
-                tint = colors.surfaceElevated.copy(alpha = LiquidGlassTintAlpha),
+                tint = colors.surfaceElevated,
                 shape = shapes.xl,
             )
         backdrop != null && isBlurSupported ->

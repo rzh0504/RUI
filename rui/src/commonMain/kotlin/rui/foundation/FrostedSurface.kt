@@ -51,7 +51,8 @@ public fun FrostedSurface(
         backdrop != null && backdrop.liquidSource != null && isBlurSupported
     val useBlur = backdrop != null && isBlurSupported && !useLiquid
     val effectiveTint = when {
-        useLiquid -> tint.copy(alpha = LiquidGlassTintAlpha)
+        // Liquid: alpha comes from the tuning, surfaces pass the raw color.
+        useLiquid -> tint
         useBlur -> tint.copy(alpha = 0.72f)
         else -> tint.copy(alpha = 0.85f)
     }

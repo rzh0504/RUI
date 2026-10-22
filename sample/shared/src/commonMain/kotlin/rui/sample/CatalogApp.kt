@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableStateOf
@@ -41,8 +42,10 @@ import rui.components.navigation.RuiNavController
 import rui.components.navigation.rememberRuiNavBackStack
 import rui.components.rememberRuiScrollBehavior
 import rui.foundation.ExperimentalRuiApi
+import rui.foundation.LocalRuiLiquidGlassTuning
 import rui.foundation.RuiGlassMaterial
 import rui.foundation.RuiIcons
+import rui.foundation.RuiLiquidGlassTuning
 import rui.foundation.rememberBlurBackdrop
 import rui.foundation.utils.StatusBarAppearance
 import rui.sample.screens.AccountScreen
@@ -209,6 +212,10 @@ public fun CatalogApp() {
     var frostedEnabled by remember { mutableStateOf(SampleSettings.getBoolean(KeyFrosted, true)) }
     var floatingNavBarEnabled by remember { mutableStateOf(SampleSettings.getBoolean(KeyFloatingNavBar, false)) }
     var liquidNavBarEnabled by remember { mutableStateOf(SampleSettings.getBoolean(KeyLiquidNavBar, false)) }
+    // Liquid-material test bench: the Liquid tab's sliders write it, the
+    // provider makes every liquid surface below — bars included — follow.
+    // Session-scoped on purpose; the shipped look is one app restart away.
+    var liquidTuning by remember { mutableStateOf(RuiLiquidGlassTuning()) }
     var languageChoice by remember {
         mutableStateOf(
             LanguageChoice.entries.firstOrNull { it.name == SampleSettings.getString(KeyLanguage, LanguageChoice.System.name) }
@@ -239,6 +246,7 @@ public fun CatalogApp() {
         )
         // Dialogs and bottom sheets portal above the navigation stack —
         // both through the one overlay host.
+        CompositionLocalProvider(LocalRuiLiquidGlassTuning provides liquidTuning) {
         RuiOverlayHost {
             // Tooltip panels portal above the navigation stack too.
             TooltipHost {
@@ -379,6 +387,8 @@ public fun CatalogApp() {
                                 2 -> TokensScreen(contentPadding = padding)
                                 LiquidTab -> LiquidGlassScreen(
                                     backdrop = backdrop,
+                                    tuning = liquidTuning,
+                                    onTuningChange = { liquidTuning = it },
                                     contentPadding = padding,
                                 )
                             }
@@ -453,6 +463,7 @@ public fun CatalogApp() {
                     rui.components.RuiSnackbarHost(snackbarHostState)
                 }
             }
+        }
         }
     }
 }

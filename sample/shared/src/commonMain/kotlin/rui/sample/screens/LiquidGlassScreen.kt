@@ -24,6 +24,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import kotlin.math.pow
+import kotlin.math.roundToInt
 import rui.components.RuiBottomSheet
 import rui.components.RuiButton
 import rui.components.RuiButtonVariant
@@ -40,11 +42,14 @@ import rui.foundation.FrostedSurface
 import rui.foundation.RuiGlassMaterial
 import rui.foundation.RuiIcon
 import rui.foundation.RuiIcons
+import rui.foundation.RuiLiquidGlassTuning
 import rui.foundation.RuiText
 import rui.foundation.blurBackdrop
 import rui.foundation.rememberBlurBackdrop
 import rui.sample.ui.ContentColumn
 import rui.sample.ui.SectionLabel
+import rui.components.RuiSlider
+import rui.components.RuiSwitch
 import rui.theme.RuiTheme
 
 /** A vivid field the glass samples — a flat page color shows refraction and
@@ -83,6 +88,8 @@ private fun DemoField(
 @Composable
 public fun LiquidGlassScreen(
     backdrop: BlurBackdrop,
+    tuning: RuiLiquidGlassTuning,
+    onTuningChange: (RuiLiquidGlassTuning) -> Unit,
     contentPadding: PaddingValues = PaddingValues(0.dp),
 ) {
     var sheet by remember { mutableStateOf(false) }
@@ -97,6 +104,65 @@ public fun LiquidGlassScreen(
             style = RuiTheme.typography.bodySm,
             color = RuiTheme.colors.contentMuted,
         )
+
+        SectionLabel("Material tuning")
+        RuiText(
+            text = "Live recipe for every liquid surface on this screen — " +
+                "bars and popups included. Session-scoped; restart to reset.",
+            style = RuiTheme.typography.bodySm,
+            color = RuiTheme.colors.contentMuted,
+        )
+        TuningRow(
+            label = "Tint alpha",
+            value = tuning.tintAlpha.formatted(2),
+            valueRange = 0f..0.9f,
+            selected = tuning.tintAlpha,
+            onSelect = { onTuningChange(tuning.copy(tintAlpha = it)) },
+        )
+        TuningRow(
+            label = "Blur",
+            value = "${tuning.blurRadius.value.roundToInt()} dp",
+            valueRange = 0f..40f,
+            selected = tuning.blurRadius.value,
+            onSelect = { onTuningChange(tuning.copy(blurRadius = it.dp)) },
+        )
+        TuningRow(
+            label = "Refraction",
+            value = "${tuning.refractionHeight.value.roundToInt()} dp",
+            valueRange = 0f..24f,
+            selected = tuning.refractionHeight.value,
+            onSelect = { onTuningChange(tuning.copy(refractionHeight = it.dp)) },
+        )
+        TuningRow(
+            label = "Saturation",
+            value = "${tuning.saturation.formatted(2)}×",
+            valueRange = 1f..3f,
+            selected = tuning.saturation,
+            onSelect = { onTuningChange(tuning.copy(saturation = it)) },
+        )
+        TuningRow(
+            label = "Highlight",
+            value = tuning.highlightAlpha.formatted(2),
+            valueRange = 0f..1f,
+            selected = tuning.highlightAlpha,
+            onSelect = { onTuningChange(tuning.copy(highlightAlpha = it)) },
+        )
+        RuiListGroup {
+            RuiListItem(
+                title = "Chromatic aberration",
+                subtitle = "Per-channel lens dispersion (Android 13+ / Skia)",
+                trailing = {
+                    RuiSwitch(
+                        checked = tuning.chromaticAberration,
+                        onCheckedChange = { onTuningChange(tuning.copy(chromaticAberration = it)) },
+                    )
+                },
+            )
+            RuiListItem(
+                title = "Reset to defaults",
+                onClick = { onTuningChange(RuiLiquidGlassTuning()) },
+            )
+        }
 
         SectionLabel("Frosted vs liquid")
         DemoField(height = 200.dp) { fieldBackdrop ->
@@ -229,6 +295,41 @@ public fun LiquidGlassScreen(
             }
         },
     )
+}
+
+@Composable
+private fun TuningRow(
+    label: String,
+    value: String,
+    valueRange: ClosedFloatingPointRange<Float>,
+    selected: Float,
+    onSelect: (Float) -> Unit,
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = RuiTheme.spacing.lg),
+    ) {
+        Row(modifier = Modifier.fillMaxWidth()) {
+            RuiText(
+                text = label,
+                style = RuiTheme.typography.labelMd,
+                modifier = Modifier.weight(1f),
+            )
+            RuiText(
+                text = value,
+                style = RuiTheme.typography.labelSm,
+                color = RuiTheme.colors.contentMuted,
+            )
+        }
+        RuiSlider(value = selected, onValueChange = onSelect, valueRange = valueRange)
+    }
+}
+
+/** Multiplatform float formatting — String.format is JVM-only. */
+private fun Float.formatted(digits: Int): String {
+    val factor = 10.0.pow(digits)
+    return (this * factor).roundToInt().div(factor).toString()
 }
 
 @OptIn(ExperimentalRuiApi::class)

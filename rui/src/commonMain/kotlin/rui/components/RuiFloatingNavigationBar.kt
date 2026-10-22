@@ -43,7 +43,6 @@ import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import rui.foundation.BlurBackdrop
-import rui.foundation.LiquidGlassTintAlpha
 import rui.foundation.RuiGlassMaterial
 import rui.foundation.RuiIcon
 import rui.foundation.RuiText
@@ -140,10 +139,13 @@ public object RuiFloatingNavigationBarDefaults {
  * renders an empty capsule.
  *
  * By default the capsule spans the available width up to
- * [RuiFloatingNavigationBarDefaults.MaxWidth]; give [barWidth] a fixed
- * length instead. Grow it with the items — more slots in the same length
- * squeeze each one — e.g. `barWidth = 96.dp * items.size` keeps every slot
- * at a comfortable width on a host that controls its own surface.
+ * [RuiFloatingNavigationBarDefaults.MaxWidth] inside the bar's horizontal
+ * margins. Give [barWidth] an exact length to take over the geometry: the
+ * margins stop applying and the capsule measures [barWidth] edge to edge —
+ * include any breathing room in the value, and grow it with the items
+ * (`96.dp * items.size` keeps every slot at a constant width) rather than
+ * squeezing slots into a fixed length. [barHeight] overrides the capsule's
+ * height the same way.
  */
 @Composable
 public fun RuiFloatingNavigationBar(
@@ -155,6 +157,7 @@ public fun RuiFloatingNavigationBar(
     backdrop: BlurBackdrop? = null,
     material: RuiGlassMaterial = RuiGlassMaterial.Frosted,
     barWidth: Dp? = null,
+    barHeight: Dp = RuiFloatingNavigationBarDefaults.BarHeight,
     containerColor: Color = RuiTheme.colors.surfaceElevated,
     indicatorColor: Color = RuiTheme.colors.primary.copy(alpha = RuiFloatingNavigationBarDefaults.IndicatorAlpha),
 ) {
@@ -195,13 +198,13 @@ public fun RuiFloatingNavigationBar(
     )
 
     // The glass recipes of FrostedSurface: with a backdrop, liquid glass
-    // (30% tint, refraction, no border) or the frosted blur + 72% tint; an
-    // honest 85% translucent tint without a capture.
+    // (tuning alpha, refraction, no border) or the frosted blur + 72% tint;
+    // an honest 85% translucent tint without a capture.
     val useLiquid = material == RuiGlassMaterial.Liquid &&
         backdrop != null && backdrop.liquidSource != null && isBlurSupported
     val useBlur = backdrop != null && isBlurSupported && !useLiquid
     val tint = when {
-        useLiquid -> containerColor.copy(alpha = LiquidGlassTintAlpha)
+        useLiquid -> containerColor
         useBlur -> containerColor.copy(alpha = 0.72f)
         else -> containerColor.copy(alpha = 0.85f)
     }
@@ -229,13 +232,21 @@ public fun RuiFloatingNavigationBar(
                 .navigationBarsPadding()
                 .padding(top = RuiFloatingNavigationBarDefaults.ScrimRise),
         ) {
+            // With a fixed barWidth the host owns the geometry: the margins
+            // stop applying so the capsule can use the width they reserved.
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(
-                        start = RuiFloatingNavigationBarDefaults.HorizontalMargin,
-                        end = RuiFloatingNavigationBarDefaults.HorizontalMargin,
-                        bottom = RuiFloatingNavigationBarDefaults.FloatingGap,
+                    .then(
+                        if (barWidth == null) {
+                            Modifier.padding(
+                                start = RuiFloatingNavigationBarDefaults.HorizontalMargin,
+                                end = RuiFloatingNavigationBarDefaults.HorizontalMargin,
+                                bottom = RuiFloatingNavigationBarDefaults.FloatingGap,
+                            )
+                        } else {
+                            Modifier.padding(bottom = RuiFloatingNavigationBarDefaults.FloatingGap)
+                        },
                     ),
             ) {
                 Box(
@@ -255,7 +266,7 @@ public fun RuiFloatingNavigationBar(
                         modifier = Modifier
                             .onSizeChanged { capsuleWidthPx = it.width }
                             .fillMaxWidth()
-                            .height(RuiFloatingNavigationBarDefaults.BarHeight)
+                            .height(barHeight)
                             .graphicsLayer {
                                 shape = shadowShape
                                 clip = false

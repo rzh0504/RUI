@@ -51,7 +51,6 @@ import androidx.compose.ui.util.fastRoundToInt
 import androidx.compose.ui.util.lerp
 import kotlinx.coroutines.launch
 import rui.foundation.BlurBackdrop
-import rui.foundation.LiquidGlassTintAlpha
 import rui.foundation.RuiGlassMaterial
 import rui.foundation.RuiIcon
 import rui.foundation.RuiIcons
@@ -104,7 +103,7 @@ public fun RuiTopAppBar(
         backdrop != null && material == RuiGlassMaterial.Liquid && backdrop.liquidSource != null && isBlurSupported ->
             Modifier.liquidGlassSurface(
                 backdrop = backdrop,
-                tint = colors.background.copy(alpha = LiquidGlassTintAlpha),
+                tint = colors.background,
             )
         backdrop != null && isBlurSupported ->
             Modifier.blurSurface(

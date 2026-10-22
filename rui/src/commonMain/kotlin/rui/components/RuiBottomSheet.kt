@@ -27,7 +27,6 @@ import com.composeunstyled.SheetDetent
 import com.composeunstyled.UnstyledModalBottomSheet
 import com.composeunstyled.rememberModalBottomSheetState
 import rui.foundation.BlurBackdrop
-import rui.foundation.LiquidGlassTintAlpha
 import rui.foundation.RuiGlassMaterial
 import rui.foundation.RuiText
 import rui.foundation.blurSurface
@@ -103,7 +102,7 @@ public fun RuiBottomSheet(
         backdrop != null && material == RuiGlassMaterial.Liquid && backdrop.liquidSource != null && isBlurSupported ->
             Modifier.liquidGlassSurface(
                 backdrop = backdrop,
-                tint = colors.surfaceElevated.copy(alpha = LiquidGlassTintAlpha),
+                tint = colors.surfaceElevated,
                 shape = shapes.sheet,
                 // The sheet lives in the modal's own window and slides with a
                 // lazy Modifier.offset, whose placement changes never refresh

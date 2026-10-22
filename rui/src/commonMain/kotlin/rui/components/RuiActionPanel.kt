@@ -33,7 +33,6 @@ import com.composeunstyled.SheetDetent
 import com.composeunstyled.UnstyledModalBottomSheet
 import com.composeunstyled.rememberModalBottomSheetState
 import rui.foundation.BlurBackdrop
-import rui.foundation.LiquidGlassTintAlpha
 import rui.foundation.RuiGlassMaterial
 import rui.foundation.RuiIcon
 import rui.foundation.RuiText
@@ -123,7 +122,7 @@ public fun RuiActionPanel(
         backdrop != null && material == RuiGlassMaterial.Liquid && backdrop.liquidSource != null && isBlurSupported ->
             Modifier.liquidGlassSurface(
                 backdrop = backdrop,
-                tint = colors.surfaceElevated.copy(alpha = LiquidGlassTintAlpha),
+                tint = colors.surfaceElevated,
                 shape = shapes.sheet,
                 positionOverride = {
                     Offset(0f, backdrop.graphicsLayer.size.height.toFloat() - state.bottomSheetState.offset)
