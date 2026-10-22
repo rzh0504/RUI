@@ -3,6 +3,7 @@ package rui.sample
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.animation.core.Animatable
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
@@ -335,17 +336,23 @@ public fun CatalogApp() {
                         // or sidebar leads the root page instead.
                         if (atRoot && widthClass == RuiWindowWidthClass.Compact) {
                             if (floatingNavBarEnabled) {
-                                RuiFloatingNavigationBar(
-                                    items = rootNavItems,
-                                    selected = tab,
-                                    onSelect = { tab = it },
-                                    backdrop = backdrop,
-                                    material = if (liquidNavBarEnabled) {
-                                        RuiGlassMaterial.Liquid
-                                    } else {
-                                        RuiGlassMaterial.Frosted
-                                    },
-                                )
+                                // Four tabs fill the capsule — take back most
+                                // of the standing margins so the slots stay
+                                // wide (12dp breathing per side).
+                                BoxWithConstraints {
+                                    RuiFloatingNavigationBar(
+                                        items = rootNavItems,
+                                        selected = tab,
+                                        onSelect = { tab = it },
+                                        backdrop = backdrop,
+                                        material = if (liquidNavBarEnabled) {
+                                            RuiGlassMaterial.Liquid
+                                        } else {
+                                            RuiGlassMaterial.Frosted
+                                        },
+                                        barWidth = maxWidth - 24.dp,
+                                    )
+                                }
                             } else {
                                 RuiNavigationBar(
                                     items = rootNavItems,

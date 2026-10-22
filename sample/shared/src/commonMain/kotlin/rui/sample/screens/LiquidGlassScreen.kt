@@ -84,6 +84,17 @@ private fun DemoField(
     }
 }
 
+/** The demo's approximation of Apple's Liquid Glass: clearer, less blur,
+ *  stronger edge refraction and highlight than Rui's shipped look. */
+private val IosLikeTuning = RuiLiquidGlassTuning(
+    tintAlpha = 0.18f,
+    blurRadius = 8.dp,
+    refractionHeight = 14.dp,
+    saturation = 1.9f,
+    highlightAlpha = 0.7f,
+    chromaticAberration = true,
+)
+
 @OptIn(ExperimentalRuiApi::class)
 @Composable
 public fun LiquidGlassScreen(
@@ -148,6 +159,11 @@ public fun LiquidGlassScreen(
             onSelect = { onTuningChange(tuning.copy(highlightAlpha = it)) },
         )
         RuiListGroup {
+            RuiListItem(
+                title = "iOS 26 look",
+                subtitle = "Apple's recipe — clearer, harder edges, brighter highlight",
+                onClick = { onTuningChange(IosLikeTuning) },
+            )
             RuiListItem(
                 title = "Chromatic aberration",
                 subtitle = "Per-channel lens dispersion (Android 13+ / Skia)",
