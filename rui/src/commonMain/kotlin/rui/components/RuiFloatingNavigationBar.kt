@@ -138,6 +138,12 @@ public object RuiFloatingNavigationBarDefaults {
  * index, so scroll-to-top patterns keep working; [selected] outside
  * `items.indices` selects nothing and parks the pill; an empty [items]
  * renders an empty capsule.
+ *
+ * By default the capsule spans the available width up to
+ * [RuiFloatingNavigationBarDefaults.MaxWidth]; give [barWidth] a fixed
+ * length instead. Grow it with the items — more slots in the same length
+ * squeeze each one — e.g. `barWidth = 96.dp * items.size` keeps every slot
+ * at a comfortable width on a host that controls its own surface.
  */
 @Composable
 public fun RuiFloatingNavigationBar(
@@ -148,6 +154,7 @@ public fun RuiFloatingNavigationBar(
     visible: Boolean = true,
     backdrop: BlurBackdrop? = null,
     material: RuiGlassMaterial = RuiGlassMaterial.Frosted,
+    barWidth: Dp? = null,
     containerColor: Color = RuiTheme.colors.surfaceElevated,
     indicatorColor: Color = RuiTheme.colors.primary.copy(alpha = RuiFloatingNavigationBarDefaults.IndicatorAlpha),
 ) {
@@ -234,8 +241,15 @@ public fun RuiFloatingNavigationBar(
                 Box(
                     modifier = Modifier
                         .align(Alignment.Center)
-                        .fillMaxWidth()
-                        .widthIn(max = RuiFloatingNavigationBarDefaults.MaxWidth),
+                        .then(
+                            if (barWidth != null) {
+                                Modifier.width(barWidth)
+                            } else {
+                                Modifier
+                                    .fillMaxWidth()
+                                    .widthIn(max = RuiFloatingNavigationBarDefaults.MaxWidth)
+                            },
+                        ),
                 ) {
                     Box(
                         modifier = Modifier

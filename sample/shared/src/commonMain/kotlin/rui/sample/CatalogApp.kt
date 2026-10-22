@@ -19,6 +19,10 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.graphics.vector.path
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
@@ -37,6 +41,7 @@ import rui.components.navigation.RuiNavController
 import rui.components.navigation.rememberRuiNavBackStack
 import rui.components.rememberRuiScrollBehavior
 import rui.foundation.ExperimentalRuiApi
+import rui.foundation.RuiGlassMaterial
 import rui.foundation.RuiIcons
 import rui.foundation.rememberBlurBackdrop
 import rui.foundation.utils.StatusBarAppearance
@@ -72,6 +77,7 @@ import rui.sample.screens.TokensScreen
 import rui.sample.screens.TogglesScreen
 import rui.sample.screens.LazyListScreen
 import rui.sample.screens.ListsScreen
+import rui.sample.screens.LiquidGlassScreen
 import rui.sample.screens.BannerScreen
 import rui.sample.screens.LocalizationScreen
 import rui.sample.screens.ReorderScreen
@@ -173,7 +179,27 @@ private fun CatalogPage.title(): String = when (this) {
 private const val KeyDarkTheme = "appearance.darkTheme"
 private const val KeyFrosted = "appearance.frosted"
 private const val KeyFloatingNavBar = "appearance.floatingNavBar"
+private const val KeyLiquidNavBar = "appearance.liquidNavBar"
 private const val KeyLanguage = "appearance.language"
+
+/** Index of the liquid-glass tab among the root nav items. */
+private const val LiquidTab = 3
+
+/** Teardrop icon for the liquid-glass tab; the library icon set has none. */
+private val DropletIcon: ImageVector = ImageVector.Builder(
+    name = "SampleDroplet",
+    defaultWidth = 24.dp,
+    defaultHeight = 24.dp,
+    viewportWidth = 24f,
+    viewportHeight = 24f,
+).apply {
+    path(fill = SolidColor(Color(0xFF000000))) {
+        moveTo(12f, 2.69f)
+        lineToRelative(5.66f, 5.66f)
+        arcToRelative(8f, 8f, 0f, true, true, -11.31f, 0f)
+        close()
+    }
+}.build()
 
 @OptIn(ExperimentalRuiApi::class, ExperimentalComposeUiApi::class)
 @Composable
@@ -182,6 +208,7 @@ public fun CatalogApp() {
     var darkTheme by remember { mutableStateOf(SampleSettings.getBoolean(KeyDarkTheme, systemDark)) }
     var frostedEnabled by remember { mutableStateOf(SampleSettings.getBoolean(KeyFrosted, true)) }
     var floatingNavBarEnabled by remember { mutableStateOf(SampleSettings.getBoolean(KeyFloatingNavBar, false)) }
+    var liquidNavBarEnabled by remember { mutableStateOf(SampleSettings.getBoolean(KeyLiquidNavBar, false)) }
     var languageChoice by remember {
         mutableStateOf(
             LanguageChoice.entries.firstOrNull { it.name == SampleSettings.getString(KeyLanguage, LanguageChoice.System.name) }
@@ -208,6 +235,7 @@ public fun CatalogApp() {
             RuiNavigationBarItem("Components", RuiIcons.Grid),
             RuiNavigationBarItem("Blocks", RuiIcons.Layers),
             RuiNavigationBarItem("Tokens", RuiIcons.Swatch),
+            RuiNavigationBarItem("Liquid", DropletIcon),
         )
         // Dialogs and bottom sheets portal above the navigation stack —
         // both through the one overlay host.
@@ -259,12 +287,14 @@ public fun CatalogApp() {
                 // One backdrop per stack entry — the capture and the bars
                 // sampling it must share a coordinate space. A backdrop shared
                 // across stacked pages samples covered pages' translated
-                // content and the blur lands misaligned. The liquid-glass
-                // demo pages (Dialog/DropdownMenu/BottomSheet) also need the
-                // second capture; the rest skip its per-frame record.
+                // content and the blur lands misaligned. The liquid capture
+                // costs one extra record per frame, so it exists only where
+                // something consumes it: the Liquid tab, the liquid floating
+                // bar, and the liquid-glass demo pages.
                 val background = RuiTheme.colors.background
                 val backdrop = rememberBlurBackdrop(
-                    liquid = page == CatalogPage.Dialog ||
+                    liquid = (atRoot && (tab == LiquidTab || (floatingNavBarEnabled && liquidNavBarEnabled))) ||
+                        page == CatalogPage.Dialog ||
                         page == CatalogPage.DropdownMenu ||
                         page == CatalogPage.BottomSheet,
                 ) {
@@ -302,6 +332,11 @@ public fun CatalogApp() {
                                     selected = tab,
                                     onSelect = { tab = it },
                                     backdrop = backdrop,
+                                    material = if (liquidNavBarEnabled) {
+                                        RuiGlassMaterial.Liquid
+                                    } else {
+                                        RuiGlassMaterial.Frosted
+                                    },
                                 )
                             } else {
                                 RuiNavigationBar(
@@ -334,12 +369,18 @@ public fun CatalogApp() {
                                     contentPadding = padding,
                                     floatingNavBarEnabled = floatingNavBarEnabled,
                                     onFloatingNavBarEnabledChange = { floatingNavBarEnabled = it; SampleSettings.putBoolean(KeyFloatingNavBar, it) },
+                                    liquidNavBarEnabled = liquidNavBarEnabled,
+                                    onLiquidNavBarEnabledChange = { liquidNavBarEnabled = it; SampleSettings.putBoolean(KeyLiquidNavBar, it) },
                                 )
                                 1 -> BlocksScreen(
                                     onOpen = { nav.push(it) },
                                     contentPadding = padding,
                                 )
-                                else -> TokensScreen(contentPadding = padding)
+                                2 -> TokensScreen(contentPadding = padding)
+                                LiquidTab -> LiquidGlassScreen(
+                                    backdrop = backdrop,
+                                    contentPadding = padding,
+                                )
                             }
                             CatalogPage.SignIn -> SignInScreen(contentPadding = padding)
                             CatalogPage.Account -> AccountScreen(contentPadding = padding)

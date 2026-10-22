@@ -21,6 +21,8 @@ public fun ComponentsScreen(
     onFrostedEnabledChange: (Boolean) -> Unit,
     floatingNavBarEnabled: Boolean,
     onFloatingNavBarEnabledChange: (Boolean) -> Unit,
+    liquidNavBarEnabled: Boolean,
+    onLiquidNavBarEnabledChange: (Boolean) -> Unit,
     onOpen: (CatalogPage) -> Unit,
     contentPadding: PaddingValues = PaddingValues(0.dp),
 ) {
@@ -41,6 +43,21 @@ public fun ComponentsScreen(
                     RuiSwitch(
                         checked = floatingNavBarEnabled,
                         onCheckedChange = onFloatingNavBarEnabledChange,
+                    )
+                },
+            )
+            RuiListItem(
+                title = "Liquid navigation bar",
+                subtitle = if (floatingNavBarEnabled) {
+                    "The floating capsule renders in liquid glass"
+                } else {
+                    "Requires the floating navigation bar"
+                },
+                trailing = {
+                    RuiSwitch(
+                        checked = liquidNavBarEnabled,
+                        onCheckedChange = onLiquidNavBarEnabledChange,
+                        enabled = floatingNavBarEnabled,
                     )
                 },
             )
