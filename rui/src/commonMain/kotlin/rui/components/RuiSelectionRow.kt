@@ -9,6 +9,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.Immutable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.layout
 import androidx.compose.ui.unit.dp
 import rui.foundation.BlurBackdrop
@@ -87,6 +88,7 @@ public fun <T> RuiSelectionRow(
         },
     ) {
         options.forEach { option ->
+            val isSelected = option.value == selected
             RuiDropdownMenuItem(
                 text = option.label,
                 onClick = {
@@ -94,13 +96,16 @@ public fun <T> RuiSelectionRow(
                     expanded = false
                 },
                 trailing = {
-                    if (option.value == selected) {
-                        RuiIcon(
-                            imageVector = RuiIcons.Check,
-                            contentDescription = null,
-                            tint = RuiTheme.colors.primary,
-                        )
-                    }
+                    // Every row reserves the checkmark's slot — unselected
+                    // rows draw it transparent — so selecting an option
+                    // never re-measures the panel, whose width would
+                    // otherwise jump as the checkmark hops rows on the way
+                    // out.
+                    RuiIcon(
+                        imageVector = RuiIcons.Check,
+                        contentDescription = null,
+                        tint = if (isSelected) RuiTheme.colors.primary else Color.Transparent,
+                    )
                 },
             )
         }
