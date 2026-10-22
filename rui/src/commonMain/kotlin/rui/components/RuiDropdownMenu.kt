@@ -27,6 +27,7 @@ import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
@@ -79,6 +80,15 @@ public fun RuiDropdownMenu(
     val shapes = RuiTheme.shapes
     val motion = RuiTheme.motion
 
+    // Menus float above the page: the shadow carries the depth, most
+    // visibly in solid mode where the opaque panel otherwise melts into
+    // the content behind it.
+    val menuShadow = Modifier.shadow(
+        elevation = 16.dp,
+        shape = shapes.xl,
+        clip = false,
+    )
+
     val panelBackground = when {
         backdrop != null && material == RuiGlassMaterial.Liquid && backdrop.liquidSource != null && isBlurSupported ->
             Modifier.liquidGlassSurface(
@@ -115,6 +125,7 @@ public fun RuiDropdownMenu(
             DropdownMenuPanel(
                 modifier = Modifier
                     .width(IntrinsicSize.Max)
+                    .then(menuShadow)
                     .then(panelBackground),
                 enter = fadeIn(motion.normal) + scaleIn(
                     initialScale = 0.94f,
