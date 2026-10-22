@@ -42,6 +42,7 @@ public fun DropdownMenuScreen(
     var editMenu by remember { mutableStateOf(false) }
     var viewsMenu by remember { mutableStateOf(false) }
     var shareMenu by remember { mutableStateOf(false) }
+    var longMenu by remember { mutableStateOf(false) }
     var pinned by remember { mutableStateOf(false) }
     var tagColor by remember { mutableStateOf<Color?>(null) }
 
@@ -203,6 +204,30 @@ public fun DropdownMenuScreen(
                 }
                 RuiDivider()
                 RuiDropdownMenuItem(text = "Delete", onClick = { shareMenu = false }, danger = true)
+            }
+        }
+
+        SectionLabel("Long menu")
+        RuiListGroup {
+            RuiDropdownMenu(
+                expanded = longMenu,
+                onDismissRequest = { longMenu = false },
+                backdrop = glassBackdrop,
+                material = glassMaterial,
+                anchor = {
+                    RuiListItem(
+                        title = "Long menu",
+                        subtitle = "Scrolls once the panel hits the window cap",
+                        onClick = { longMenu = !longMenu },
+                    )
+                },
+            ) {
+                repeat(18) { index ->
+                    RuiDropdownMenuItem(
+                        text = "Option ${(index + 1).toString().padStart(2, '0')}",
+                        onClick = { longMenu = false },
+                    )
+                }
             }
         }
     }
