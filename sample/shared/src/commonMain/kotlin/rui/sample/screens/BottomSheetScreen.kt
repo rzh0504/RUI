@@ -39,7 +39,7 @@ public fun BottomSheetScreen(
 
     ContentColumn(contentPadding = contentPadding) {
         RuiText(
-            text = "Sheets portal through ModalBottomSheetHost at the app root. " +
+            text = "Sheets portal through RuiOverlayHost at the app root. " +
                 "Drag the grabber down, tap the scrim, or press back to dismiss. " +
                 "The glass sheet follows the Appearance glass mode.",
             style = RuiTheme.typography.bodySm,

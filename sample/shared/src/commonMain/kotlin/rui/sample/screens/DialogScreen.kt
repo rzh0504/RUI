@@ -34,7 +34,7 @@ public fun DialogScreen(
 
     ContentColumn(contentPadding = contentPadding) {
         RuiText(
-            text = "Portaled through DialogHost at the app root. Esc and back " +
+            text = "Portaled through RuiOverlayHost at the app root. Esc and back " +
                 "dismiss, the scrim fades, the panel scales in on a spring. " +
                 "The glass panel follows the Appearance glass mode.",
             style = RuiTheme.typography.bodySm,
