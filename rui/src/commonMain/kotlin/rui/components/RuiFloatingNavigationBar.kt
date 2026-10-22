@@ -10,11 +10,11 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.absoluteOffset
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
-import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
@@ -316,14 +316,14 @@ public fun RuiFloatingNavigationBar(
                         if (slotWidthPx > 0f && selected in items.indices) {
                             Box(
                                 modifier = Modifier
-                                    .offset {
-                                        val x = floatingNavBarIndicatorX(
+                                    .absoluteOffset {
+                                        val x = floatingNavBarIndicatorOffsetPx(
                                             fraction = position.value,
                                             slotWidthPx = slotWidthPx,
-                                            itemCount = items.size,
+                                            innerPaddingPx = innerPx,
                                             isLtr = isLtr,
                                         )
-                                        IntOffset((innerPx + x).roundToInt(), 0)
+                                        IntOffset(x.roundToInt(), 0)
                                     }
                                     .width(with(density) { slotWidthPx.toDp() })
                                     .height(RuiFloatingNavigationBarDefaults.RowHeight)
@@ -424,17 +424,18 @@ internal fun floatingNavBarSlotWidthPx(capsuleWidthPx: Float, innerPaddingPx: Fl
     }
 
 /**
- * X offset of the selection pill for [fraction] slots, measured from the
- * capsule's start edge — positive along the reading direction, mirrored
- * (negative screen x, the pill leaving the start edge leftwards) in RTL.
+ * Physical x offset of the selection pill from its start-aligned position:
+ * the pill is aligned to the capsule's start edge (left in LTR, right in
+ * RTL), so the walk is positive in LTR and negative in RTL. The inner ring
+ * is folded in. Apply it with an absolute (non-mirroring) offset — a
+ * relative offset would mirror this already-mirrored value again.
  */
-internal fun floatingNavBarIndicatorX(
+internal fun floatingNavBarIndicatorOffsetPx(
     fraction: Float,
     slotWidthPx: Float,
-    itemCount: Int,
+    innerPaddingPx: Float,
     isLtr: Boolean,
-): Float = if (isLtr) {
-    fraction * slotWidthPx
-} else {
-    (itemCount - 1 - fraction) * slotWidthPx
+): Float {
+    val fromStart = innerPaddingPx + fraction * slotWidthPx
+    return if (isLtr) fromStart else -fromStart
 }
