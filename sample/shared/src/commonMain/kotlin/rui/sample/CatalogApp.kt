@@ -323,8 +323,12 @@ public fun CatalogApp() {
                     drawContent()
                 }
                 val glassBackdrop = if (useGlass) backdrop else null
+                // The Liquid tab showcases the material in every mode, so its
+                // liquid surfaces need the page capture even when the app's
+                // bars are solid; only the bars follow the mode.
+                val scaffoldBackdrop = if (atRoot && tab == LiquidTab) backdrop else glassBackdrop
                 RuiScaffold(
-                    backdrop = glassBackdrop,
+                    backdrop = scaffoldBackdrop,
                     topBar = {
                         if (page == CatalogPage.NowPlaying) {
                             // The music block is fully immersive: it owns
