@@ -46,6 +46,7 @@ import rui.foundation.liquidSource
 import rui.foundation.platform.isBlurSupported
 import rui.theme.RuiTheme
 import rui.theme.StateLayerAlphas
+import rui.theme.toShadowShape
 
 /**
  * An iOS-style dropdown menu anchored to [anchor]: a floating glass (or
@@ -82,10 +83,12 @@ public fun RuiDropdownMenu(
 
     // Menus float above the page: the shadow carries the depth, most
     // visibly in solid mode where the opaque panel otherwise melts into
-    // the content behind it.
+    // the content behind it. The shadow shape maps to a plain rounded
+    // rect (toShadowShape) — HWUI renders path outlines' shadows on a
+    // per-frame software path, which stutters the whole animation.
     val menuShadow = Modifier.shadow(
         elevation = 8.dp,
-        shape = shapes.xl,
+        shape = shapes.xl.toShadowShape(),
         clip = false,
     )
 
