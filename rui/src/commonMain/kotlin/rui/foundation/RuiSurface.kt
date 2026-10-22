@@ -39,13 +39,22 @@ public fun RuiSurface(
     // HWUI renders elevation shadows only from rounded-rect outlines — a
     // squircle's Outline.Generic degrades to a rectangular shadow — so the
     // SHADOW gets the shape's plain rounded twin while the visual stays
-    // squircle (see toShadowShape).
+    // squircle (see toShadowShape). The twin must not clip: the surface's own
+    // `.clip(shape)` below keeps the smooth outline, and letting the shadow
+    // modifier clip to the plain rounded rect would shave the smooth corners
+    // back off the visible surface.
     val shadowShape = shape.toShadowShape()
 
     CompositionLocalProvider(LocalContentColor provides contentColor) {
         Box(
             modifier = modifier
-                .then(if (elevation > 0.dp) Modifier.shadow(elevation, shadowShape) else Modifier)
+                .then(
+                    if (elevation > 0.dp) {
+                        Modifier.shadow(elevation, shadowShape, clip = false)
+                    } else {
+                        Modifier
+                    },
+                )
                 .clip(shape)
                 .background(color, shape)
                 .then(if (border != null) Modifier.border(border, shape) else Modifier),
