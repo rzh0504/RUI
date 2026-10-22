@@ -1,10 +1,10 @@
 package rui.components
 
 import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.ExitTransition
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
-import androidx.compose.animation.scaleOut
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.togetherWith
@@ -130,17 +130,18 @@ public fun RuiDropdownMenu(
                     .width(IntrinsicSize.Max)
                     .then(menuShadow)
                     .then(panelBackground),
-                // Scale only, no fade: an alpha'd layer composites offscreen
-                // and crops the shadow square for the whole animation — the
-                // snackbar's lesson, same as the floating bar's shadow fade.
+                // Scale-in only; the collapse is a single-frame commit with
+                // no exit animation at all. Both alpha fades (offscreen
+                // compositing crops the shadow square — the snackbar's
+                // lesson) and the scale-out (RenderNode re-projects the
+                // elevation shadow every frame of the shrink, which
+                // stuttered even with a convex outline) proved unusable
+                // under this panel's shadow, so the close just commits.
                 enter = scaleIn(
                     initialScale = 0.94f,
                     animationSpec = motion.pop,
                 ),
-                exit = scaleOut(
-                    targetScale = 0.96f,
-                    animationSpec = motion.fast,
-                ),
+                exit = ExitTransition.None,
             ) {
                 val cascading = remember { RuiCascadingMenuState() }
                 CompositionLocalProvider(LocalRuiCascadingMenu provides cascading) {
