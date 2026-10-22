@@ -7,37 +7,13 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.Modifier
 import rui.components.RuiListGroup
 import rui.components.RuiListItem
+import rui.components.RuiSelectionOption
+import rui.components.RuiSelectionRow
 import rui.components.RuiSwitch
-import rui.foundation.RuiIcon
-import rui.foundation.RuiIcons
 import rui.foundation.RuiText
 import rui.sample.ui.ContentColumn
 import rui.sample.ui.SectionLabel
 import rui.theme.RuiTheme
-
-@Composable
-private fun GlassModeRow(
-    title: String,
-    subtitle: String,
-    mode: GlassMode,
-    selected: GlassMode,
-    onSelect: (GlassMode) -> Unit,
-) {
-    RuiListItem(
-        title = title,
-        subtitle = subtitle,
-        trailing = {
-            if (selected == mode) {
-                RuiIcon(
-                    imageVector = RuiIcons.Check,
-                    contentDescription = null,
-                    tint = RuiTheme.colors.primary,
-                )
-            }
-        },
-        onClick = { onSelect(mode) },
-    )
-}
 
 @Composable
 public fun ComponentsScreen(
@@ -59,24 +35,18 @@ public fun ComponentsScreen(
                 title = "Dark appearance",
                 trailing = { RuiSwitch(checked = darkTheme, onCheckedChange = onDarkThemeChange) },
             )
-            GlassModeRow(
-                title = "Solid",
-                subtitle = "No glass — opaque surfaces, no blur",
-                mode = GlassMode.Solid,
-                selected = glassMode,
-                onSelect = onGlassModeChange,
-            )
-            GlassModeRow(
-                title = "Frosted glass",
-                subtitle = "Backdrop blur behind a heavy tint",
-                mode = GlassMode.Frosted,
-                selected = glassMode,
-                onSelect = onGlassModeChange,
-            )
-            GlassModeRow(
-                title = "Liquid glass",
-                subtitle = "Edge refraction, highlight, clear tint",
-                mode = GlassMode.Liquid,
+            RuiSelectionRow(
+                title = "Glass material",
+                subtitle = when (glassMode) {
+                    GlassMode.Solid -> "No glass — opaque surfaces, no blur"
+                    GlassMode.Frosted -> "Backdrop blur behind a heavy tint"
+                    GlassMode.Liquid -> "Edge refraction, highlight, clear tint"
+                },
+                options = listOf(
+                    RuiSelectionOption(GlassMode.Solid, "Solid"),
+                    RuiSelectionOption(GlassMode.Frosted, "Frosted glass"),
+                    RuiSelectionOption(GlassMode.Liquid, "Liquid glass"),
+                ),
                 selected = glassMode,
                 onSelect = onGlassModeChange,
             )
