@@ -369,14 +369,16 @@ public fun RuiFloatingNavigationBar(
                                                 tint = itemColor,
                                             )
                                         }
-                                        RuiText(
-                                            text = item.label,
-                                            style = typography.labelSm,
-                                            color = itemColor,
-                                            fontWeight = if (isSelected) FontWeight.SemiBold else null,
-                                            maxLines = 1,
-                                            overflow = TextOverflow.Ellipsis,
-                                        )
+                                        if (item.label.isNotBlank()) {
+                                            RuiText(
+                                                text = item.label,
+                                                style = typography.labelSm,
+                                                color = itemColor,
+                                                fontWeight = if (isSelected) FontWeight.SemiBold else null,
+                                                maxLines = 1,
+                                                overflow = TextOverflow.Ellipsis,
+                                            )
+                                        }
                                     }
                                 }
                             }

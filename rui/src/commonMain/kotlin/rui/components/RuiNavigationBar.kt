@@ -45,7 +45,8 @@ public data class RuiNavigationBarItem(
  * slot.
  *
  * Items are exposed as tabs, and the current destination is marked selected
- * for assistive technology. [selected] outside `items.indices` selects
+ * for assistive technology. A slot with a `null` icon renders label only, a
+ * blank label renders icon only. [selected] outside `items.indices` selects
  * nothing; an empty [items] renders an empty bar; tapping the already
  * selected tab re-invokes [onSelect] with its index, so scroll-to-top
  * patterns keep working.
@@ -128,12 +129,14 @@ public fun RuiNavigationBar(
                                 tint = if (isSelected) colors.content else colors.contentMuted,
                             )
                         }
-                        RuiText(
-                            text = item.label,
-                            style = typography.labelSm,
-                            color = if (isSelected) colors.content else colors.contentMuted,
-                            maxLines = 1,
-                        )
+                        if (item.label.isNotBlank()) {
+                            RuiText(
+                                text = item.label,
+                                style = typography.labelSm,
+                                color = if (isSelected) colors.content else colors.contentMuted,
+                                maxLines = 1,
+                            )
+                        }
                     }
                 }
             }
