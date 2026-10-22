@@ -1,6 +1,7 @@
 package rui.components
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -15,6 +16,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
 import rui.foundation.blurSurface
@@ -75,7 +77,16 @@ public fun RuiNavigationBar(
         else -> Modifier.background(colors.background)
     }
 
-    Column(modifier = modifier.fillMaxWidth().then(barBackground)) {
+    Column(
+        modifier = modifier
+            .fillMaxWidth()
+            .then(barBackground)
+            // Same contract as the floating bar: the bar's own strip swallows
+            // taps so they never reach the content scrolling beneath it.
+            .pointerInput(Unit) {
+                detectTapGestures { }
+            },
+    ) {
         RuiDivider()
         Row(
             modifier = Modifier

@@ -10,6 +10,7 @@ import androidx.compose.animation.core.animateTo
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.rememberSplineBasedDecay
 import androidx.compose.foundation.background
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -38,6 +39,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
 import androidx.compose.ui.input.nestedscroll.NestedScrollSource
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.layout.layoutId
 import androidx.compose.ui.layout.onSizeChanged
@@ -114,7 +116,17 @@ public fun RuiTopAppBar(
         else -> Modifier.background(colors.background)
     }
 
-    Column(modifier = modifier.fillMaxWidth().then(barBackground).statusBarsPadding()) {
+    Column(
+        modifier = modifier
+            .fillMaxWidth()
+            .then(barBackground)
+            .statusBarsPadding()
+            // The bar's strip swallows taps, like the bottom bars — content
+            // scrolling beneath it must not react to taps on the chrome.
+            .pointerInput(Unit) {
+                detectTapGestures { }
+            },
+    ) {
         when {
             scrollBehavior != null -> CollapsingTopAppBarLayout(
                 title = title,

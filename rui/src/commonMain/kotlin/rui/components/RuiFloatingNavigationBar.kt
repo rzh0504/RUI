@@ -4,6 +4,7 @@ import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
@@ -33,6 +34,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.luminance
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalLayoutDirection
@@ -231,7 +233,13 @@ public fun RuiFloatingNavigationBar(
                 .fillMaxWidth()
                 .graphicsLayer { translationY = slide.value }
                 .navigationBarsPadding()
-                .padding(top = RuiFloatingNavigationBarDefaults.ScrimRise),
+                .padding(top = RuiFloatingNavigationBarDefaults.ScrimRise)
+                // The bar owns its zone: taps on the air around and below the
+                // capsule used to fall through to the page content — a row
+                // behind the bar navigated on a tap aimed at nothing.
+                .pointerInput(Unit) {
+                    detectTapGestures { }
+                },
         ) {
             // With a fixed barWidth the host owns the geometry: the margins
             // stop applying so the capsule can use the width they reserved.

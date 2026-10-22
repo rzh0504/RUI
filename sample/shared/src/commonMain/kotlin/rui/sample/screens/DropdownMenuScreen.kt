@@ -29,6 +29,7 @@ import rui.foundation.RuiGlassMaterial
 import rui.foundation.RuiIcon
 import rui.foundation.RuiIcons
 import rui.foundation.RuiText
+import rui.sample.GlassMode
 import rui.sample.ui.ContentColumn
 import rui.sample.ui.SectionLabel
 import rui.theme.RuiTheme
@@ -36,6 +37,7 @@ import rui.theme.RuiTheme
 @OptIn(ExperimentalRuiApi::class)
 @Composable
 public fun DropdownMenuScreen(
+    glassMode: GlassMode,
     backdrop: BlurBackdrop,
     contentPadding: PaddingValues = PaddingValues(0.dp),
 ) {
@@ -45,10 +47,16 @@ public fun DropdownMenuScreen(
     var pinned by remember { mutableStateOf(false) }
     var tagColor by remember { mutableStateOf<Color?>(null) }
 
+    // The demo pages follow the Appearance glass mode; the Liquid tab owns
+    // the liquid-only showcase.
+    val glassBackdrop = if (glassMode == GlassMode.Solid) null else backdrop
+    val glassMaterial = if (glassMode == GlassMode.Liquid) RuiGlassMaterial.Liquid else RuiGlassMaterial.Frosted
+
     ContentColumn(contentPadding = contentPadding) {
         RuiText(
             text = "Menus anchor to their trigger, portal above the page, and " +
-                "dismiss on outside tap, back, or selection.",
+                "dismiss on outside tap, back, or selection. The panels " +
+                "follow the Appearance glass mode.",
             style = RuiTheme.typography.bodySm,
             color = RuiTheme.colors.contentMuted,
         )
@@ -56,8 +64,8 @@ public fun DropdownMenuScreen(
         SectionLabel("Context menu")
         RuiListGroup {
             RuiContextMenu(
-                backdrop = backdrop,
-                material = RuiGlassMaterial.Liquid,
+                backdrop = glassBackdrop,
+                material = glassMaterial,
                 menu = {
                     RuiDropdownMenuItem(
                         text = if (pinned) "Unpin" else "Pin",
@@ -116,13 +124,13 @@ public fun DropdownMenuScreen(
             RuiDropdownMenu(
                 expanded = editMenu,
                 onDismissRequest = { editMenu = false },
-                backdrop = backdrop,
-                material = RuiGlassMaterial.Liquid,
+                backdrop = glassBackdrop,
+                material = glassMaterial,
                 alignment = AnchorAlignment.End,
                 anchor = {
                     RuiListItem(
                         title = "Edit",
-                        subtitle = "Liquid glass panel with a destructive action",
+                        subtitle = "Glass panel with a destructive action",
                         onClick = { editMenu = !editMenu },
                     )
                 },
@@ -136,8 +144,8 @@ public fun DropdownMenuScreen(
             RuiDropdownMenu(
                 expanded = viewsMenu,
                 onDismissRequest = { viewsMenu = false },
-                backdrop = backdrop,
-                material = RuiGlassMaterial.Liquid,
+                backdrop = glassBackdrop,
+                material = glassMaterial,
                 anchor = {
                     RuiListItem(
                         title = "Choose view",
@@ -168,8 +176,8 @@ public fun DropdownMenuScreen(
             RuiDropdownMenu(
                 expanded = shareMenu,
                 onDismissRequest = { shareMenu = false },
-                backdrop = backdrop,
-                material = RuiGlassMaterial.Liquid,
+                backdrop = glassBackdrop,
+                material = glassMaterial,
                 alignment = AnchorAlignment.End,
                 anchor = {
                     RuiListItem(

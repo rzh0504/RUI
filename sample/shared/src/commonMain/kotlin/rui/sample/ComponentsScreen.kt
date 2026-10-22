@@ -8,17 +8,43 @@ import androidx.compose.ui.Modifier
 import rui.components.RuiListGroup
 import rui.components.RuiListItem
 import rui.components.RuiSwitch
+import rui.foundation.RuiIcon
+import rui.foundation.RuiIcons
 import rui.foundation.RuiText
 import rui.sample.ui.ContentColumn
 import rui.sample.ui.SectionLabel
 import rui.theme.RuiTheme
 
 @Composable
+private fun GlassModeRow(
+    title: String,
+    subtitle: String,
+    mode: GlassMode,
+    selected: GlassMode,
+    onSelect: (GlassMode) -> Unit,
+) {
+    RuiListItem(
+        title = title,
+        subtitle = subtitle,
+        trailing = {
+            if (selected == mode) {
+                RuiIcon(
+                    imageVector = RuiIcons.Check,
+                    contentDescription = null,
+                    tint = RuiTheme.colors.primary,
+                )
+            }
+        },
+        onClick = { onSelect(mode) },
+    )
+}
+
+@Composable
 public fun ComponentsScreen(
     darkTheme: Boolean,
     onDarkThemeChange: (Boolean) -> Unit,
-    frostedEnabled: Boolean,
-    onFrostedEnabledChange: (Boolean) -> Unit,
+    glassMode: GlassMode,
+    onGlassModeChange: (GlassMode) -> Unit,
     floatingNavBarEnabled: Boolean,
     onFloatingNavBarEnabledChange: (Boolean) -> Unit,
     liquidNavBarEnabled: Boolean,
@@ -33,9 +59,26 @@ public fun ComponentsScreen(
                 title = "Dark appearance",
                 trailing = { RuiSwitch(checked = darkTheme, onCheckedChange = onDarkThemeChange) },
             )
-            RuiListItem(
-                title = "Frosted material",
-                trailing = { RuiSwitch(checked = frostedEnabled, onCheckedChange = onFrostedEnabledChange) },
+            GlassModeRow(
+                title = "Solid",
+                subtitle = "No glass — opaque surfaces, no blur",
+                mode = GlassMode.Solid,
+                selected = glassMode,
+                onSelect = onGlassModeChange,
+            )
+            GlassModeRow(
+                title = "Frosted glass",
+                subtitle = "Backdrop blur behind a heavy tint",
+                mode = GlassMode.Frosted,
+                selected = glassMode,
+                onSelect = onGlassModeChange,
+            )
+            GlassModeRow(
+                title = "Liquid glass",
+                subtitle = "Edge refraction, highlight, clear tint",
+                mode = GlassMode.Liquid,
+                selected = glassMode,
+                onSelect = onGlassModeChange,
             )
             RuiListItem(
                 title = "Floating navigation bar",
@@ -48,8 +91,10 @@ public fun ComponentsScreen(
             )
             RuiListItem(
                 title = "Liquid navigation bar",
-                subtitle = if (floatingNavBarEnabled) {
+                subtitle = if (floatingNavBarEnabled && glassMode != GlassMode.Solid) {
                     "The floating capsule renders in liquid glass"
+                } else if (glassMode == GlassMode.Solid) {
+                    "Solid mode keeps the chrome opaque"
                 } else {
                     "Requires the floating navigation bar"
                 },
@@ -57,7 +102,7 @@ public fun ComponentsScreen(
                     RuiSwitch(
                         checked = liquidNavBarEnabled,
                         onCheckedChange = onLiquidNavBarEnabledChange,
-                        enabled = floatingNavBarEnabled,
+                        enabled = floatingNavBarEnabled && glassMode != GlassMode.Solid,
                     )
                 },
             )

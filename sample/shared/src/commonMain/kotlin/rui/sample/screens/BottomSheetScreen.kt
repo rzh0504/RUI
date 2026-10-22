@@ -17,24 +17,31 @@ import rui.components.RuiListItem
 import rui.foundation.BlurBackdrop
 import rui.foundation.RuiGlassMaterial
 import rui.foundation.RuiText
+import rui.sample.GlassMode
 import rui.sample.ui.ContentColumn
 import rui.sample.ui.SectionLabel
 import rui.theme.RuiTheme
 
 @Composable
 public fun BottomSheetScreen(
+    glassMode: GlassMode,
     backdrop: BlurBackdrop,
     contentPadding: PaddingValues = PaddingValues(0.dp),
 ) {
     var standardSheet by remember { mutableStateOf(false) }
-    var frostedSheet by remember { mutableStateOf(false) }
-    var liquidSheet by remember { mutableStateOf(false) }
+    var glassSheet by remember { mutableStateOf(false) }
     var actionPanel by remember { mutableStateOf(false) }
+
+    // The demo pages follow the Appearance glass mode; the Liquid tab owns
+    // the liquid-only showcase.
+    val glassBackdrop = if (glassMode == GlassMode.Solid) null else backdrop
+    val glassMaterial = if (glassMode == GlassMode.Liquid) RuiGlassMaterial.Liquid else RuiGlassMaterial.Frosted
 
     ContentColumn(contentPadding = contentPadding) {
         RuiText(
             text = "Sheets portal through ModalBottomSheetHost at the app root. " +
-                "Drag the grabber down, tap the scrim, or press back to dismiss.",
+                "Drag the grabber down, tap the scrim, or press back to dismiss. " +
+                "The glass sheet follows the Appearance glass mode.",
             style = RuiTheme.typography.bodySm,
             color = RuiTheme.colors.contentMuted,
         )
@@ -48,16 +55,14 @@ public fun BottomSheetScreen(
                 onClick = { standardSheet = true },
             )
             RuiListItem(
-                title = "Frosted sheet",
-                subtitle = "Backdrop blur behind the panel",
+                title = "Glass sheet",
+                subtitle = when (glassMode) {
+                    GlassMode.Solid -> "Solid mode — opaque elevated surface"
+                    GlassMode.Frosted -> "Backdrop blur behind the panel"
+                    GlassMode.Liquid -> "Refraction at the panel's top corners"
+                },
                 showChevron = true,
-                onClick = { frostedSheet = true },
-            )
-            RuiListItem(
-                title = "Liquid glass sheet",
-                subtitle = "Edge refraction and a specular highlight",
-                showChevron = true,
-                onClick = { liquidSheet = true },
+                onClick = { glassSheet = true },
             )
         }
 
@@ -82,7 +87,8 @@ public fun BottomSheetScreen(
             RuiActionOption(label = "Move to trash", danger = true) { },
         ),
         cancelLabel = "Cancel",
-        backdrop = backdrop,
+        backdrop = glassBackdrop,
+        material = glassMaterial,
     )
 
     RuiBottomSheet(
@@ -97,27 +103,15 @@ public fun BottomSheetScreen(
     }
 
     RuiBottomSheet(
-        visible = frostedSheet,
-        onDismiss = { frostedSheet = false },
-        title = "Frosted sheet",
-        backdrop = backdrop,
+        visible = glassSheet,
+        onDismiss = { glassSheet = false },
+        title = "Glass sheet",
+        backdrop = glassBackdrop,
+        material = glassMaterial,
     ) {
         RuiListGroup(Modifier.padding(horizontal = RuiTheme.spacing.lg)) {
-            RuiListItem(title = "Row one", subtitle = "Blur samples the page behind the sheet")
-            RuiListItem(title = "Row two", subtitle = "Solid surface on unsupported platforms")
-        }
-    }
-
-    RuiBottomSheet(
-        visible = liquidSheet,
-        onDismiss = { liquidSheet = false },
-        title = "Liquid glass sheet",
-        backdrop = backdrop,
-        material = RuiGlassMaterial.Liquid,
-    ) {
-        RuiListGroup(Modifier.padding(horizontal = RuiTheme.spacing.lg)) {
-            RuiListItem(title = "Row one", subtitle = "The page refracts at the sheet's edges")
-            RuiListItem(title = "Row two", subtitle = "Frosted look where runtime shaders are missing")
+            RuiListItem(title = "Row one", subtitle = "Samples the page behind the sheet")
+            RuiListItem(title = "Row two", subtitle = "Opaque surface in solid mode")
         }
     }
 }

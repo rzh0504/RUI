@@ -180,8 +180,13 @@ private fun CatalogPage.title(): String = when (this) {
  * Tokens) and component pages pushed onto a [RuiNavDisplay] back stack.
  * [DialogHost] sits at the root so RuiDialog panels portal above everything.
  */
+/** The catalog-wide glass material. Solid shows what every surface does
+ *  with no capture at all; Frosted and Liquid thread the mode through the
+ *  bars and the overlay demo pages. The Liquid tab is mode-independent. */
+public enum class GlassMode { Solid, Frosted, Liquid }
+
 private const val KeyDarkTheme = "appearance.darkTheme"
-private const val KeyFrosted = "appearance.frosted"
+private const val KeyGlassMode = "appearance.glassMode"
 private const val KeyFloatingNavBar = "appearance.floatingNavBar"
 private const val KeyLiquidNavBar = "appearance.liquidNavBar"
 private const val KeyLanguage = "appearance.language"
@@ -210,7 +215,13 @@ private val DropletIcon: ImageVector = ImageVector.Builder(
 public fun CatalogApp() {
     val systemDark = isSystemInDarkTheme()
     var darkTheme by remember { mutableStateOf(SampleSettings.getBoolean(KeyDarkTheme, systemDark)) }
-    var frostedEnabled by remember { mutableStateOf(SampleSettings.getBoolean(KeyFrosted, true)) }
+    var glassMode by remember {
+        mutableStateOf(
+            GlassMode.entries.firstOrNull {
+                it.name == SampleSettings.getString(KeyGlassMode, GlassMode.Frosted.name)
+            } ?: GlassMode.Frosted,
+        )
+    }
     var floatingNavBarEnabled by remember { mutableStateOf(SampleSettings.getBoolean(KeyFloatingNavBar, false)) }
     var liquidNavBarEnabled by remember { mutableStateOf(SampleSettings.getBoolean(KeyLiquidNavBar, false)) }
     // Liquid-material test bench: the Liquid tab's sliders write it, the
@@ -298,20 +309,32 @@ public fun CatalogApp() {
                 // across stacked pages samples covered pages' translated
                 // content and the blur lands misaligned. The liquid capture
                 // costs one extra record per frame, so it exists only where
-                // something consumes it: the Liquid tab, the liquid floating
-                // bar, and the liquid-glass demo pages.
+                // something consumes it: the Liquid tab (mode-independent),
+                // the liquid floating bar, and the overlay demo pages in
+                // liquid mode.
                 val background = RuiTheme.colors.background
+                val useGlass = glassMode != GlassMode.Solid
+                val barMaterial = when (glassMode) {
+                    GlassMode.Liquid -> RuiGlassMaterial.Liquid
+                    // The liquid-bar switch opts the chrome into liquid while
+                    // the rest of the app stays frosted.
+                    GlassMode.Frosted -> if (liquidNavBarEnabled) RuiGlassMaterial.Liquid else RuiGlassMaterial.Frosted
+                    GlassMode.Solid -> RuiGlassMaterial.Frosted
+                }
                 val backdrop = rememberBlurBackdrop(
-                    liquid = (atRoot && (tab == LiquidTab || (floatingNavBarEnabled && liquidNavBarEnabled))) ||
-                        page == CatalogPage.Dialog ||
-                        page == CatalogPage.DropdownMenu ||
-                        page == CatalogPage.BottomSheet,
+                    liquid = (atRoot && (tab == LiquidTab ||
+                        (floatingNavBarEnabled && liquidNavBarEnabled && glassMode == GlassMode.Liquid))) ||
+                        (glassMode == GlassMode.Liquid &&
+                            (page == CatalogPage.Dialog ||
+                                page == CatalogPage.DropdownMenu ||
+                                page == CatalogPage.BottomSheet)),
                 ) {
                     drawRect(background)
                     drawContent()
                 }
+                val glassBackdrop = if (useGlass) backdrop else null
                 RuiScaffold(
-                    backdrop = backdrop,
+                    backdrop = glassBackdrop,
                     topBar = {
                         if (page == CatalogPage.NowPlaying) {
                             // The music block is fully immersive: it owns
@@ -319,7 +342,8 @@ public fun CatalogApp() {
                         } else if (atRoot) {
                             RuiTopAppBar(
                                 title = page.title(),
-                                backdrop = backdrop,
+                                backdrop = glassBackdrop,
+                                material = barMaterial,
                                 scrollBehavior = scrollBehavior,
                             )
                         } else {
@@ -327,7 +351,8 @@ public fun CatalogApp() {
                                 title = page.title(),
                                 showBack = true,
                                 onBack = { nav.pop() },
-                                backdrop = backdrop,
+                                backdrop = glassBackdrop,
+                                material = barMaterial,
                             )
                         }
                     },
@@ -344,11 +369,15 @@ public fun CatalogApp() {
                                         items = rootNavItems,
                                         selected = tab,
                                         onSelect = { tab = it },
-                                        backdrop = backdrop,
-                                        material = if (liquidNavBarEnabled) {
-                                            RuiGlassMaterial.Liquid
-                                        } else {
-                                            RuiGlassMaterial.Frosted
+                                        backdrop = glassBackdrop,
+                                        material = when (glassMode) {
+                                            GlassMode.Solid -> RuiGlassMaterial.Frosted
+                                            GlassMode.Liquid -> RuiGlassMaterial.Liquid
+                                            GlassMode.Frosted -> if (liquidNavBarEnabled) {
+                                                RuiGlassMaterial.Liquid
+                                            } else {
+                                                RuiGlassMaterial.Frosted
+                                            }
                                         },
                                         barWidth = maxWidth - 24.dp,
                                     )
@@ -358,7 +387,8 @@ public fun CatalogApp() {
                                     items = rootNavItems,
                                     selected = tab,
                                     onSelect = { tab = it },
-                                    backdrop = backdrop,
+                                    backdrop = glassBackdrop,
+                                    material = barMaterial,
                                 )
                             }
                         }
@@ -378,8 +408,8 @@ public fun CatalogApp() {
                                 0 -> ComponentsScreen(
                                     darkTheme = darkTheme,
                                     onDarkThemeChange = { darkTheme = it; SampleSettings.putBoolean(KeyDarkTheme, it) },
-                                    frostedEnabled = frostedEnabled,
-                                    onFrostedEnabledChange = { frostedEnabled = it; SampleSettings.putBoolean(KeyFrosted, it) },
+                                    glassMode = glassMode,
+                                    onGlassModeChange = { glassMode = it; SampleSettings.putString(KeyGlassMode, it.name) },
                                     onOpen = { nav.push(it) },
                                     contentPadding = padding,
                                     floatingNavBarEnabled = floatingNavBarEnabled,
@@ -410,15 +440,17 @@ public fun CatalogApp() {
                             CatalogPage.Toggles -> TogglesScreen(contentPadding = padding)
                             CatalogPage.Tabs -> TabsScreen(contentPadding = padding)
                             CatalogPage.Dialog -> DialogScreen(
-                                frostedEnabled = frostedEnabled,
+                                glassMode = glassMode,
                                 backdrop = backdrop,
                                 contentPadding = padding,
                             )
                             CatalogPage.DropdownMenu -> DropdownMenuScreen(
+                                glassMode = glassMode,
                                 backdrop = backdrop,
                                 contentPadding = padding,
                             )
                             CatalogPage.BottomSheet -> BottomSheetScreen(
+                                glassMode = glassMode,
                                 backdrop = backdrop,
                                 contentPadding = padding,
                             )
