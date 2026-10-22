@@ -1,25 +1,24 @@
 package rui.components
 
-import androidx.compose.animation.core.TweenSpec
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.runtime.Immutable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.layout
+import androidx.compose.ui.semantics.selected
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
-import kotlinx.coroutines.delay
 import rui.foundation.BlurBackdrop
 import rui.foundation.RuiGlassMaterial
 import rui.foundation.RuiIcon
 import rui.foundation.RuiIcons
 import rui.theme.RuiTheme
+
+/** How far inside the card the row's menu panel sits. */
+private val MenuEdgeInset = 8.dp
 
 /** One option of a [RuiSelectionRow]. */
 @Immutable
@@ -33,7 +32,8 @@ public data class RuiSelectionOption<T>(
  * row — title, the current option's label in the value slot, chevron — and
  * tapping it drops down the option menu anchored to the row, checkmark on
  * the current value, iOS's in-menu picker for settings pages. The menu
- * spans the row's width, so it reads as part of the settings card.
+ * aligns to the row's value side and is kept a hair inside the card's
+ * trailing edge; it sizes to its options instead of stretching the card.
  * Selecting an option closes the menu and reports through [onSelect].
  *
  * The menu is the standard [RuiDropdownMenu]: it portals above everything
@@ -58,59 +58,34 @@ public fun <T> RuiSelectionRow(
     var expanded by remember { mutableStateOf(false) }
     val currentLabel = options.firstOrNull { it.value == selected }?.label
 
-    // Selection lands after the menu's exit finishes: the caller's state
-    // change — a glass-mode switch rewires the whole scaffold — must not
-    // share frames with the exit animation, which stutters when it does.
-    var pendingSelect by remember { mutableStateOf<(() -> Unit)?>(null) }
-    val exitDuration = (RuiTheme.motion.fast as? TweenSpec<Float>)?.durationMillis ?: 150
-    LaunchedEffect(pendingSelect) {
-        val apply = pendingSelect ?: return@LaunchedEffect
-        // The exit runs on the fast motion; wait it out plus a frame of
-        // settle.
-        delay(exitDuration.toLong() + 32)
-        apply()
-        pendingSelect = null
-    }
-
     RuiDropdownMenu(
         expanded = expanded,
         onDismissRequest = { expanded = false },
         modifier = modifier,
-        // The menu hugs the value side: right-aligned under the current
-        // option's label and chevron, growing leftward with its content —
-        // iOS's in-row menu placement.
+        // The menu hugs the value side: aligned under the current option's
+        // label and chevron, inset from the card's edge so the panel reads
+        // as floating instead of touching (or bleeding off) the card.
         alignment = AnchorAlignment.End,
+        alignmentOffset = -MenuEdgeInset,
         backdrop = backdrop,
         material = material,
         anchor = {
-            // The popup right-aligns to the measured anchor, so measure the
-            // row a hair narrower than it draws — the menu clears the card's
-            // edge instead of touching it.
-            Box(
-                Modifier.layout { measurable, constraints ->
-                    val inset = 8.dp.roundToPx()
-                    val placeable = measurable.measure(
-                        constraints.copy(maxWidth = (constraints.maxWidth - inset).coerceAtLeast(0)),
-                    )
-                    layout(placeable.width, placeable.height) { placeable.place(0, 0) }
-                },
-            ) {
-                RuiListItem(
-                    title = title,
-                    value = currentLabel,
-                    showChevron = true,
-                    onClick = { expanded = true },
-                )
-            }
+            RuiListItem(
+                title = title,
+                value = currentLabel,
+                showChevron = true,
+                onClick = { expanded = true },
+            )
         },
     ) {
         options.forEach { option ->
             val isSelected = option.value == selected
             RuiDropdownMenuItem(
                 text = option.label,
+                modifier = Modifier.semantics { this.selected = isSelected },
                 onClick = {
                     expanded = false
-                    pendingSelect = { onSelect(option.value) }
+                    onSelect(option.value)
                 },
                 trailing = {
                     // Every row reserves the checkmark's slot — unselected

@@ -29,6 +29,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import com.composeunstyled.DropdownMenuPanel
@@ -62,6 +63,10 @@ import rui.theme.toShadowShape
  * @param onDismissRequest Called when the menu should close.
  * @param side Which side of the anchor the panel appears on.
  * @param alignment How the panel aligns with the anchor along that side.
+ * @param sideOffset Air between the anchor and the panel's near edge.
+ * @param alignmentOffset Shifts the panel along the alignment axis; pass a
+ *   negative value with [AnchorAlignment.End] to keep the panel off the
+ *   anchor's trailing edge (a settings card's edge, for instance).
  */
 @Composable
 public fun RuiDropdownMenu(
@@ -70,6 +75,8 @@ public fun RuiDropdownMenu(
     modifier: Modifier = Modifier,
     side: AnchorSide = AnchorSide.Bottom,
     alignment: AnchorAlignment = AnchorAlignment.Start,
+    sideOffset: Dp = 0.dp,
+    alignmentOffset: Dp = 0.dp,
     backdrop: BlurBackdrop? = null,
     material: RuiGlassMaterial = RuiGlassMaterial.Frosted,
     anchor: @Composable () -> Unit,
@@ -116,6 +123,8 @@ public fun RuiDropdownMenu(
         modifier = modifier,
         side = side,
         alignment = alignment,
+        sideOffset = sideOffset,
+        alignmentOffset = alignmentOffset,
         anchor = anchor,
         panel = {
             // Content-adaptive: the panel takes its content's MAX intrinsic
