@@ -17,7 +17,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.widthIn
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
@@ -108,14 +107,14 @@ public fun RuiDropdownMenu(
         alignment = alignment,
         anchor = anchor,
         panel = {
-            // Content-adaptive with a floor: the panel takes its content's
-            // minimum intrinsic width (the widest option label), floored at
-            // the menu minimum — children still measure with bounded width,
-            // so the weighted cascading arrows keep their layout.
+            // Content-adaptive: the panel takes its content's minimum
+            // intrinsic width (the widest option label plus its trailing) —
+            // no floor, blank space inside a menu reads as a layout bug.
+            // IntrinsicSize keeps children measured with bounded width, so
+            // the weighted cascading arrows keep working.
             DropdownMenuPanel(
                 modifier = Modifier
                     .width(IntrinsicSize.Min)
-                    .widthIn(min = MenuMinWidth)
                     .then(panelBackground),
                 enter = fadeIn(motion.normal) + scaleIn(
                     initialScale = 0.94f,
@@ -197,7 +196,6 @@ public fun RuiDropdownMenuItem(
 }
 
 /** iOS pull-down menus are a fixed 250pt wide; honor that as the panel minimum. */
-private val MenuMinWidth = 250.dp
 
 /** Which side of the anchor the menu panel appears on (Unstyled's vocabulary). */
 public typealias AnchorSide = com.composeunstyled.AnchorSide

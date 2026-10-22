@@ -54,6 +54,10 @@ public fun <T> RuiSelectionRow(
         expanded = expanded,
         onDismissRequest = { expanded = false },
         modifier = modifier,
+        // The menu hugs the value side: right-aligned under the current
+        // option's label and chevron, growing leftward with its content —
+        // iOS's in-row menu placement.
+        alignment = AnchorAlignment.End,
         backdrop = backdrop,
         material = material,
         anchor = {

@@ -18,6 +18,8 @@ import rui.components.RuiRadioRow
 import rui.components.RuiSelectionOption
 import rui.components.RuiSelectionRow
 import rui.components.RuiSwitch
+import rui.foundation.BlurBackdrop
+import rui.foundation.RuiGlassMaterial
 import rui.foundation.RuiText
 import rui.sample.ui.ContentColumn
 import rui.sample.ui.SectionLabel
@@ -36,7 +38,11 @@ private enum class Language {
 }
 
 @Composable
-public fun ListsScreen(contentPadding: PaddingValues = PaddingValues(0.dp)) {
+public fun ListsScreen(
+    backdrop: BlurBackdrop?,
+    material: RuiGlassMaterial,
+    contentPadding: PaddingValues = PaddingValues(0.dp),
+) {
     var wifi by rememberSaveable { mutableStateOf(true) }
     var bluetooth by rememberSaveable { mutableStateOf(false) }
     var cellular by rememberSaveable { mutableStateOf(true) }
@@ -116,6 +122,8 @@ public fun ListsScreen(contentPadding: PaddingValues = PaddingValues(0.dp)) {
                 ),
                 selected = network,
                 onSelect = { network = it },
+                backdrop = backdrop,
+                material = material,
             )
             RuiDivider(inset = RuiTheme.spacing.lg)
             RuiSelectionRow(
@@ -127,6 +135,8 @@ public fun ListsScreen(contentPadding: PaddingValues = PaddingValues(0.dp)) {
                 ),
                 selected = language,
                 onSelect = { language = it },
+                backdrop = backdrop,
+                material = material,
             )
             RuiDivider(inset = RuiTheme.spacing.lg)
             RuiListItem(

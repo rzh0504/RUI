@@ -454,7 +454,11 @@ public fun CatalogApp() {
                             CatalogPage.EmptyState -> EmptyStateScreen(contentPadding = padding)
                             CatalogPage.PageIndicator -> PageIndicatorScreen(contentPadding = padding)
                             CatalogPage.Drawer -> DrawerScreen(contentPadding = padding)
-                            CatalogPage.Lists -> ListsScreen(contentPadding = padding)
+                            CatalogPage.Lists -> ListsScreen(
+                                backdrop = glassBackdrop,
+                                material = barMaterial,
+                                contentPadding = padding,
+                            )
                             CatalogPage.LazyList -> LazyListScreen(contentPadding = padding)
                             CatalogPage.InlineBanner -> BannerScreen(contentPadding = padding)
                             CatalogPage.Localization -> LocalizationScreen(
