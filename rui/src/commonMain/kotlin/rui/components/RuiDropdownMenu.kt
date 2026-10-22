@@ -107,14 +107,14 @@ public fun RuiDropdownMenu(
         alignment = alignment,
         anchor = anchor,
         panel = {
-            // Content-adaptive: the panel takes its content's minimum
-            // intrinsic width (the widest option label plus its trailing) —
-            // no floor, blank space inside a menu reads as a layout bug.
-            // IntrinsicSize keeps children measured with bounded width, so
-            // the weighted cascading arrows keep working.
+            // Content-adaptive: the panel takes its content's MAX intrinsic
+            // width — the widest option label on a single line — so long
+            // options extend the menu instead of wrapping. IntrinsicSize
+            // keeps children measured with bounded width, so the weighted
+            // cascading arrows keep working.
             DropdownMenuPanel(
                 modifier = Modifier
-                    .width(IntrinsicSize.Min)
+                    .width(IntrinsicSize.Max)
                     .then(panelBackground),
                 enter = fadeIn(motion.normal) + scaleIn(
                     initialScale = 0.94f,
