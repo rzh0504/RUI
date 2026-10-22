@@ -34,7 +34,6 @@ import androidx.compose.ui.unit.dp
 import com.composeunstyled.DropdownMenuPanel
 import com.composeunstyled.UnstyledDropdownMenu
 import com.composeunstyled.UnstyledDropdownMenuItem
-import com.composeunstyled.theme.ColoredIndication
 import rui.foundation.BlurBackdrop
 import rui.foundation.RuiGlassMaterial
 import rui.foundation.RuiIcon
@@ -45,7 +44,6 @@ import rui.foundation.liquidGlassSurface
 import rui.foundation.liquidSource
 import rui.foundation.platform.isBlurSupported
 import rui.theme.RuiTheme
-import rui.theme.StateLayerAlphas
 import rui.theme.toShadowShape
 
 /**
@@ -173,23 +171,13 @@ public fun RuiDropdownMenuItem(
     val colors = RuiTheme.colors
     val typography = RuiTheme.typography
     val spacing = RuiTheme.spacing
-    val motion = RuiTheme.motion
-    val indication = remember(colors.content, motion) {
-        ColoredIndication(
-            hoveredColor = colors.content.copy(alpha = StateLayerAlphas.hovered),
-            pressedColor = colors.content.copy(alpha = StateLayerAlphas.pressed),
-            focusedColor = colors.content.copy(alpha = StateLayerAlphas.focused),
-            draggedColor = colors.content.copy(alpha = StateLayerAlphas.dragged),
-            animationSpecEnter = motion.stateLayerIn,
-            animationSpecExit = motion.stateLayerOut,
-        )
-    }
 
+    // No press indication: iOS menu rows don't paint a state layer — the
+    // tap just commits.
     UnstyledDropdownMenuItem(
         onClick = onClick,
         enabled = enabled,
         closeOnClick = closeOnClick,
-        indication = indication,
         modifier = modifier,
     ) {
         Row(
@@ -216,11 +204,8 @@ public fun RuiDropdownMenuItem(
     }
 }
 
-/** iOS pull-down menus are a fixed 250pt wide; honor that as the panel minimum. */
-
 /** Which side of the anchor the menu panel appears on (Unstyled's vocabulary). */
 public typealias AnchorSide = com.composeunstyled.AnchorSide
-
 /** How the menu panel aligns with the anchor along [AnchorSide] (Unstyled's vocabulary). */
 public typealias AnchorAlignment = com.composeunstyled.AnchorAlignment
 
@@ -308,22 +293,10 @@ private fun CascadingBackRow(
     val colors = RuiTheme.colors
     val typography = RuiTheme.typography
     val spacing = RuiTheme.spacing
-    val motion = RuiTheme.motion
-    val indication = remember(colors.content, motion) {
-        ColoredIndication(
-            hoveredColor = colors.content.copy(alpha = StateLayerAlphas.hovered),
-            pressedColor = colors.content.copy(alpha = StateLayerAlphas.pressed),
-            focusedColor = colors.content.copy(alpha = StateLayerAlphas.focused),
-            draggedColor = colors.content.copy(alpha = StateLayerAlphas.dragged),
-            animationSpecEnter = motion.stateLayerIn,
-            animationSpecExit = motion.stateLayerOut,
-        )
-    }
 
     UnstyledDropdownMenuItem(
         onClick = onBack,
         closeOnClick = false,
-        indication = indication,
     ) {
         Row(
             modifier = Modifier
