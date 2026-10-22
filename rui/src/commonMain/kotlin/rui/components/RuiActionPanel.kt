@@ -4,6 +4,7 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -18,12 +19,12 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -40,6 +41,7 @@ import rui.foundation.blurSurface
 import rui.foundation.liquidGlassSurface
 import rui.foundation.liquidSource
 import rui.foundation.platform.isBlurSupported
+import rui.foundation.rememberRuiIndication
 import rui.theme.RuiTheme
 
 /**
@@ -66,8 +68,9 @@ public data class RuiActionOption(
  * title, hairline-separated option rows, and an optional explicit cancel row.
  * Selecting an option closes the panel and reports through [RuiActionOption.onSelect].
  *
- * Give it the screen's [backdrop] for the frosted material, like [RuiBottomSheet].
- * The app root must compose `ModalBottomSheetHost` (the catalog does).
+ * Give it the screen's [backdrop] to render glass — frosted by default, or
+ * the liquid-glass material with `material = RuiGlassMaterial.Liquid`. The
+ * app root should compose [RuiOverlayHost] (the catalog does).
  *
  * @param visible Whether the panel is showing; the caller owns this state.
  * @param onDismiss Called for every dismiss path (scrim, back, drag, selection).
@@ -94,6 +97,8 @@ public fun RuiActionPanel(
     val spacing = RuiTheme.spacing
     val motion = RuiTheme.motion
     val isVisible by rememberUpdatedState(visible)
+
+    WarnWithoutRuiOverlayHost("RuiActionPanel")
 
     val state = rememberModalBottomSheetState(
         initialDetent = SheetDetent.Hidden,
@@ -199,7 +204,6 @@ public fun RuiActionPanel(
                             }
                             ActionRow(
                                 action = action,
-                                shape = shapes.md,
                                 onDismiss = onDismiss,
                             )
                         }
@@ -210,7 +214,6 @@ public fun RuiActionPanel(
                                 label = cancelLabel,
                                 onSelect = onDismiss,
                             ),
-                            shape = shapes.md,
                             onDismiss = onDismiss,
                             modifier = Modifier.padding(top = spacing.sm),
                             emphasized = true,
@@ -229,13 +232,14 @@ public fun RuiActionPanel(
 @Composable
 private fun ActionRow(
     action: RuiActionOption,
-    shape: Shape,
     onDismiss: () -> Unit,
     modifier: Modifier = Modifier,
     emphasized: Boolean = false,
 ) {
     val colors = RuiTheme.colors
     val spacing = RuiTheme.spacing
+    val interactionSource = remember { MutableInteractionSource() }
+    val indication = rememberRuiIndication()
     val contentColor = when {
         !action.enabled -> colors.contentMuted
         action.danger -> colors.danger
@@ -248,7 +252,11 @@ private fun ActionRow(
             .heightIn(min = RuiTheme.dimens.touchTarget)
             .then(
                 if (action.enabled) {
-                    Modifier.clickable(onClick = { onDismiss(); action.onSelect() })
+                    Modifier.clickable(
+                        interactionSource = interactionSource,
+                        indication = indication,
+                        onClick = { onDismiss(); action.onSelect() },
+                    )
                 } else {
                     Modifier
                 },
