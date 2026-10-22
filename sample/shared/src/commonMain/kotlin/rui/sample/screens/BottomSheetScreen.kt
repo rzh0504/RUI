@@ -15,6 +15,7 @@ import rui.components.RuiBottomSheet
 import rui.components.RuiListGroup
 import rui.components.RuiListItem
 import rui.foundation.BlurBackdrop
+import rui.foundation.RuiGlassMaterial
 import rui.foundation.RuiText
 import rui.sample.ui.ContentColumn
 import rui.sample.ui.SectionLabel
@@ -27,6 +28,7 @@ public fun BottomSheetScreen(
 ) {
     var standardSheet by remember { mutableStateOf(false) }
     var frostedSheet by remember { mutableStateOf(false) }
+    var liquidSheet by remember { mutableStateOf(false) }
     var actionPanel by remember { mutableStateOf(false) }
 
     ContentColumn(contentPadding = contentPadding) {
@@ -50,6 +52,12 @@ public fun BottomSheetScreen(
                 subtitle = "Backdrop blur behind the panel",
                 showChevron = true,
                 onClick = { frostedSheet = true },
+            )
+            RuiListItem(
+                title = "Liquid glass sheet",
+                subtitle = "Edge refraction and a specular highlight",
+                showChevron = true,
+                onClick = { liquidSheet = true },
             )
         }
 
@@ -97,6 +105,19 @@ public fun BottomSheetScreen(
         RuiListGroup(Modifier.padding(horizontal = RuiTheme.spacing.lg)) {
             RuiListItem(title = "Row one", subtitle = "Blur samples the page behind the sheet")
             RuiListItem(title = "Row two", subtitle = "Solid surface on unsupported platforms")
+        }
+    }
+
+    RuiBottomSheet(
+        visible = liquidSheet,
+        onDismiss = { liquidSheet = false },
+        title = "Liquid glass sheet",
+        backdrop = backdrop,
+        material = RuiGlassMaterial.Liquid,
+    ) {
+        RuiListGroup(Modifier.padding(horizontal = RuiTheme.spacing.lg)) {
+            RuiListItem(title = "Row one", subtitle = "The page refracts at the sheet's edges")
+            RuiListItem(title = "Row two", subtitle = "Frosted look where runtime shaders are missing")
         }
     }
 }

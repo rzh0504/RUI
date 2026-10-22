@@ -25,11 +25,14 @@ public annotation class ExperimentalRuiApi
 
 /**
  * A frosted surface: with a [backdrop] it renders the captured content
- * blurred behind a translucent tint (frosted glass); without one it is an
+ * behind a translucent tint — frosted glass by default, or the liquid-glass
+ * material with `material = RuiGlassMaterial.Liquid` (lighter tint, edge
+ * refraction, specular highlight; needs the capture created with
+ * `rememberBlurBackdrop(liquid = true)`); without a backdrop it is an
  * honest translucent panel — tint plus hairline border, no blur.
  *
  * Pass a [BlurBackdrop] from [rememberBlurBackdrop] + [blurBackdrop] to get
- * the frosted look; see the catalog app for the wiring.
+ * the glass look; see the catalog app for the wiring.
  */
 @ExperimentalRuiApi
 @Composable
@@ -40,30 +43,49 @@ public fun FrostedSurface(
     contentColor: Color = RuiTheme.colors.content,
     backdrop: BlurBackdrop? = null,
     blurRadius: Dp = 24.dp,
+    material: RuiGlassMaterial = RuiGlassMaterial.Frosted,
     content: @Composable () -> Unit,
 ) {
     val colors = RuiTheme.colors
-    val useBlur = backdrop != null && isBlurSupported
-    val effectiveTint = if (useBlur) tint.copy(alpha = 0.72f) else tint.copy(alpha = 0.85f)
+    val useLiquid = material == RuiGlassMaterial.Liquid &&
+        backdrop != null && backdrop.liquidSource != null && isBlurSupported
+    val useBlur = backdrop != null && isBlurSupported && !useLiquid
+    val effectiveTint = when {
+        useLiquid -> tint.copy(alpha = LiquidGlassTintAlpha)
+        useBlur -> tint.copy(alpha = 0.72f)
+        else -> tint.copy(alpha = 0.85f)
+    }
 
     CompositionLocalProvider(LocalContentColor provides contentColor) {
         Box(
             modifier = modifier
                 .then(
-                    if (useBlur) {
-                        Modifier.blurSurface(
-                            backdrop = backdrop,
+                    when {
+                        useLiquid -> Modifier.liquidGlassSurface(
+                            backdrop = requireNotNull(backdrop),
+                            tint = effectiveTint,
+                            shape = shape,
+                        )
+                        useBlur -> Modifier.blurSurface(
+                            backdrop = requireNotNull(backdrop),
                             radius = blurRadius,
                             tint = effectiveTint,
                             shape = shape,
                         )
-                    } else {
-                        Modifier
+                        else -> Modifier
                             .background(effectiveTint, shape)
                             .clip(shape)
                     },
                 )
-                .border(RuiTheme.dimens.borderWidth, colors.outlineSubtle, shape),
+                .then(
+                    // Liquid glass reads its edge from the specular highlight;
+                    // a hairline on top of it doubles the border.
+                    if (useLiquid) {
+                        Modifier
+                    } else {
+                        Modifier.border(RuiTheme.dimens.borderWidth, colors.outlineSubtle, shape)
+                    },
+                ),
         ) {
             content()
         }

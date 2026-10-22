@@ -33,9 +33,13 @@ import com.composeunstyled.SheetDetent
 import com.composeunstyled.UnstyledModalBottomSheet
 import com.composeunstyled.rememberModalBottomSheetState
 import rui.foundation.BlurBackdrop
+import rui.foundation.LiquidGlassTintAlpha
+import rui.foundation.RuiGlassMaterial
 import rui.foundation.RuiIcon
 import rui.foundation.RuiText
 import rui.foundation.blurSurface
+import rui.foundation.liquidGlassSurface
+import rui.foundation.liquidSource
 import rui.foundation.platform.isBlurSupported
 import rui.theme.RuiTheme
 
@@ -84,6 +88,7 @@ public fun RuiActionPanel(
     message: String? = null,
     cancelLabel: String? = null,
     backdrop: BlurBackdrop? = null,
+    material: RuiGlassMaterial = RuiGlassMaterial.Frosted,
 ) {
     val colors = RuiTheme.colors
     val typography = RuiTheme.typography
@@ -114,18 +119,27 @@ public fun RuiActionPanel(
     }
 
     val shapes = RuiTheme.shapes
-    val sheetBackground = if (backdrop != null && isBlurSupported) {
-        Modifier.blurSurface(
-            backdrop = backdrop,
-            radius = 24.dp,
-            tint = colors.surfaceElevated.copy(alpha = 0.72f),
-            shape = shapes.sheet,
-            positionOverride = {
-                Offset(0f, backdrop.graphicsLayer.size.height.toFloat() - state.bottomSheetState.offset)
-            },
-        )
-    } else {
-        Modifier.background(colors.surfaceElevated, shapes.sheet)
+    val sheetBackground = when {
+        backdrop != null && material == RuiGlassMaterial.Liquid && backdrop.liquidSource != null && isBlurSupported ->
+            Modifier.liquidGlassSurface(
+                backdrop = backdrop,
+                tint = colors.surfaceElevated.copy(alpha = LiquidGlassTintAlpha),
+                shape = shapes.sheet,
+                positionOverride = {
+                    Offset(0f, backdrop.graphicsLayer.size.height.toFloat() - state.bottomSheetState.offset)
+                },
+            )
+        backdrop != null && isBlurSupported ->
+            Modifier.blurSurface(
+                backdrop = backdrop,
+                radius = 24.dp,
+                tint = colors.surfaceElevated.copy(alpha = 0.72f),
+                shape = shapes.sheet,
+                positionOverride = {
+                    Offset(0f, backdrop.graphicsLayer.size.height.toFloat() - state.bottomSheetState.offset)
+                },
+            )
+        else -> Modifier.background(colors.surfaceElevated, shapes.sheet)
     }
 
     UnstyledModalBottomSheet(

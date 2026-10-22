@@ -25,6 +25,7 @@ import rui.components.RuiListGroup
 import rui.components.RuiListItem
 import rui.foundation.BlurBackdrop
 import rui.foundation.ExperimentalRuiApi
+import rui.foundation.RuiGlassMaterial
 import rui.foundation.RuiIcon
 import rui.foundation.RuiIcons
 import rui.foundation.RuiText
@@ -56,6 +57,7 @@ public fun DropdownMenuScreen(
         RuiListGroup {
             RuiContextMenu(
                 backdrop = backdrop,
+                material = RuiGlassMaterial.Liquid,
                 menu = {
                     RuiDropdownMenuItem(
                         text = if (pinned) "Unpin" else "Pin",
@@ -115,11 +117,12 @@ public fun DropdownMenuScreen(
                 expanded = editMenu,
                 onDismissRequest = { editMenu = false },
                 backdrop = backdrop,
+                material = RuiGlassMaterial.Liquid,
                 alignment = AnchorAlignment.End,
                 anchor = {
                     RuiListItem(
                         title = "Edit",
-                        subtitle = "Frosted panel with a destructive action",
+                        subtitle = "Liquid glass panel with a destructive action",
                         onClick = { editMenu = !editMenu },
                     )
                 },
@@ -134,6 +137,7 @@ public fun DropdownMenuScreen(
                 expanded = viewsMenu,
                 onDismissRequest = { viewsMenu = false },
                 backdrop = backdrop,
+                material = RuiGlassMaterial.Liquid,
                 anchor = {
                     RuiListItem(
                         title = "Choose view",
@@ -165,6 +169,7 @@ public fun DropdownMenuScreen(
                 expanded = shareMenu,
                 onDismissRequest = { shareMenu = false },
                 backdrop = backdrop,
+                material = RuiGlassMaterial.Liquid,
                 alignment = AnchorAlignment.End,
                 anchor = {
                     RuiListItem(

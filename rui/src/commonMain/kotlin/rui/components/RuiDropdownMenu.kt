@@ -34,19 +34,25 @@ import com.composeunstyled.UnstyledDropdownMenu
 import com.composeunstyled.UnstyledDropdownMenuItem
 import com.composeunstyled.theme.ColoredIndication
 import rui.foundation.BlurBackdrop
+import rui.foundation.LiquidGlassTintAlpha
+import rui.foundation.RuiGlassMaterial
 import rui.foundation.RuiIcon
 import rui.foundation.RuiIcons
 import rui.foundation.RuiText
 import rui.foundation.blurSurface
+import rui.foundation.liquidGlassSurface
+import rui.foundation.liquidSource
 import rui.foundation.platform.isBlurSupported
 import rui.theme.RuiTheme
 import rui.theme.StateLayerAlphas
 
 /**
- * An iOS-style dropdown menu anchored to [anchor]: a floating frosted (or
- * elevated) panel with vertically arranged items. Dismisses on outside tap,
- * back/Esc, or selecting an item. Compose [RuiDropdownMenuItem] (and plain
- * [RuiDivider] where wanted) inside [content].
+ * An iOS-style dropdown menu anchored to [anchor]: a floating glass (or
+ * elevated) panel with vertically arranged items — frosted by default, or
+ * the liquid-glass material with `material = RuiGlassMaterial.Liquid`.
+ * Dismisses on outside tap, back/Esc, or selecting an item. Compose
+ * [RuiDropdownMenuItem] (and plain [RuiDivider] where wanted) inside
+ * [content].
  *
  * The panel portals above everything; give it the screen's [backdrop] to
  * render the frosted material — without one it falls back to an opaque
@@ -65,6 +71,7 @@ public fun RuiDropdownMenu(
     side: AnchorSide = AnchorSide.Bottom,
     alignment: AnchorAlignment = AnchorAlignment.Start,
     backdrop: BlurBackdrop? = null,
+    material: RuiGlassMaterial = RuiGlassMaterial.Frosted,
     anchor: @Composable () -> Unit,
     content: @Composable () -> Unit,
 ) {
@@ -72,17 +79,24 @@ public fun RuiDropdownMenu(
     val shapes = RuiTheme.shapes
     val motion = RuiTheme.motion
 
-    val panelBackground = if (backdrop != null && isBlurSupported) {
-        Modifier.blurSurface(
-            backdrop = backdrop,
-            radius = 24.dp,
-            tint = colors.surfaceElevated.copy(alpha = 0.72f),
-            shape = shapes.xl,
-        )
-    } else {
-        Modifier
-            .clip(shapes.xl)
-            .background(colors.surfaceElevated, shapes.xl)
+    val panelBackground = when {
+        backdrop != null && material == RuiGlassMaterial.Liquid && backdrop.liquidSource != null && isBlurSupported ->
+            Modifier.liquidGlassSurface(
+                backdrop = backdrop,
+                tint = colors.surfaceElevated.copy(alpha = LiquidGlassTintAlpha),
+                shape = shapes.xl,
+            )
+        backdrop != null && isBlurSupported ->
+            Modifier.blurSurface(
+                backdrop = backdrop,
+                radius = 24.dp,
+                tint = colors.surfaceElevated.copy(alpha = 0.72f),
+                shape = shapes.xl,
+            )
+        else ->
+            Modifier
+                .clip(shapes.xl)
+                .background(colors.surfaceElevated, shapes.xl)
     }
 
     UnstyledDropdownMenu(

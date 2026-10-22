@@ -43,9 +43,13 @@ import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import rui.foundation.BlurBackdrop
+import rui.foundation.LiquidGlassTintAlpha
+import rui.foundation.RuiGlassMaterial
 import rui.foundation.RuiIcon
 import rui.foundation.RuiText
 import rui.foundation.blurSurface
+import rui.foundation.liquidGlassSurface
+import rui.foundation.liquidSource
 import rui.foundation.platform.isBlurSupported
 import rui.foundation.ruiMinimumTouchTarget
 import rui.theme.RuiTheme
@@ -143,6 +147,7 @@ public fun RuiFloatingNavigationBar(
     modifier: Modifier = Modifier,
     visible: Boolean = true,
     backdrop: BlurBackdrop? = null,
+    material: RuiGlassMaterial = RuiGlassMaterial.Frosted,
     containerColor: Color = RuiTheme.colors.surfaceElevated,
     indicatorColor: Color = RuiTheme.colors.primary.copy(alpha = RuiFloatingNavigationBarDefaults.IndicatorAlpha),
 ) {
@@ -182,13 +187,16 @@ public fun RuiFloatingNavigationBar(
         label = "rui_floating_navigation_bar_indicator",
     )
 
-    // The glass recipe of FrostedSurface: blur + 72% tint with a backdrop, an
-    // honest 85% translucent tint without one.
-    val useBlur = backdrop != null && isBlurSupported
-    val tint = if (useBlur) {
-        containerColor.copy(alpha = 0.72f)
-    } else {
-        containerColor.copy(alpha = 0.85f)
+    // The glass recipes of FrostedSurface: with a backdrop, liquid glass
+    // (30% tint, refraction, no border) or the frosted blur + 72% tint; an
+    // honest 85% translucent tint without a capture.
+    val useLiquid = material == RuiGlassMaterial.Liquid &&
+        backdrop != null && backdrop.liquidSource != null && isBlurSupported
+    val useBlur = backdrop != null && isBlurSupported && !useLiquid
+    val tint = when {
+        useLiquid -> containerColor.copy(alpha = LiquidGlassTintAlpha)
+        useBlur -> containerColor.copy(alpha = 0.72f)
+        else -> containerColor.copy(alpha = 0.85f)
     }
 
     // The block spans to the screen's bottom edge so the scrim can cover the
@@ -245,18 +253,30 @@ public fun RuiFloatingNavigationBar(
                             }
                             .graphicsLayer { alpha = contentAlpha }
                             .then(
-                                if (useBlur) {
-                                    Modifier.blurSurface(
-                                        backdrop = backdrop,
+                                when {
+                                    useLiquid -> Modifier.liquidGlassSurface(
+                                        backdrop = requireNotNull(backdrop),
+                                        tint = tint,
+                                        shape = capsule,
+                                    )
+                                    useBlur -> Modifier.blurSurface(
+                                        backdrop = requireNotNull(backdrop),
                                         radius = RuiFloatingNavigationBarDefaults.BlurRadius,
                                         tint = tint,
                                         shape = capsule,
                                     )
-                                } else {
-                                    Modifier.background(tint, capsule)
+                                    else -> Modifier.background(tint, capsule)
                                 },
                             )
-                            .border(RuiTheme.dimens.borderWidth, colors.outlineSubtle, capsule),
+                            .then(
+                                // Liquid glass reads its edge from the specular
+                                // highlight; a hairline on top doubles the border.
+                                if (useLiquid) {
+                                    Modifier
+                                } else {
+                                    Modifier.border(RuiTheme.dimens.borderWidth, colors.outlineSubtle, capsule)
+                                },
+                            ),
                         contentAlignment = Alignment.CenterStart,
                     ) {
                         if (slotWidthPx > 0f && selected in items.indices) {

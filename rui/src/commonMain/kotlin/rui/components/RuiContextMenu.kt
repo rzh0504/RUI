@@ -19,15 +19,17 @@ import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import rui.foundation.BlurBackdrop
 import rui.foundation.ExperimentalRuiApi
+import rui.foundation.RuiGlassMaterial
 import kotlin.math.roundToInt
 
 /**
  * An iOS-style context menu: long-pressing (touch or mouse) or right-clicking
- * the [content] opens the [menu] at the press position — the same 250dp
- * frosted panel, cascading [RuiDropdownSubmenu] levels and dismissal as
- * [RuiDropdownMenu], anchored where the finger landed and opening upward, so
- * the panel never sits under the finger. The content itself does not lift;
- * outside tap, back and Esc dismiss from any submenu depth.
+ * the [content] opens the [menu] at the press position — the same 250dp glass
+ * panel (frosted, or liquid with `material = RuiGlassMaterial.Liquid`),
+ * cascading [RuiDropdownSubmenu] levels and dismissal as [RuiDropdownMenu],
+ * anchored where the finger landed and opening upward, so the panel never
+ * sits under the finger. The content itself does not lift; outside tap, back
+ * and Esc dismiss from any submenu depth.
  *
  * The gesture modifiers ride a wrapper around [content], so press handlers
  * inside it (clickable rows, toggles) keep working — only the long press and
@@ -40,6 +42,7 @@ import kotlin.math.roundToInt
 @Composable
 public fun RuiContextMenu(
     backdrop: BlurBackdrop? = null,
+    material: RuiGlassMaterial = RuiGlassMaterial.Frosted,
     modifier: Modifier = Modifier,
     menu: @Composable () -> Unit,
     content: @Composable () -> Unit,
@@ -85,6 +88,7 @@ public fun RuiContextMenu(
                     expanded = true,
                     onDismissRequest = { pressPoint = null },
                     backdrop = backdrop,
+                    material = material,
                     side = AnchorSide.Top,
                     alignment = AnchorAlignment.Start,
                     anchor = { Box(Modifier.size(1.dp)) },

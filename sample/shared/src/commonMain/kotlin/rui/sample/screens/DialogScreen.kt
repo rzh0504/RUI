@@ -16,6 +16,7 @@ import rui.components.RuiListGroup
 import rui.components.RuiListItem
 import rui.foundation.BlurBackdrop
 import rui.foundation.ExperimentalRuiApi
+import rui.foundation.RuiGlassMaterial
 import rui.foundation.RuiText
 import rui.sample.ui.ContentColumn
 import rui.sample.ui.SectionLabel
@@ -30,6 +31,7 @@ public fun DialogScreen(
 ) {
     var standardDialog by remember { mutableStateOf(false) }
     var glassDialog by remember { mutableStateOf(false) }
+    var liquidDialog by remember { mutableStateOf(false) }
 
     ContentColumn(contentPadding = contentPadding) {
         RuiText(
@@ -58,6 +60,16 @@ public fun DialogScreen(
                 onClick = { glassDialog = true },
             )
         }
+
+        SectionLabel("Liquid glass")
+        RuiListGroup {
+            RuiListItem(
+                title = "Liquid glass panel",
+                subtitle = "Edge refraction, specular highlight, clearer tint",
+                showChevron = true,
+                onClick = { liquidDialog = true },
+            )
+        }
     }
 
     RuiDialog(
@@ -84,6 +96,21 @@ public fun DialogScreen(
         supportingText = "Unsupported platforms get a near-opaque fallback automatically.",
         actions = {
             RuiButton(onClick = { glassDialog = false }, variant = RuiButtonVariant.Tonal) {
+                RuiText("Got it")
+            }
+        },
+    )
+
+    RuiDialog(
+        visible = liquidDialog,
+        onDismissRequest = { liquidDialog = false },
+        frosted = true,
+        backdrop = backdrop,
+        material = RuiGlassMaterial.Liquid,
+        title = "Liquid glass panel",
+        supportingText = "The page refracts at the panel's edges; Android 12 keeps the tint without refraction.",
+        actions = {
+            RuiButton(onClick = { liquidDialog = false }, variant = RuiButtonVariant.Tonal) {
                 RuiText("Got it")
             }
         },

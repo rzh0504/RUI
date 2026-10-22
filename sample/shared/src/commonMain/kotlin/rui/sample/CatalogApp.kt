@@ -259,9 +259,15 @@ public fun CatalogApp() {
                 // One backdrop per stack entry — the capture and the bars
                 // sampling it must share a coordinate space. A backdrop shared
                 // across stacked pages samples covered pages' translated
-                // content and the blur lands misaligned.
+                // content and the blur lands misaligned. The liquid-glass
+                // demo pages (Dialog/DropdownMenu/BottomSheet) also need the
+                // second capture; the rest skip its per-frame record.
                 val background = RuiTheme.colors.background
-                val backdrop = rememberBlurBackdrop {
+                val backdrop = rememberBlurBackdrop(
+                    liquid = page == CatalogPage.Dialog ||
+                        page == CatalogPage.DropdownMenu ||
+                        page == CatalogPage.BottomSheet,
+                ) {
                     drawRect(background)
                     drawContent()
                 }

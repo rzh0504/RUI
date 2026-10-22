@@ -25,6 +25,9 @@ import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
+import com.kyant.backdrop.backdrops.LayerBackdrop
+import com.kyant.backdrop.backdrops.layerBackdrop
+import com.kyant.backdrop.backdrops.rememberLayerBackdrop
 import rui.foundation.platform.isBlurSupported
 
 /**
@@ -58,9 +61,15 @@ public interface BlurBackdrop {
 private class BlurBackdropImpl(
     override val graphicsLayer: GraphicsLayer,
     val onDraw: ContentDrawScope.() -> Unit,
+    val liquid: LayerBackdrop? = null,
 ) : BlurBackdrop {
     override var layerCoordinates: LayoutCoordinates? by mutableStateOf(null)
 }
+
+/** The liquid capture recorded by `rememberBlurBackdrop(liquid = true)` —
+ *  the source [Modifier.liquidGlassSurface] consumes. */
+internal val BlurBackdrop.liquidSource: LayerBackdrop?
+    get() = (this as? BlurBackdropImpl)?.liquid
 
 /**
  * Creates a backdrop whose capturing node replays [onDraw] into its layer
@@ -72,45 +81,73 @@ private class BlurBackdropImpl(
  * [Modifier.blurBackdrop] recorder overwrites the layer and its coordinates,
  * so pages stacked on top of each other sharing a backdrop would sample the
  * wrong content at the wrong offset.
+ *
+ * Set [liquid] to also record a second capture into the Backdrop library's
+ * [com.kyant.backdrop.backdrops.LayerBackdrop] — the source the
+ * [RuiGlassMaterial.Liquid] surfaces consume (see
+ * [Modifier.liquidGlassSurface]). Both captures replay the same [onDraw];
+ * the extra one costs one GraphicsLayer record per frame, so leave it off
+ * for screens that stay frosted. Unlike the frosted capture, the liquid one
+ * keeps recording through navigation transitions (its consumer has no
+ * recordEnabled escape hatch) — a page that transitions heavily is better
+ * off frosted-only.
  */
 @Composable
 public fun rememberBlurBackdrop(
+    liquid: Boolean = false,
     onDraw: ContentDrawScope.() -> Unit = { drawContent() },
 ): BlurBackdrop {
     val graphicsLayer = rememberGraphicsLayer()
-    return remember(onDraw) { BlurBackdropImpl(graphicsLayer, onDraw) }
+    val liquidSource = if (liquid) {
+        rememberLayerBackdrop(onDraw = onDraw)
+    } else {
+        null
+    }
+    return remember(onDraw, liquidSource) { BlurBackdropImpl(graphicsLayer, onDraw, liquidSource) }
 }
 
 /**
  * Marks this composable as the content [backdrop] captures. Every redraw
  * re-records the layer; recording is cheap and doesn't invalidate consumers
  * on its own. Set [recordEnabled] to false while a transition is running to
- * keep the animation's frame budget (surfaces sample the last frame).
+ * keep the animation's frame budget (surfaces sample the last frame). The
+ * liquid capture, when present, records through unconditionally — the
+ * library's recorder has no pause.
  */
 public fun Modifier.blurBackdrop(
     backdrop: BlurBackdrop,
     recordEnabled: Boolean = true,
-): Modifier =
-    drawWithContent {
-        drawContent()
-        if (!recordEnabled) return@drawWithContent
-        val impl = backdrop as BlurBackdropImpl
-        val sourceDensity = drawContext.density
-        val scope: ContentDrawScope = this
-        impl.graphicsLayer.record(IntSize(size.width.toInt(), size.height.toInt())) {
-            val previous = drawContext.density
-            drawContext.density = sourceDensity
-            try {
-                impl.onDraw(scope)
-            } finally {
-                drawContext.density = previous
+): Modifier {
+    val impl = backdrop as BlurBackdropImpl
+    return this
+        .drawWithContent {
+            drawContent()
+            if (!recordEnabled) return@drawWithContent
+            val sourceDensity = drawContext.density
+            val scope: ContentDrawScope = this
+            impl.graphicsLayer.record(IntSize(size.width.toInt(), size.height.toInt())) {
+                val previous = drawContext.density
+                drawContext.density = sourceDensity
+                try {
+                    impl.onDraw(scope)
+                } finally {
+                    drawContext.density = previous
+                }
             }
         }
-    }.onGloballyPositioned { coordinates ->
-        if (coordinates.isAttached) {
-            (backdrop as BlurBackdropImpl).layerCoordinates = coordinates
+        .onGloballyPositioned { coordinates ->
+            if (coordinates.isAttached) {
+                impl.layerCoordinates = coordinates
+            }
         }
-    }
+        .then(
+            if (impl.liquid != null) {
+                Modifier.layerBackdrop(impl.liquid)
+            } else {
+                Modifier
+            },
+        )
+}
 
 /**
  * Draws the blurred [backdrop] behind this composable's content, clipped to
