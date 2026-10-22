@@ -5,7 +5,7 @@ This product includes software developed by the miuix project
 (https://github.com/composable-miuix-ui/miuix) and used under the Apache
 License, Version 2.0.
 
-  rui-ui/src/commonMain/kotlin/rui/theme/RuiShape.kt
+  rui/src/commonMain/kotlin/rui/theme/RuiShape.kt
     - Continuous-corner ("squircle") shape algorithm adapted from miuix's
       miuix-squircle module (Path.addSquircleRect).
     - Modified: re-exposed as a Compose Shape (SmoothCornerShape) integrated
@@ -13,16 +13,16 @@ License, Version 2.0.
       a top-edge-only variant (TopSmoothCornerShape) for surfaces docked to
       the screen's bottom edge, using the same corner math.
 
-  rui-ui/src/commonMain/kotlin/rui/foundation/utils/RuiOverscroll.kt
-  rui-ui/src/commonMain/kotlin/rui/foundation/utils/RuiScrollEndHaptic.kt
-  rui-ui/src/commonMain/kotlin/rui/foundation/utils/SpringUtils.kt
+  rui/src/commonMain/kotlin/rui/foundation/utils/RuiOverscroll.kt
+  rui/src/commonMain/kotlin/rui/foundation/utils/RuiScrollEndHaptic.kt
+  rui/src/commonMain/kotlin/rui/foundation/utils/SpringUtils.kt
     - Bounce-overscroll, scroll-end haptics and the damping/spring settle
       math adapted from miuix's Overscroll.kt / ScrollEndHaptic.kt /
       SpringUtils.kt.
     - Modified: removed pull-to-refresh coordination and the theme-level
       overscroll factory; renamed to Rui's modifier convention.
 
-  rui-ui/src/commonMain/kotlin/rui/foundation/BlurBackdrop.kt
+  rui/src/commonMain/kotlin/rui/foundation/BlurBackdrop.kt
     - Backdrop-capture mechanism (GraphicsLayer recording + coordinates
       translation) adapted from miuix's miuix-blur module
       (LayerBackdrop/LayerBackdropModifier).
@@ -30,7 +30,7 @@ License, Version 2.0.
       cross-platform BlurEffect instead of miuix's AGSL/SkSL runtime-shader
       pipeline; no progressive blur, noise dither or highlights.
 
-  rui-ui/src/commonMain/kotlin/rui/components/RuiTopAppBar.kt
+  rui/src/commonMain/kotlin/rui/components/RuiTopAppBar.kt
     - Collapsing large-title top app bar (RuiScrollBehavior /
       RuiTopAppBarState, the exit-until-collapsed nested-scroll connection
       and the collapsing bar layout) adapted from miuix's basic/TopAppBar.kt.
@@ -38,7 +38,7 @@ License, Version 2.0.
       interplay; integrated with Rui's frosted bar background, typography
       and spacing tokens.
 
-  rui-ui/src/commonMain/kotlin/rui/components/RuiSlider.kt
+  rui/src/commonMain/kotlin/rui/components/RuiSlider.kt
     - Drag mechanics, progress/thumb springs and step haptics adapted from
       miuix's basic/Slider.kt; the range form's thumb selection (nearest on a
       tie to start), no-cross pinning and the collapsed-pair hand-off adapted
@@ -47,7 +47,7 @@ License, Version 2.0.
       UISlider visuals (jump to touch, white thumb with shadow) on Rui's
       token system.
 
-  rui-ui/src/commonMain/kotlin/rui/components/RuiPullToRefresh.kt
+  rui/src/commonMain/kotlin/rui/components/RuiPullToRefresh.kt
     - Pull-to-refresh state machine, nested-scroll coordination, damped-drag
       physics (via Rui's SpringUtils port of miuix's SpringMath/SpringEngine)
       and the threshold haptic adapted from miuix's basic/PullToRefresh.kt.
@@ -55,27 +55,27 @@ License, Version 2.0.
       integration and no text labels; the indicator reuses RuiCircularProgress
       instead of a custom orbiting-dot canvas.
 
-  rui-ui/src/commonMain/kotlin/rui/components/RuiProgress.kt
+  rui/src/commonMain/kotlin/rui/components/RuiProgress.kt
     - Indeterminate circular mechanics (rotating arc with keyframed sweep)
       adapted from miuix's basic/ProgressIndicator.kt.
     - Modified: built on Compose Unstyled's UnstyledProgress for semantics;
       iOS-adjacent visuals (4dp capsule linear bar, thin ring, animated fill)
       on Rui's token system; no third orbiting-dot variant.
 
-  rui-ui/src/commonMain/kotlin/rui/foundation/utils/NavSettleEasing.kt
+  rui/src/commonMain/kotlin/rui/foundation/utils/NavSettleEasing.kt
     - Duration-pinned navigation settle curve (underdamped spring step
       response baked into an Easing) adapted from miuix-nav's
       runtime/NavSettleEasing.kt (NavProgrammaticEasing).
     - Modified: internal to Rui, exposed as the navigationDriver motion
       token's default; no gesture-commit/cancel phase variants.
 
-  rui-ui/src/commonMain/kotlin/rui/components/RuiBadge.kt
+  rui/src/commonMain/kotlin/rui/components/RuiBadge.kt
     - BadgedBox placement math (corner-relative badge offsets, anchor-only
       baselines) adapted from miuix's basic/Badge.kt, following Material 3.
     - Modified: RuiBadge exposes a text/dot API instead of an arbitrary
       content slot; no placement rulers; sizes on Rui's token system.
 
-  rui-ui/src/commonMain/kotlin/rui/components/RuiNavigationRail.kt
+  rui/src/commonMain/kotlin/rui/components/RuiNavigationRail.kt
     - Rail layout concept and item structure adapted from miuix's
       basic/NavigationRail.kt.
     - Modified: static dual forms instead of the collapse/expand morph (no
@@ -84,7 +84,7 @@ License, Version 2.0.
       surface; Rui's primary-pill selection language; no Android insets
       machinery.
 
-  rui-ui/src/commonMain/kotlin/rui/components/RuiScrollBar.kt
+  rui/src/commonMain/kotlin/rui/components/RuiScrollBar.kt
     - Scrollbar adapter contract, thumb geometry (proportional length with a
       minimum, reverse-layout flip), drag mapping with carried-over overshoot
       and the lazy-list average-row estimation (including the stretched-first-

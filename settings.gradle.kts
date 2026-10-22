@@ -21,6 +21,6 @@ dependencyResolutionManagement {
 
 rootProject.name = "Rui"
 
-include(":rui-ui")
+include(":rui")
 include(":sample:shared")
 include(":sample:androidApp")

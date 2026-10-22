@@ -24,4 +24,4 @@ jobs:
       - name: Build and test
         run: |
           chmod +x gradlew
-          ./gradlew :rui-ui:allTests :sample:androidApp:assembleDebug
+          ./gradlew :rui:allTests :sample:androidApp:assembleDebug

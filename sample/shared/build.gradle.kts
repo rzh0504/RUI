@@ -33,7 +33,7 @@ kotlin {
 
     sourceSets {
         commonMain.dependencies {
-            implementation(project(":rui-ui"))
+            implementation(project(":rui"))
             implementation(compose.runtime)
             implementation(compose.foundation)
             implementation(compose.ui)
