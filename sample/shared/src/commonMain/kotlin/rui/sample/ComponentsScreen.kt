@@ -10,6 +10,8 @@ import rui.components.RuiListItem
 import rui.components.RuiSelectionOption
 import rui.components.RuiSelectionRow
 import rui.components.RuiSwitch
+import rui.foundation.BlurBackdrop
+import rui.foundation.RuiGlassMaterial
 import rui.foundation.RuiText
 import rui.sample.ui.ContentColumn
 import rui.sample.ui.SectionLabel
@@ -21,10 +23,10 @@ public fun ComponentsScreen(
     onDarkThemeChange: (Boolean) -> Unit,
     glassMode: GlassMode,
     onGlassModeChange: (GlassMode) -> Unit,
+    backdrop: BlurBackdrop?,
+    material: RuiGlassMaterial,
     floatingNavBarEnabled: Boolean,
     onFloatingNavBarEnabledChange: (Boolean) -> Unit,
-    liquidNavBarEnabled: Boolean,
-    onLiquidNavBarEnabledChange: (Boolean) -> Unit,
     onOpen: (CatalogPage) -> Unit,
     contentPadding: PaddingValues = PaddingValues(0.dp),
 ) {
@@ -37,11 +39,6 @@ public fun ComponentsScreen(
             )
             RuiSelectionRow(
                 title = "Glass material",
-                subtitle = when (glassMode) {
-                    GlassMode.Solid -> "No glass — opaque surfaces, no blur"
-                    GlassMode.Frosted -> "Backdrop blur behind a heavy tint"
-                    GlassMode.Liquid -> "Edge refraction, highlight, clear tint"
-                },
                 options = listOf(
                     RuiSelectionOption(GlassMode.Solid, "Solid"),
                     RuiSelectionOption(GlassMode.Frosted, "Frosted glass"),
@@ -49,6 +46,8 @@ public fun ComponentsScreen(
                 ),
                 selected = glassMode,
                 onSelect = onGlassModeChange,
+                backdrop = backdrop,
+                material = material,
             )
             RuiListItem(
                 title = "Floating navigation bar",
@@ -56,23 +55,6 @@ public fun ComponentsScreen(
                     RuiSwitch(
                         checked = floatingNavBarEnabled,
                         onCheckedChange = onFloatingNavBarEnabledChange,
-                    )
-                },
-            )
-            RuiListItem(
-                title = "Liquid navigation bar",
-                subtitle = if (floatingNavBarEnabled && glassMode != GlassMode.Solid) {
-                    "The floating capsule renders in liquid glass"
-                } else if (glassMode == GlassMode.Solid) {
-                    "Solid mode keeps the chrome opaque"
-                } else {
-                    "Requires the floating navigation bar"
-                },
-                trailing = {
-                    RuiSwitch(
-                        checked = liquidNavBarEnabled,
-                        onCheckedChange = onLiquidNavBarEnabledChange,
-                        enabled = floatingNavBarEnabled && glassMode != GlassMode.Solid,
                     )
                 },
             )

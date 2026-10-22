@@ -7,6 +7,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.Immutable
 import androidx.compose.ui.Modifier
+import rui.foundation.BlurBackdrop
+import rui.foundation.RuiGlassMaterial
 import rui.foundation.RuiIcon
 import rui.foundation.RuiIcons
 import rui.theme.RuiTheme
@@ -22,13 +24,14 @@ public data class RuiSelectionOption<T>(
  * A settings value row that picks from a dropdown: the row reads as a value
  * row — title, the current option's label in the value slot, chevron — and
  * tapping it drops down the option menu anchored to the row, checkmark on
- * the current value, iOS's in-menu picker for settings pages. Selecting an
- * option closes the menu and reports through [onSelect].
+ * the current value, iOS's in-menu picker for settings pages. The menu
+ * spans the row's width, so it reads as part of the settings card.
+ * Selecting an option closes the menu and reports through [onSelect].
  *
  * The menu is the standard [RuiDropdownMenu]: it portals above everything
- * through the overlay host, follows the screen's glass mode through its
- * `backdrop`/`material` parameters, and dismisses on outside tap, back and
- * Esc.
+ * through the overlay host and dismisses on outside tap, back and Esc.
+ * Give it the screen's [backdrop] and the active [material] to render in
+ * the app's glass material.
  *
  * @param selected The currently selected value; the row's value slot shows
  *   the first option matching it. A value with no matching option shows an
@@ -41,7 +44,8 @@ public fun <T> RuiSelectionRow(
     selected: T,
     onSelect: (T) -> Unit,
     modifier: Modifier = Modifier,
-    subtitle: String? = null,
+    backdrop: BlurBackdrop? = null,
+    material: RuiGlassMaterial = RuiGlassMaterial.Frosted,
 ) {
     var expanded by remember { mutableStateOf(false) }
     val currentLabel = options.firstOrNull { it.value == selected }?.label
@@ -50,10 +54,12 @@ public fun <T> RuiSelectionRow(
         expanded = expanded,
         onDismissRequest = { expanded = false },
         modifier = modifier,
+        matchAnchorWidth = true,
+        backdrop = backdrop,
+        material = material,
         anchor = {
             RuiListItem(
                 title = title,
-                subtitle = subtitle,
                 value = currentLabel,
                 showChevron = true,
                 onClick = { expanded = true },

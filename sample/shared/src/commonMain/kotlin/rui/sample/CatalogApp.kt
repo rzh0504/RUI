@@ -188,7 +188,6 @@ public enum class GlassMode { Solid, Frosted, Liquid }
 private const val KeyDarkTheme = "appearance.darkTheme"
 private const val KeyGlassMode = "appearance.glassMode"
 private const val KeyFloatingNavBar = "appearance.floatingNavBar"
-private const val KeyLiquidNavBar = "appearance.liquidNavBar"
 private const val KeyLanguage = "appearance.language"
 
 /** Index of the liquid-glass tab among the root nav items. */
@@ -223,7 +222,6 @@ public fun CatalogApp() {
         )
     }
     var floatingNavBarEnabled by remember { mutableStateOf(SampleSettings.getBoolean(KeyFloatingNavBar, false)) }
-    var liquidNavBarEnabled by remember { mutableStateOf(SampleSettings.getBoolean(KeyLiquidNavBar, false)) }
     // Liquid-material test bench: the Liquid tab's sliders write it, the
     // provider makes every liquid surface below — bars included — follow.
     // Session-scoped on purpose; the shipped look is one app restart away.
@@ -309,25 +307,17 @@ public fun CatalogApp() {
                 // across stacked pages samples covered pages' translated
                 // content and the blur lands misaligned. The liquid capture
                 // costs one extra record per frame, so it exists only where
-                // something consumes it: the Liquid tab (mode-independent),
-                // the liquid floating bar, and the overlay demo pages in
-                // liquid mode.
+                // something consumes it: everything in Liquid mode, and the
+                // Liquid tab (mode-independent) while it shows.
                 val background = RuiTheme.colors.background
                 val useGlass = glassMode != GlassMode.Solid
-                val barMaterial = when (glassMode) {
-                    GlassMode.Liquid -> RuiGlassMaterial.Liquid
-                    // The liquid-bar switch opts the chrome into liquid while
-                    // the rest of the app stays frosted.
-                    GlassMode.Frosted -> if (liquidNavBarEnabled) RuiGlassMaterial.Liquid else RuiGlassMaterial.Frosted
-                    GlassMode.Solid -> RuiGlassMaterial.Frosted
+                val barMaterial = if (glassMode == GlassMode.Liquid) {
+                    RuiGlassMaterial.Liquid
+                } else {
+                    RuiGlassMaterial.Frosted
                 }
                 val backdrop = rememberBlurBackdrop(
-                    liquid = (atRoot && (tab == LiquidTab ||
-                        (floatingNavBarEnabled && liquidNavBarEnabled && glassMode == GlassMode.Liquid))) ||
-                        (glassMode == GlassMode.Liquid &&
-                            (page == CatalogPage.Dialog ||
-                                page == CatalogPage.DropdownMenu ||
-                                page == CatalogPage.BottomSheet)),
+                    liquid = glassMode == GlassMode.Liquid || (atRoot && tab == LiquidTab),
                 ) {
                     drawRect(background)
                     drawContent()
@@ -370,15 +360,7 @@ public fun CatalogApp() {
                                         selected = tab,
                                         onSelect = { tab = it },
                                         backdrop = glassBackdrop,
-                                        material = when (glassMode) {
-                                            GlassMode.Solid -> RuiGlassMaterial.Frosted
-                                            GlassMode.Liquid -> RuiGlassMaterial.Liquid
-                                            GlassMode.Frosted -> if (liquidNavBarEnabled) {
-                                                RuiGlassMaterial.Liquid
-                                            } else {
-                                                RuiGlassMaterial.Frosted
-                                            }
-                                        },
+                                        material = barMaterial,
                                         barWidth = maxWidth - 24.dp,
                                     )
                                 }
@@ -410,12 +392,12 @@ public fun CatalogApp() {
                                     onDarkThemeChange = { darkTheme = it; SampleSettings.putBoolean(KeyDarkTheme, it) },
                                     glassMode = glassMode,
                                     onGlassModeChange = { glassMode = it; SampleSettings.putString(KeyGlassMode, it.name) },
-                                    onOpen = { nav.push(it) },
-                                    contentPadding = padding,
+                                    backdrop = glassBackdrop,
+                                    material = barMaterial,
                                     floatingNavBarEnabled = floatingNavBarEnabled,
                                     onFloatingNavBarEnabledChange = { floatingNavBarEnabled = it; SampleSettings.putBoolean(KeyFloatingNavBar, it) },
-                                    liquidNavBarEnabled = liquidNavBarEnabled,
-                                    onLiquidNavBarEnabledChange = { liquidNavBarEnabled = it; SampleSettings.putBoolean(KeyLiquidNavBar, it) },
+                                    onOpen = { nav.push(it) },
+                                    contentPadding = padding,
                                 )
                                 1 -> BlocksScreen(
                                     onOpen = { nav.push(it) },
