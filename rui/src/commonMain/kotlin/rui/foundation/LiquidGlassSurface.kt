@@ -1,5 +1,6 @@
 package rui.foundation
 
+import androidx.compose.foundation.shape.CornerBasedShape
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
@@ -79,8 +80,12 @@ public fun Modifier.liquidGlassSurface(
         effects = {
             vibrancy()
             blur(radius.toPx())
-            val height = refraction.toPx()
-            lens(refractionHeight = height, refractionAmount = height)
+            // The lens shader needs corner radii; an arbitrary Shape would
+            // throw inside the library, so it degrades to vibrancy + blur.
+            if (shape is CornerBasedShape) {
+                val height = refraction.toPx()
+                lens(refractionHeight = height, refractionAmount = height)
+            }
         },
         highlight = { Highlight.Default },
         shadow = null,

@@ -1,12 +1,13 @@
 package rui.theme
 
+import androidx.compose.foundation.shape.CornerBasedShape
+import androidx.compose.foundation.shape.CornerSize
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Outline
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.Shape
-import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
@@ -28,24 +29,60 @@ import kotlin.math.min
  * `1.1` is the standard continuous look. Radii larger than half the shorter
  * side clamp to it, producing smooth stadiums/pills.
  *
+ * It IS a [CornerBasedShape] underneath — glass materials read corner
+ * radii through that contract (backdrop's lens refraction, specular
+ * highlights) — but the outline is drawn from the Bézier path, so the
+ * smooth geometry is unchanged. Consequences of the inheritance: `copy`
+ * with different corners returns a plain RoundedCornerShape (CornerSize
+ * can't be reversed to a Dp, so the smoothing is lost there), and equality
+ * stays strict to this class.
+ *
  * The algorithm is adapted from the miuix project's squircle module
  * (https://github.com/composable-miuix/miuix, Apache License 2.0).
  */
 public class SmoothCornerShape(
     public val radius: Dp,
     public val smoothing: Float = DefaultSmoothing,
-) : Shape {
+) : CornerBasedShape(
+    topStart = CornerSize(radius),
+    topEnd = CornerSize(radius),
+    bottomEnd = CornerSize(radius),
+    bottomStart = CornerSize(radius),
+) {
 
     override fun createOutline(
         size: Size,
+        topStart: Float,
+        topEnd: Float,
+        bottomEnd: Float,
+        bottomStart: Float,
         layoutDirection: LayoutDirection,
-        density: Density,
     ): Outline {
-        val radiusPx = with(density) { radius.toPx() }
         val path = Path()
-        path.addSmoothCornerRect(size.width, size.height, radiusPx, smoothing)
+        // The base resolves and clamps the corners before handing them over;
+        // the smooth rect is uniform-radius, so take the largest.
+        path.addSmoothCornerRect(
+            size.width,
+            size.height,
+            maxOf(topStart, topEnd, bottomEnd, bottomStart),
+            smoothing,
+        )
         return Outline.Generic(path)
     }
+
+    override fun copy(
+        topStart: CornerSize,
+        topEnd: CornerSize,
+        bottomEnd: CornerSize,
+        bottomStart: CornerSize,
+    ): CornerBasedShape =
+        if (topStart == this.topStart && topEnd == this.topEnd &&
+            bottomEnd == this.bottomEnd && bottomStart == this.bottomStart
+        ) {
+            this
+        } else {
+            RoundedCornerShape(topStart, topEnd, bottomEnd, bottomStart)
+        }
 
     override fun equals(other: Any?): Boolean =
         other is SmoothCornerShape && other.radius == radius && other.smoothing == smoothing
@@ -63,23 +100,51 @@ public class SmoothCornerShape(
  * Continuous corners on the top edge only, square at the bottom — for
  * surfaces docked to the screen's bottom edge (sheets), where square bottom
  * corners keep the shape flush with the screen. Radius and smoothing follow
- * the same model as [SmoothCornerShape].
+ * the same model as [SmoothCornerShape]; the same CornerBasedShape contract
+ * and `copy` caveat apply (top corners carry [radius], bottom corners are
+ * zero).
  */
 public class TopSmoothCornerShape(
     public val radius: Dp,
     public val smoothing: Float = SmoothCornerShape.DefaultSmoothing,
-) : Shape {
+) : CornerBasedShape(
+    topStart = CornerSize(radius),
+    topEnd = CornerSize(radius),
+    bottomEnd = CornerSize(0.dp),
+    bottomStart = CornerSize(0.dp),
+) {
 
     override fun createOutline(
         size: Size,
+        topStart: Float,
+        topEnd: Float,
+        bottomEnd: Float,
+        bottomStart: Float,
         layoutDirection: LayoutDirection,
-        density: Density,
     ): Outline {
-        val radiusPx = with(density) { radius.toPx() }
         val path = Path()
-        path.addSmoothTopCornerRect(size.width, size.height, radiusPx, smoothing)
+        path.addSmoothTopCornerRect(
+            size.width,
+            size.height,
+            maxOf(topStart, topEnd),
+            smoothing,
+        )
         return Outline.Generic(path)
     }
+
+    override fun copy(
+        topStart: CornerSize,
+        topEnd: CornerSize,
+        bottomEnd: CornerSize,
+        bottomStart: CornerSize,
+    ): CornerBasedShape =
+        if (topStart == this.topStart && topEnd == this.topEnd &&
+            bottomEnd == this.bottomEnd && bottomStart == this.bottomStart
+        ) {
+            this
+        } else {
+            RoundedCornerShape(topStart, topEnd, bottomEnd, bottomStart)
+        }
 
     override fun equals(other: Any?): Boolean =
         other is TopSmoothCornerShape && other.radius == radius && other.smoothing == smoothing
