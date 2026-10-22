@@ -212,7 +212,10 @@ public fun RuiActionPanel(
                         ActionRow(
                             action = RuiActionOption(
                                 label = cancelLabel,
-                                onSelect = onDismiss,
+                                // The row dismisses before reporting; the
+                                // cancel option is the dismiss label, not a
+                                // second dismiss call.
+                                onSelect = {},
                             ),
                             onDismiss = onDismiss,
                             modifier = Modifier.padding(top = spacing.sm),
