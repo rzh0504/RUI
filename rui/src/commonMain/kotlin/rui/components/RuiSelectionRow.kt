@@ -1,8 +1,10 @@
 package rui.components
 
+import androidx.compose.animation.core.TweenSpec
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -12,6 +14,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.layout
 import androidx.compose.ui.unit.dp
+import kotlinx.coroutines.delay
 import rui.foundation.BlurBackdrop
 import rui.foundation.RuiGlassMaterial
 import rui.foundation.RuiIcon
@@ -55,6 +58,20 @@ public fun <T> RuiSelectionRow(
     var expanded by remember { mutableStateOf(false) }
     val currentLabel = options.firstOrNull { it.value == selected }?.label
 
+    // Selection lands after the menu's exit finishes: the caller's state
+    // change — a glass-mode switch rewires the whole scaffold — must not
+    // share frames with the exit animation, which stutters when it does.
+    var pendingSelect by remember { mutableStateOf<(() -> Unit)?>(null) }
+    val exitDuration = (RuiTheme.motion.fast as? TweenSpec<Float>)?.durationMillis ?: 150
+    LaunchedEffect(pendingSelect) {
+        val apply = pendingSelect ?: return@LaunchedEffect
+        // The exit runs on the fast motion; wait it out plus a frame of
+        // settle.
+        delay(exitDuration.toLong() + 32)
+        apply()
+        pendingSelect = null
+    }
+
     RuiDropdownMenu(
         expanded = expanded,
         onDismissRequest = { expanded = false },
@@ -92,8 +109,8 @@ public fun <T> RuiSelectionRow(
             RuiDropdownMenuItem(
                 text = option.label,
                 onClick = {
-                    onSelect(option.value)
                     expanded = false
+                    pendingSelect = { onSelect(option.value) }
                 },
                 trailing = {
                     // Every row reserves the checkmark's slot — unselected

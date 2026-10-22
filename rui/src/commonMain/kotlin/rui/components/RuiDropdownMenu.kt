@@ -134,7 +134,10 @@ public fun RuiDropdownMenu(
                     initialScale = 0.94f,
                     animationSpec = motion.pop,
                 ),
-                exit = scaleOut(targetScale = 0.96f),
+                exit = scaleOut(
+                    targetScale = 0.96f,
+                    animationSpec = motion.fast,
+                ),
             ) {
                 val cascading = remember { RuiCascadingMenuState() }
                 CompositionLocalProvider(LocalRuiCascadingMenu provides cascading) {
