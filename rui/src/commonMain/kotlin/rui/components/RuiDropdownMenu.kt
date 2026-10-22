@@ -8,6 +8,7 @@ import androidx.compose.animation.scaleIn
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.togetherWith
+import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -17,6 +18,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
@@ -29,6 +32,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
@@ -46,6 +50,9 @@ import rui.foundation.liquidSource
 import rui.foundation.platform.isBlurSupported
 import rui.theme.RuiTheme
 import rui.theme.toShadowShape
+
+/** Air kept between a menu panel and the window edges. */
+private val MenuPanelWindowMargin = 24.dp
 
 /**
  * An iOS-style dropdown menu anchored to [anchor]: a floating glass (or
@@ -85,6 +92,32 @@ public fun RuiDropdownMenu(
     val colors = RuiTheme.colors
     val shapes = RuiTheme.shapes
     val motion = RuiTheme.motion
+    val windowSize = LocalWindowInfo.current.containerDpSize
+
+    // A menu is measured unconstrained by the anchoring machinery, so cap it
+    // to the window here and scroll the levels inside: a long menu must stay
+    // reachable instead of running off the screen. The panel leaves a margin
+    // on every side, like iOS's menus under the display edges.
+    val panelSize = Modifier
+        .width(IntrinsicSize.Max)
+        .then(
+            if (windowSize.width > 0.dp) {
+                Modifier.widthIn(
+                    max = (windowSize.width - MenuPanelWindowMargin * 2).coerceAtLeast(0.dp),
+                )
+            } else {
+                Modifier
+            },
+        )
+        .then(
+            if (windowSize.height > 0.dp) {
+                Modifier.heightIn(
+                    max = (windowSize.height - MenuPanelWindowMargin * 2).coerceAtLeast(0.dp),
+                )
+            } else {
+                Modifier
+            },
+        )
 
     // Menus float above the page: the shadow carries the depth, most
     // visibly in solid mode where the opaque panel otherwise melts into
@@ -129,12 +162,12 @@ public fun RuiDropdownMenu(
         panel = {
             // Content-adaptive: the panel takes its content's MAX intrinsic
             // width — the widest option label on a single line — so long
-            // options extend the menu instead of wrapping. IntrinsicSize
-            // keeps children measured with bounded width, so the weighted
+            // options extend the menu instead of wrapping, up to the
+            // window's width cap where they wrap. IntrinsicSize keeps
+            // children measured with bounded width, so the weighted
             // cascading arrows keep working.
             DropdownMenuPanel(
-                modifier = Modifier
-                    .width(IntrinsicSize.Max)
+                modifier = panelSize
                     .then(menuShadow)
                     .then(panelBackground),
                 // Scale-in only; the collapse is a single-frame commit with
@@ -279,7 +312,10 @@ internal fun MenuLevels(
         label = "RuiDropdownMenuLevels",
         contentKey = { it?.id },
     ) { level ->
-        Column {
+        // One scroll position per level: a long submenu scrolls on its own,
+        // and returning to a level starts it at the top again.
+        val scrollState = remember(level) { ScrollState(0) }
+        Column(modifier = Modifier.verticalScroll(scrollState)) {
             if (level == null) {
                 rootContent()
             } else {
