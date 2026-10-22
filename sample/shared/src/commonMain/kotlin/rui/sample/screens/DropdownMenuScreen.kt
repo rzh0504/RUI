@@ -19,8 +19,6 @@ import rui.components.RuiDivider
 import rui.components.RuiDropdownMenu
 import rui.components.RuiDropdownMenuItem
 import rui.components.RuiDropdownSubmenu
-import rui.components.RuiListItem
-import rui.components.RuiDropdownSubmenu
 import rui.components.RuiListGroup
 import rui.components.RuiListItem
 import rui.foundation.BlurBackdrop

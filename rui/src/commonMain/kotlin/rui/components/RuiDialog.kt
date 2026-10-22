@@ -65,8 +65,7 @@ public fun RuiDialog(
 }
 
 /** Glass-skinned variant of [RuiDialog] — frosted by default, or the
- * liquid-glass material with [material]; experimental until backdrop blur
- * lands. */
+ * liquid-glass material with [material]. */
 @ExperimentalRuiApi
 @Composable
 public fun RuiDialog(

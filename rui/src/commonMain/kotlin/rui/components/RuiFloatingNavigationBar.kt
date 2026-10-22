@@ -120,12 +120,13 @@ public object RuiFloatingNavigationBarDefaults {
  * nothing; light themes wash it white, dark ones with the page's own
  * background.
  *
- * The capsule itself is frosted like the docked [RuiNavigationBar] — with a
- * [backdrop] it blurs the content behind itself; without one it is an
- * honest opaque stadium. Place inside [RuiScaffold]'s `bottomBar`
- * slot; the scaffold reports the capsule, its surrounding air and the
- * scrim's rise as content padding, so lists scroll under the floating bar
- * and never end up hidden behind it.
+ * The capsule itself is glass like the docked [RuiNavigationBar] — frosted
+ * by default, or the liquid material with `material`; with a [backdrop] it
+ * samples the content behind itself, without one it is an honest opaque
+ * stadium. Place inside [RuiScaffold]'s `bottomBar` slot; the scaffold
+ * reports the capsule, its surrounding air and the scrim's rise as content
+ * padding, so lists scroll under the floating bar and never end up hidden
+ * behind it.
  *
  * The current destination is marked by a pill in the accent color sliding
  * between the equal-width slots; the selected slot's icon and label read in

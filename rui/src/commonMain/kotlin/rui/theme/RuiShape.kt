@@ -203,7 +203,8 @@ public fun Path.addSmoothTopCornerRect(
     height: Float,
     cornerRadius: Float,
     smoothing: Float = SmoothCornerShape.DefaultSmoothing,
-) {    if (width <= 0f || height <= 0f) {
+) {
+    if (width <= 0f || height <= 0f) {
         return
     }
 
