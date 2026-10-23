@@ -11,6 +11,7 @@ import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
@@ -31,6 +32,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.layout.positionInWindow
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.unit.Dp
@@ -55,6 +58,27 @@ import rui.theme.toShadowShape
 private val MenuPanelWindowMargin = 24.dp
 
 /**
+ * The side a vertical menu actually opens on: it keeps [preferred] while its
+ * anchor sits in the matching half of the window, and flips to the other
+ * side when the anchor crosses the middle — a menu near the bottom edge
+ * opens upward instead of being clamped over its trigger. Horizontal sides
+ * are left alone. [anchorCenterY] and [windowHeightPx] are window pixels.
+ */
+internal fun autoFlippedMenuSide(
+    preferred: AnchorSide,
+    anchorCenterY: Float?,
+    windowHeightPx: Int,
+): AnchorSide {
+    if (anchorCenterY == null || windowHeightPx <= 0) return preferred
+    val middle = windowHeightPx / 2f
+    return when {
+        preferred == AnchorSide.Bottom && anchorCenterY > middle -> AnchorSide.Top
+        preferred == AnchorSide.Top && anchorCenterY < middle -> AnchorSide.Bottom
+        else -> preferred
+    }
+}
+
+/**
  * An iOS-style dropdown menu anchored to [anchor]: a floating glass (or
  * elevated) panel with vertically arranged items — frosted by default, or
  * the liquid-glass material with `material = RuiGlassMaterial.Liquid`.
@@ -68,7 +92,11 @@ private val MenuPanelWindowMargin = 24.dp
  *
  * @param expanded Whether the menu is showing; toggle from [anchor]'s onClick.
  * @param onDismissRequest Called when the menu should close.
- * @param side Which side of the anchor the panel appears on.
+ * @param side The preferred side of the anchor the panel appears on.
+ * @param autoFlip When true, a [AnchorSide.Top]/[AnchorSide.Bottom] panel
+ *   flips to the roomier half of the window when its anchor sits in the
+ *   other half, so a menu near the edge opens inward instead of covering its
+ *   trigger. Horizontal sides never flip.
  * @param alignment How the panel aligns with the anchor along that side.
  * @param sideOffset Air between the anchor and the panel's near edge.
  * @param alignmentOffset Shifts the panel along the alignment axis; pass a
@@ -81,6 +109,7 @@ public fun RuiDropdownMenu(
     onDismissRequest: () -> Unit,
     modifier: Modifier = Modifier,
     side: AnchorSide = AnchorSide.Bottom,
+    autoFlip: Boolean = true,
     alignment: AnchorAlignment = AnchorAlignment.Start,
     sideOffset: Dp = 0.dp,
     alignmentOffset: Dp = 0.dp,
@@ -92,7 +121,15 @@ public fun RuiDropdownMenu(
     val colors = RuiTheme.colors
     val shapes = RuiTheme.shapes
     val motion = RuiTheme.motion
-    val windowSize = LocalWindowInfo.current.containerDpSize
+    val windowInfo = LocalWindowInfo.current
+    val windowSize = windowInfo.containerDpSize
+    val windowSizePx = windowInfo.containerSize
+    var anchorCenterY by remember { mutableStateOf<Float?>(null) }
+    val resolvedSide = if (autoFlip) {
+        autoFlippedMenuSide(side, anchorCenterY, windowSizePx.height)
+    } else {
+        side
+    }
 
     // A menu is measured unconstrained by the anchoring machinery, so cap it
     // to the window here and scroll the levels inside: a long menu must stay
@@ -154,11 +191,22 @@ public fun RuiDropdownMenu(
         expanded = expanded,
         onExpandedChange = { if (!it) onDismissRequest() },
         modifier = modifier,
-        side = side,
+        side = resolvedSide,
         alignment = alignment,
         sideOffset = sideOffset,
         alignmentOffset = alignmentOffset,
-        anchor = anchor,
+        anchor = {
+            Box(
+                modifier = Modifier.onGloballyPositioned { coordinates ->
+                    if (coordinates.isAttached) {
+                        anchorCenterY = coordinates.positionInWindow().y +
+                            coordinates.size.height / 2f
+                    }
+                },
+            ) {
+                anchor()
+            }
+        },
         panel = {
             // Content-adaptive: the panel takes its content's MAX intrinsic
             // width — the widest option label on a single line — so long

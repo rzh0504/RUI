@@ -90,6 +90,11 @@ public fun RuiContextMenu(
                     backdrop = backdrop,
                     material = material,
                     side = AnchorSide.Top,
+                    // The anchor is planted at the press moment, so its bounds
+                    // arrive after the panel is already open; flipping then
+                    // would make the panel jump. Context menus stay above the
+                    // finger by contract.
+                    autoFlip = false,
                     alignment = AnchorAlignment.Start,
                     anchor = { Box(Modifier.size(1.dp)) },
                     content = menu,
