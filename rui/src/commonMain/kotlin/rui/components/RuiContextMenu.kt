@@ -37,12 +37,15 @@ import kotlin.math.roundToInt
  *
  * @param menu The menu rows ([RuiDropdownMenuItem], [RuiDropdownSubmenu],
  *   plain [RuiDivider]).
+ * @param reserveLeadingIcon Keep an empty leading icon slot on rows without
+ *   one, so mixed icon/text menus keep their labels aligned.
  */
 @ExperimentalRuiApi
 @Composable
 public fun RuiContextMenu(
     backdrop: BlurBackdrop? = null,
     material: RuiGlassMaterial = RuiGlassMaterial.Frosted,
+    reserveLeadingIcon: Boolean = false,
     modifier: Modifier = Modifier,
     menu: @Composable () -> Unit,
     content: @Composable () -> Unit,
@@ -89,6 +92,7 @@ public fun RuiContextMenu(
                     onDismissRequest = { pressPoint = null },
                     backdrop = backdrop,
                     material = material,
+                    reserveLeadingIcon = reserveLeadingIcon,
                     side = AnchorSide.Top,
                     // The anchor is planted at the press moment, so its bounds
                     // arrive after the panel is already open; flipping then

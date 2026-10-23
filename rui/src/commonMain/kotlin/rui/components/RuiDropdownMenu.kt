@@ -21,6 +21,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.verticalScroll
@@ -128,6 +129,9 @@ internal fun menuPanelMaxHeight(
  * @param alignmentOffset Shifts the panel along the alignment axis; pass a
  *   negative value with [AnchorAlignment.End] to keep the panel off the
  *   anchor's trailing edge (a settings card's edge, for instance).
+ * @param reserveLeadingIcon When true, every row keeps a leading icon slot
+ *   even if it has no `leading` content, so labels stay aligned in menus
+ *   that mix icon and text-only rows. Cascading levels inherit the setting.
  */
 @Composable
 public fun RuiDropdownMenu(
@@ -139,6 +143,7 @@ public fun RuiDropdownMenu(
     alignment: AnchorAlignment = AnchorAlignment.Start,
     sideOffset: Dp = 0.dp,
     alignmentOffset: Dp = 0.dp,
+    reserveLeadingIcon: Boolean = false,
     backdrop: BlurBackdrop? = null,
     material: RuiGlassMaterial = RuiGlassMaterial.Frosted,
     anchor: @Composable () -> Unit,
@@ -269,7 +274,10 @@ public fun RuiDropdownMenu(
                 exit = ExitTransition.None,
             ) {
                 val cascading = remember { RuiCascadingMenuState() }
-                CompositionLocalProvider(LocalRuiCascadingMenu provides cascading) {
+                CompositionLocalProvider(
+                    LocalRuiCascadingMenu provides cascading,
+                    LocalRuiDropdownReserveLeadingIcon provides reserveLeadingIcon,
+                ) {
                     MenuLevels(cascading = cascading, rootContent = content)
                 }
             }
@@ -282,7 +290,9 @@ public fun RuiDropdownMenu(
  * pass [leading] for an icon and [trailing] for a checkmark or shortcut.
  * Danger rows render in the destructive color, as on iOS. Selecting a row
  * closes the menu — [closeOnClick] = false keeps it open (how
- * [RuiDropdownSubmenu] pushes its level).
+ * [RuiDropdownSubmenu] pushes its level). When the menu sets
+ * `reserveLeadingIcon`, rows without a leading view keep an empty icon slot
+ * so labels stay aligned.
  */
 @Composable
 public fun RuiDropdownMenuItem(
@@ -298,6 +308,7 @@ public fun RuiDropdownMenuItem(
     val colors = RuiTheme.colors
     val typography = RuiTheme.typography
     val spacing = RuiTheme.spacing
+    val reserveLeading = LocalRuiDropdownReserveLeadingIcon.current
 
     // No press indication: iOS menu rows don't paint a state layer — the
     // tap just commits.
@@ -315,7 +326,16 @@ public fun RuiDropdownMenuItem(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(spacing.md),
         ) {
-            if (leading != null) leading()
+            if (reserveLeading) {
+                Box(
+                    modifier = Modifier.size(RuiTheme.dimens.iconSize),
+                    contentAlignment = Alignment.CenterStart,
+                ) {
+                    leading?.invoke()
+                }
+            } else if (leading != null) {
+                leading()
+            }
             RuiText(
                 text = text,
                 style = typography.bodyLg,
@@ -366,6 +386,9 @@ internal class RuiCascadingMenuState {
 
 /** The open menu's cascade, readable by [RuiDropdownSubmenu] rows. */
 internal val LocalRuiCascadingMenu = staticCompositionLocalOf<RuiCascadingMenuState?> { null }
+
+/** Whether menu rows reserve an empty leading icon slot when they have none. */
+internal val LocalRuiDropdownReserveLeadingIcon = staticCompositionLocalOf { false }
 
 /**
  * The levels of one open menu: the caller's [rootContent] at the root, a
