@@ -30,17 +30,25 @@ import rui.foundation.platform.isBlurSupported
 import rui.foundation.ruiMinimumTouchTarget
 import rui.theme.RuiTheme
 
-/** One destination of [RuiNavigationBar]. */
+/**
+ * One destination of the navigation shells — [RuiNavigationBar],
+ * [RuiFloatingNavigationBar], [RuiNavigationRail] and [RuiSidebar] — so a host
+ * swaps shell per window width class and keeps one list.
+ */
 public data class RuiNavigationBarItem(
     public val label: String,
     public val icon: ImageVector? = null,
     /**
      * The glyph shown while this destination is selected — the iOS tab bar
      * treatment (outline at rest, filled when selected). Null renders [icon]
-     * in both states.
+     * in both states; with a null [icon] the unselected slot has no glyph.
      */
     public val selectedIcon: ImageVector? = null,
 )
+
+/** The glyph to draw for this destination in its current selection state. */
+internal fun RuiNavigationBarItem.iconFor(selected: Boolean): ImageVector? =
+    if (selected) selectedIcon ?: icon else icon
 
 /**
  * The bottom navigation bar. The bar shares the page
@@ -52,10 +60,11 @@ public data class RuiNavigationBarItem(
  *
  * Items are exposed as tabs, and the current destination is marked selected
  * for assistive technology. A slot with a `null` icon renders label only, a
- * blank label renders icon only. [selected] outside `items.indices` selects
- * nothing; an empty [items] renders an empty bar; tapping the already
- * selected tab re-invokes [onSelect] with its index, so scroll-to-top
- * patterns keep working.
+ * blank label renders icon only; the selected slot draws
+ * [RuiNavigationBarItem.selectedIcon] when one is set. [selected] outside
+ * `items.indices` selects nothing; an empty [items] renders an empty bar;
+ * tapping the already selected tab re-invokes [onSelect] with its index, so
+ * scroll-to-top patterns keep working.
  */
 @Composable
 public fun RuiNavigationBar(
@@ -127,7 +136,7 @@ public fun RuiNavigationBar(
                         horizontalAlignment = Alignment.CenterHorizontally,
                         verticalArrangement = Arrangement.spacedBy(2.dp),
                     ) {
-                        val icon = if (isSelected) item.selectedIcon ?: item.icon else item.icon
+                        val icon = item.iconFor(isSelected)
                         if (icon != null) {
                             RuiIcon(
                                 imageVector = icon,

@@ -132,7 +132,8 @@ public object RuiFloatingNavigationBarDefaults {
  * between the equal-width slots; the selected slot's icon and label read in
  * the accent, the rest in the muted content color. Items share the
  * [RuiNavigationBarItem] model of the docked bar: a slot with a `null` icon
- * renders label only, a blank label renders icon only.
+ * renders label only, a blank label renders icon only, and the selected slot
+ * draws its `selectedIcon` when one is set.
  *
  * [visible] = false hides the bar: the capsule slides down under the
  * navigation-bar inset while the scrim, tint, border and items fade, and
@@ -362,7 +363,7 @@ public fun RuiFloatingNavigationBar(
                                         horizontalAlignment = Alignment.CenterHorizontally,
                                         verticalArrangement = Arrangement.spacedBy(2.dp),
                                     ) {
-                                        val icon = if (isSelected) item.selectedIcon ?: item.icon else item.icon
+                                        val icon = item.iconFor(isSelected)
                                         if (icon != null) {
                                             RuiIcon(
                                                 imageVector = icon,

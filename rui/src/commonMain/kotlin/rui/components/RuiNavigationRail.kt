@@ -176,8 +176,9 @@ private fun CollapsedRailItem(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(2.dp),
         ) {
-            if (item.icon != null) {
-                RuiIcon(imageVector = item.icon, contentDescription = null, size = 22.dp, tint = contentColor)
+            val icon = item.iconFor(isSelected)
+            if (icon != null) {
+                RuiIcon(imageVector = icon, contentDescription = null, size = 22.dp, tint = contentColor)
             }
             RuiText(text = item.label, style = typography.labelSm, color = contentColor, maxLines = 1)
         }
@@ -228,8 +229,9 @@ internal fun NavigationRow(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(12.dp),
         ) {
-            if (item.icon != null) {
-                RuiIcon(imageVector = item.icon, contentDescription = null, size = 22.dp, tint = contentColor)
+            val icon = item.iconFor(isSelected)
+            if (icon != null) {
+                RuiIcon(imageVector = icon, contentDescription = null, size = 22.dp, tint = contentColor)
             }
             RuiText(
                 text = item.label,
