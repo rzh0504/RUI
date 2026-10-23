@@ -34,6 +34,12 @@ import rui.theme.RuiTheme
 public data class RuiNavigationBarItem(
     public val label: String,
     public val icon: ImageVector? = null,
+    /**
+     * The glyph shown while this destination is selected — the iOS tab bar
+     * treatment (outline at rest, filled when selected). Null renders [icon]
+     * in both states.
+     */
+    public val selectedIcon: ImageVector? = null,
 )
 
 /**
@@ -121,9 +127,10 @@ public fun RuiNavigationBar(
                         horizontalAlignment = Alignment.CenterHorizontally,
                         verticalArrangement = Arrangement.spacedBy(2.dp),
                     ) {
-                        if (item.icon != null) {
+                        val icon = if (isSelected) item.selectedIcon ?: item.icon else item.icon
+                        if (icon != null) {
                             RuiIcon(
-                                imageVector = item.icon,
+                                imageVector = icon,
                                 contentDescription = null,
                                 size = 22.dp,
                                 tint = if (isSelected) colors.content else colors.contentMuted,

@@ -362,9 +362,10 @@ public fun RuiFloatingNavigationBar(
                                         horizontalAlignment = Alignment.CenterHorizontally,
                                         verticalArrangement = Arrangement.spacedBy(2.dp),
                                     ) {
-                                        if (item.icon != null) {
+                                        val icon = if (isSelected) item.selectedIcon ?: item.icon else item.icon
+                                        if (icon != null) {
                                             RuiIcon(
-                                                imageVector = item.icon,
+                                                imageVector = icon,
                                                 contentDescription = null,
                                                 size = RuiFloatingNavigationBarDefaults.IconSize,
                                                 tint = itemColor,
