@@ -64,6 +64,7 @@ import rui.sample.screens.DropdownMenuScreen
 import rui.sample.screens.DrawerScreen
 import rui.sample.screens.AvatarScreen
 import rui.sample.screens.ImageScreen
+import rui.sample.screens.IconsScreen
 import rui.sample.screens.DisclosureScreen
 import rui.sample.screens.ProgressScreen
 import rui.sample.screens.PullToRefreshScreen
@@ -125,6 +126,7 @@ public sealed interface CatalogPage : RuiNavKey {
     public data object Drawer : CatalogPage
     public data object Lists : CatalogPage
     public data object LazyList : CatalogPage
+    public data object Icons : CatalogPage
     public data object InlineBanner : CatalogPage
     public data object Localization : CatalogPage
     public data object Reorder : CatalogPage
@@ -165,6 +167,7 @@ private fun CatalogPage.title(): String = when (this) {
     CatalogPage.Drawer -> "Drawer"
     CatalogPage.Lists -> "Lists"
     CatalogPage.LazyList -> "Lazy list"
+    CatalogPage.Icons -> "Icons"
     CatalogPage.InlineBanner -> "Inline banner"
     CatalogPage.Localization -> "Localization"
     CatalogPage.Reorder -> "Reorder"
@@ -464,6 +467,7 @@ public fun CatalogApp() {
                                 contentPadding = padding,
                             )
                             CatalogPage.LazyList -> LazyListScreen(contentPadding = padding)
+                            CatalogPage.Icons -> IconsScreen(contentPadding = padding)
                             CatalogPage.InlineBanner -> BannerScreen(contentPadding = padding)
                             CatalogPage.Localization -> LocalizationScreen(
                                 languageChoice = languageChoice,

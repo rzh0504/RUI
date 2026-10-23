@@ -66,6 +66,16 @@ public fun ComponentsScreen(
             )
         }
 
+        SectionLabel("Foundation")
+        RuiListGroup {
+            RuiListItem(
+                title = "Icons",
+                subtitle = "Common glyphs with semantic names and RTL mirroring",
+                showChevron = true,
+                onClick = { onOpen(CatalogPage.Icons) },
+            )
+        }
+
         SectionLabel("Controls")
         RuiListGroup {
             RuiListItem(
