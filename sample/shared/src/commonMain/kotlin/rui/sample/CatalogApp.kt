@@ -1,5 +1,11 @@
 package rui.sample
 
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.animation.core.Animatable
 import androidx.compose.foundation.layout.Box
@@ -23,6 +29,8 @@ import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import com.composeunstyled.TooltipHost
 import rui.components.RuiOverlayHost
@@ -231,6 +239,11 @@ public fun CatalogApp() {
         // caller-stack restore, no re-key needed.
         StatusBarAppearance(darkIcons = !darkTheme)
         val widthClass = RuiTheme.windowWidthClass
+        val motion = RuiTheme.motion
+        val layoutDirection = LocalLayoutDirection.current
+        // Positive means the next tab lives to the end of the reading
+        // direction; the root tab slide follows the bar's item order.
+        val tabForward = if (layoutDirection == LayoutDirection.Ltr) 1 else -1
         val rootNavItems = listOf(
             RuiNavigationBarItem("UI", RuiCommonIcons.Component),
             RuiNavigationBarItem("Blocks", RuiCommonIcons.Blocks),
@@ -373,30 +386,53 @@ public fun CatalogApp() {
                         ),
                     ) {
                         when (page) {
-                            CatalogPage.Root -> when (tab) {
-                                0 -> ComponentsScreen(
-                                    darkTheme = darkTheme,
-                                    onDarkThemeChange = { darkTheme = it; SampleSettings.putBoolean(KeyDarkTheme, it) },
-                                    glassMode = glassMode,
-                                    onGlassModeChange = { glassMode = it; SampleSettings.putString(KeyGlassMode, it.name) },
-                                    backdrop = glassBackdrop,
-                                    material = barMaterial,
-                                    floatingNavBarEnabled = floatingNavBarEnabled,
-                                    onFloatingNavBarEnabledChange = { floatingNavBarEnabled = it; SampleSettings.putBoolean(KeyFloatingNavBar, it) },
-                                    onOpen = { nav.push(it) },
-                                    contentPadding = padding,
-                                )
-                                1 -> BlocksScreen(
-                                    onOpen = { nav.push(it) },
-                                    contentPadding = padding,
-                                )
-                                2 -> TokensScreen(contentPadding = padding)
-                                LiquidTab -> LiquidGlassScreen(
-                                    backdrop = backdrop,
-                                    tuning = liquidTuning,
-                                    onTuningChange = { liquidTuning = it },
-                                    contentPadding = padding,
-                                )
+                            CatalogPage.Root -> AnimatedContent(
+                                targetState = tab,
+                                modifier = Modifier.fillMaxSize(),
+                                transitionSpec = {
+                                    val direction = if (targetState > initialState) {
+                                        tabForward
+                                    } else {
+                                        -tabForward
+                                    }
+                                    (
+                                        slideInHorizontally { width ->
+                                            direction * width / 10
+                                        } + fadeIn(animationSpec = motion.normal)
+                                        ) togetherWith
+                                        (
+                                            slideOutHorizontally { width ->
+                                                -direction * width / 10
+                                            } + fadeOut(animationSpec = motion.normal)
+                                            )
+                                },
+                                label = "catalog_root_tab",
+                            ) { currentTab ->
+                                when (currentTab) {
+                                    0 -> ComponentsScreen(
+                                        darkTheme = darkTheme,
+                                        onDarkThemeChange = { darkTheme = it; SampleSettings.putBoolean(KeyDarkTheme, it) },
+                                        glassMode = glassMode,
+                                        onGlassModeChange = { glassMode = it; SampleSettings.putString(KeyGlassMode, it.name) },
+                                        backdrop = glassBackdrop,
+                                        material = barMaterial,
+                                        floatingNavBarEnabled = floatingNavBarEnabled,
+                                        onFloatingNavBarEnabledChange = { floatingNavBarEnabled = it; SampleSettings.putBoolean(KeyFloatingNavBar, it) },
+                                        onOpen = { nav.push(it) },
+                                        contentPadding = padding,
+                                    )
+                                    1 -> BlocksScreen(
+                                        onOpen = { nav.push(it) },
+                                        contentPadding = padding,
+                                    )
+                                    2 -> TokensScreen(contentPadding = padding)
+                                    LiquidTab -> LiquidGlassScreen(
+                                        backdrop = backdrop,
+                                        tuning = liquidTuning,
+                                        onTuningChange = { liquidTuning = it },
+                                        contentPadding = padding,
+                                    )
+                                }
                             }
                             CatalogPage.SignIn -> SignInScreen(contentPadding = padding)
                             CatalogPage.Account -> AccountScreen(contentPadding = padding)
