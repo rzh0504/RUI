@@ -32,6 +32,10 @@ import rui.sample.ui.ContentColumn
 import rui.sample.ui.SectionLabel
 import rui.theme.RuiTheme
 
+/** Keep a menu panel a hair inside the card's trailing edge, like the
+ *  settings option menus. */
+private val MenuEdgeInset = 8.dp
+
 @OptIn(ExperimentalRuiApi::class)
 @Composable
 public fun DropdownMenuScreen(
@@ -65,6 +69,7 @@ public fun DropdownMenuScreen(
             RuiContextMenu(
                 backdrop = glassBackdrop,
                 material = glassMaterial,
+                reserveLeadingIcon = true,
                 menu = {
                     RuiDropdownMenuItem(
                         text = if (pinned) "Unpin" else "Pin",
@@ -126,6 +131,7 @@ public fun DropdownMenuScreen(
                 backdrop = glassBackdrop,
                 material = glassMaterial,
                 alignment = AnchorAlignment.End,
+                alignmentOffset = -MenuEdgeInset,
                 anchor = {
                     RuiListItem(
                         title = "Edit",
@@ -145,6 +151,9 @@ public fun DropdownMenuScreen(
                 onDismissRequest = { viewsMenu = false },
                 backdrop = glassBackdrop,
                 material = glassMaterial,
+                alignment = AnchorAlignment.End,
+                alignmentOffset = -MenuEdgeInset,
+                reserveLeadingIcon = true,
                 anchor = {
                     RuiListItem(
                         title = "Choose view",
@@ -178,6 +187,8 @@ public fun DropdownMenuScreen(
                 backdrop = glassBackdrop,
                 material = glassMaterial,
                 alignment = AnchorAlignment.End,
+                alignmentOffset = -MenuEdgeInset,
+                reserveLeadingIcon = true,
                 anchor = {
                     RuiListItem(
                         title = "Share",
@@ -214,6 +225,8 @@ public fun DropdownMenuScreen(
                 onDismissRequest = { longMenu = false },
                 backdrop = glassBackdrop,
                 material = glassMaterial,
+                alignment = AnchorAlignment.End,
+                alignmentOffset = -MenuEdgeInset,
                 anchor = {
                     RuiListItem(
                         title = "Long menu",
