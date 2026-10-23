@@ -21,10 +21,6 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.SolidColor
-import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.graphics.vector.path
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
@@ -45,10 +41,10 @@ import rui.components.rememberRuiScrollBehavior
 import rui.foundation.ExperimentalRuiApi
 import rui.foundation.LocalRuiLiquidGlassTuning
 import rui.foundation.RuiGlassMaterial
-import rui.foundation.RuiIcons
 import rui.foundation.RuiLiquidGlassTuning
 import rui.foundation.rememberBlurBackdrop
 import rui.foundation.utils.StatusBarAppearance
+import rui.icons.RuiCommonIcons
 import rui.sample.screens.AccountScreen
 import rui.sample.screens.BlocksScreen
 import rui.sample.screens.ButtonsScreen
@@ -179,8 +175,8 @@ private fun CatalogPage.title(): String = when (this) {
 
 /**
  * Root of the catalog app: a large-title app bar, a bottom navigation bar
- * switchable between the docked bar and the floating capsule (Components /
- * Tokens) and component pages pushed onto a [RuiNavDisplay] back stack.
+ * switchable between the docked bar and the floating capsule, and component
+ * pages pushed onto a [RuiNavDisplay] back stack.
  * [DialogHost] sits at the root so RuiDialog panels portal above everything.
  */
 /** The catalog-wide glass material. Solid shows what every surface does
@@ -195,22 +191,6 @@ private const val KeyLanguage = "appearance.language"
 
 /** Index of the liquid-glass tab among the root nav items. */
 private const val LiquidTab = 3
-
-/** Teardrop icon for the liquid-glass tab; the library icon set has none. */
-private val DropletIcon: ImageVector = ImageVector.Builder(
-    name = "SampleDroplet",
-    defaultWidth = 24.dp,
-    defaultHeight = 24.dp,
-    viewportWidth = 24f,
-    viewportHeight = 24f,
-).apply {
-    path(fill = SolidColor(Color(0xFF000000))) {
-        moveTo(12f, 2.69f)
-        lineToRelative(5.66f, 5.66f)
-        arcToRelative(8f, 8f, 0f, true, true, -11.31f, 0f)
-        close()
-    }
-}.build()
 
 @OptIn(ExperimentalRuiApi::class, ExperimentalComposeUiApi::class)
 @Composable
@@ -252,10 +232,10 @@ public fun CatalogApp() {
         StatusBarAppearance(darkIcons = !darkTheme)
         val widthClass = RuiTheme.windowWidthClass
         val rootNavItems = listOf(
-            RuiNavigationBarItem("Components", RuiIcons.Grid),
-            RuiNavigationBarItem("Blocks", RuiIcons.Layers),
-            RuiNavigationBarItem("Tokens", RuiIcons.Swatch),
-            RuiNavigationBarItem("Liquid", DropletIcon),
+            RuiNavigationBarItem("UI", RuiCommonIcons.Component),
+            RuiNavigationBarItem("Blocks", RuiCommonIcons.Blocks),
+            RuiNavigationBarItem("Tokens", RuiCommonIcons.Palette),
+            RuiNavigationBarItem("Liquid", RuiCommonIcons.Droplet),
         )
         // Dialogs and bottom sheets portal above the navigation stack —
         // both through the one overlay host.
