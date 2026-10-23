@@ -30,6 +30,8 @@ Settings|Settings|0
 House|Home|0
 LayoutGrid|Grid|0
 List|List|0
+Component|Component|0
+Blocks|Blocks|0
 PanelLeft|PanelLeft|0
 Maximize|Maximize|0
 Minimize|Minimize|0

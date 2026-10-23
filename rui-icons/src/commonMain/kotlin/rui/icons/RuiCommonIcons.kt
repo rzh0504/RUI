@@ -35,6 +35,8 @@ public object RuiCommonIcons {
     public val Home: ImageVector get() = lucideHome
     public val Grid: ImageVector get() = lucideGrid
     public val List: ImageVector get() = lucideList
+    public val Component: ImageVector get() = lucideComponent
+    public val Blocks: ImageVector get() = lucideBlocks
     public val PanelLeft: ImageVector get() = lucidePanelLeft
     public val Maximize: ImageVector get() = lucideMaximize
     public val Minimize: ImageVector get() = lucideMinimize

@@ -32,6 +32,8 @@ internal val allIcons: List<RuiCommonIcon> = listOf(
     RuiCommonIcon("Home", RuiCommonIcons.Home),
     RuiCommonIcon("Grid", RuiCommonIcons.Grid),
     RuiCommonIcon("List", RuiCommonIcons.List),
+    RuiCommonIcon("Component", RuiCommonIcons.Component),
+    RuiCommonIcon("Blocks", RuiCommonIcons.Blocks),
     RuiCommonIcon("PanelLeft", RuiCommonIcons.PanelLeft),
     RuiCommonIcon("Maximize", RuiCommonIcons.Maximize),
     RuiCommonIcon("Minimize", RuiCommonIcons.Minimize),
