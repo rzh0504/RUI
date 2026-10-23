@@ -19,35 +19,47 @@ import rui.components.RuiDivider
 import rui.components.RuiDropdownMenu
 import rui.components.RuiDropdownMenuItem
 import rui.components.RuiDropdownSubmenu
-import rui.components.RuiListItem
-import rui.components.RuiDropdownSubmenu
 import rui.components.RuiListGroup
 import rui.components.RuiListItem
 import rui.foundation.BlurBackdrop
 import rui.foundation.ExperimentalRuiApi
+import rui.foundation.RuiGlassMaterial
 import rui.foundation.RuiIcon
 import rui.foundation.RuiIcons
 import rui.foundation.RuiText
+import rui.sample.GlassMode
 import rui.sample.ui.ContentColumn
 import rui.sample.ui.SectionLabel
 import rui.theme.RuiTheme
 
+/** Keep a menu panel a hair inside the card's trailing edge, like the
+ *  settings option menus. */
+private val MenuEdgeInset = 8.dp
+
 @OptIn(ExperimentalRuiApi::class)
 @Composable
 public fun DropdownMenuScreen(
+    glassMode: GlassMode,
     backdrop: BlurBackdrop,
     contentPadding: PaddingValues = PaddingValues(0.dp),
 ) {
     var editMenu by remember { mutableStateOf(false) }
     var viewsMenu by remember { mutableStateOf(false) }
     var shareMenu by remember { mutableStateOf(false) }
+    var longMenu by remember { mutableStateOf(false) }
     var pinned by remember { mutableStateOf(false) }
     var tagColor by remember { mutableStateOf<Color?>(null) }
+
+    // The demo pages follow the Appearance glass mode; the Liquid tab owns
+    // the liquid-only showcase.
+    val glassBackdrop = if (glassMode == GlassMode.Solid) null else backdrop
+    val glassMaterial = if (glassMode == GlassMode.Liquid) RuiGlassMaterial.Liquid else RuiGlassMaterial.Frosted
 
     ContentColumn(contentPadding = contentPadding) {
         RuiText(
             text = "Menus anchor to their trigger, portal above the page, and " +
-                "dismiss on outside tap, back, or selection.",
+                "dismiss on outside tap, back, or selection. The panels " +
+                "follow the Appearance glass mode.",
             style = RuiTheme.typography.bodySm,
             color = RuiTheme.colors.contentMuted,
         )
@@ -55,7 +67,9 @@ public fun DropdownMenuScreen(
         SectionLabel("Context menu")
         RuiListGroup {
             RuiContextMenu(
-                backdrop = backdrop,
+                backdrop = glassBackdrop,
+                material = glassMaterial,
+                reserveLeadingIcon = true,
                 menu = {
                     RuiDropdownMenuItem(
                         text = if (pinned) "Unpin" else "Pin",
@@ -114,12 +128,14 @@ public fun DropdownMenuScreen(
             RuiDropdownMenu(
                 expanded = editMenu,
                 onDismissRequest = { editMenu = false },
-                backdrop = backdrop,
+                backdrop = glassBackdrop,
+                material = glassMaterial,
                 alignment = AnchorAlignment.End,
+                alignmentOffset = -MenuEdgeInset,
                 anchor = {
                     RuiListItem(
                         title = "Edit",
-                        subtitle = "Frosted panel with a destructive action",
+                        subtitle = "Glass panel with a destructive action",
                         onClick = { editMenu = !editMenu },
                     )
                 },
@@ -133,7 +149,11 @@ public fun DropdownMenuScreen(
             RuiDropdownMenu(
                 expanded = viewsMenu,
                 onDismissRequest = { viewsMenu = false },
-                backdrop = backdrop,
+                backdrop = glassBackdrop,
+                material = glassMaterial,
+                alignment = AnchorAlignment.End,
+                alignmentOffset = -MenuEdgeInset,
+                reserveLeadingIcon = true,
                 anchor = {
                     RuiListItem(
                         title = "Choose view",
@@ -164,8 +184,11 @@ public fun DropdownMenuScreen(
             RuiDropdownMenu(
                 expanded = shareMenu,
                 onDismissRequest = { shareMenu = false },
-                backdrop = backdrop,
+                backdrop = glassBackdrop,
+                material = glassMaterial,
                 alignment = AnchorAlignment.End,
+                alignmentOffset = -MenuEdgeInset,
+                reserveLeadingIcon = true,
                 anchor = {
                     RuiListItem(
                         title = "Share",
@@ -192,6 +215,32 @@ public fun DropdownMenuScreen(
                 }
                 RuiDivider()
                 RuiDropdownMenuItem(text = "Delete", onClick = { shareMenu = false }, danger = true)
+            }
+        }
+
+        SectionLabel("Long menu")
+        RuiListGroup {
+            RuiDropdownMenu(
+                expanded = longMenu,
+                onDismissRequest = { longMenu = false },
+                backdrop = glassBackdrop,
+                material = glassMaterial,
+                alignment = AnchorAlignment.End,
+                alignmentOffset = -MenuEdgeInset,
+                anchor = {
+                    RuiListItem(
+                        title = "Long menu",
+                        subtitle = "Scrolls once the panel hits the window cap",
+                        onClick = { longMenu = !longMenu },
+                    )
+                },
+            ) {
+                repeat(18) { index ->
+                    RuiDropdownMenuItem(
+                        text = "Option ${(index + 1).toString().padStart(2, '0')}",
+                        onClick = { longMenu = false },
+                    )
+                }
             }
         }
     }

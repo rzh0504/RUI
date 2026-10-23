@@ -27,6 +27,7 @@ import com.composeunstyled.UnstyledDialog
 import rui.foundation.BlurBackdrop
 import rui.foundation.ExperimentalRuiApi
 import rui.foundation.FrostedSurface
+import rui.foundation.RuiGlassMaterial
 import rui.foundation.RuiText
 import rui.foundation.RuiSurface
 import rui.theme.RuiTheme
@@ -55,6 +56,7 @@ public fun RuiDialog(
         modifier = modifier,
         frosted = false,
         backdrop = null,
+        material = RuiGlassMaterial.Frosted,
         title = title,
         supportingText = supportingText,
         actions = actions,
@@ -62,7 +64,8 @@ public fun RuiDialog(
     )
 }
 
-/** Frosted-skinned variant of [RuiDialog]; experimental until backdrop blur lands. */
+/** Glass-skinned variant of [RuiDialog] — frosted by default, or the
+ * liquid-glass material with [material]. */
 @ExperimentalRuiApi
 @Composable
 public fun RuiDialog(
@@ -71,6 +74,7 @@ public fun RuiDialog(
     frosted: Boolean,
     modifier: Modifier = Modifier,
     backdrop: BlurBackdrop? = null,
+    material: RuiGlassMaterial = RuiGlassMaterial.Frosted,
     title: String? = null,
     supportingText: String? = null,
     actions: @Composable RowScope.() -> Unit = {},
@@ -82,6 +86,7 @@ public fun RuiDialog(
         modifier = modifier,
         frosted = frosted,
         backdrop = backdrop,
+        material = material,
         title = title,
         supportingText = supportingText,
         actions = actions,
@@ -97,6 +102,7 @@ private fun RuiDialogPanel(
     modifier: Modifier,
     frosted: Boolean,
     backdrop: BlurBackdrop?,
+    material: RuiGlassMaterial,
     title: String?,
     supportingText: String?,
     actions: @Composable RowScope.() -> Unit,
@@ -153,6 +159,7 @@ private fun RuiDialogPanel(
                         modifier = Modifier.fillMaxWidth(),
                         shape = RuiTheme.shapes.xl,
                         backdrop = backdrop,
+                        material = material,
                     ) {
                         DialogBody(title, supportingText, actions, content)
                     }

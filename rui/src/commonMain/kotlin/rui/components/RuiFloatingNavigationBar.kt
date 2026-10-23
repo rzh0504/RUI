@@ -4,16 +4,17 @@ import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.absoluteOffset
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
-import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
@@ -33,19 +34,24 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.luminance
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import rui.foundation.BlurBackdrop
+import rui.foundation.RuiGlassMaterial
 import rui.foundation.RuiIcon
 import rui.foundation.RuiText
 import rui.foundation.blurSurface
+import rui.foundation.liquidGlassSurface
+import rui.foundation.liquidSource
 import rui.foundation.platform.isBlurSupported
 import rui.foundation.ruiMinimumTouchTarget
 import rui.theme.RuiTheme
@@ -114,12 +120,13 @@ public object RuiFloatingNavigationBarDefaults {
  * nothing; light themes wash it white, dark ones with the page's own
  * background.
  *
- * The capsule itself is frosted like the docked [RuiNavigationBar] — with a
- * [backdrop] it blurs the content behind itself; without one it is an
- * honest translucent stadium. Place inside [RuiScaffold]'s `bottomBar`
- * slot; the scaffold reports the capsule, its surrounding air and the
- * scrim's rise as content padding, so lists scroll under the floating bar
- * and never end up hidden behind it.
+ * The capsule itself is glass like the docked [RuiNavigationBar] — frosted
+ * by default, or the liquid material with `material`; with a [backdrop] it
+ * samples the content behind itself, without one it is an honest opaque
+ * stadium. Place inside [RuiScaffold]'s `bottomBar` slot; the scaffold
+ * reports the capsule, its surrounding air and the scrim's rise as content
+ * padding, so lists scroll under the floating bar and never end up hidden
+ * behind it.
  *
  * The current destination is marked by a pill in the accent color sliding
  * between the equal-width slots; the selected slot's icon and label read in
@@ -134,6 +141,15 @@ public object RuiFloatingNavigationBarDefaults {
  * index, so scroll-to-top patterns keep working; [selected] outside
  * `items.indices` selects nothing and parks the pill; an empty [items]
  * renders an empty capsule.
+ *
+ * By default the capsule spans the available width up to
+ * [RuiFloatingNavigationBarDefaults.MaxWidth] inside the bar's horizontal
+ * margins. Give [barWidth] an exact length to take over the geometry: the
+ * margins stop applying and the capsule measures [barWidth] edge to edge —
+ * include any breathing room in the value, and grow it with the items
+ * (`96.dp * items.size` keeps every slot at a constant width) rather than
+ * squeezing slots into a fixed length. [barHeight] overrides the capsule's
+ * height the same way.
  */
 @Composable
 public fun RuiFloatingNavigationBar(
@@ -143,6 +159,9 @@ public fun RuiFloatingNavigationBar(
     modifier: Modifier = Modifier,
     visible: Boolean = true,
     backdrop: BlurBackdrop? = null,
+    material: RuiGlassMaterial = RuiGlassMaterial.Frosted,
+    barWidth: Dp? = null,
+    barHeight: Dp = RuiFloatingNavigationBarDefaults.BarHeight,
     containerColor: Color = RuiTheme.colors.surfaceElevated,
     indicatorColor: Color = RuiTheme.colors.primary.copy(alpha = RuiFloatingNavigationBarDefaults.IndicatorAlpha),
 ) {
@@ -182,13 +201,16 @@ public fun RuiFloatingNavigationBar(
         label = "rui_floating_navigation_bar_indicator",
     )
 
-    // The glass recipe of FrostedSurface: blur + 72% tint with a backdrop, an
-    // honest 85% translucent tint without one.
-    val useBlur = backdrop != null && isBlurSupported
-    val tint = if (useBlur) {
-        containerColor.copy(alpha = 0.72f)
-    } else {
-        containerColor.copy(alpha = 0.85f)
+    // The glass recipes of FrostedSurface: with a backdrop, liquid glass
+    // (tuning alpha, refraction, no border) or the frosted blur + 72% tint;
+    // without a capture, an honest opaque stadium — no glass, no translucency.
+    val useLiquid = material == RuiGlassMaterial.Liquid &&
+        backdrop != null && backdrop.liquidSource != null && isBlurSupported
+    val useBlur = backdrop != null && isBlurSupported && !useLiquid
+    val tint = when {
+        useLiquid -> containerColor
+        useBlur -> containerColor.copy(alpha = 0.72f)
+        else -> containerColor
     }
 
     // The block spans to the screen's bottom edge so the scrim can cover the
@@ -212,28 +234,49 @@ public fun RuiFloatingNavigationBar(
                 .fillMaxWidth()
                 .graphicsLayer { translationY = slide.value }
                 .navigationBarsPadding()
-                .padding(top = RuiFloatingNavigationBarDefaults.ScrimRise),
+                .padding(top = RuiFloatingNavigationBarDefaults.ScrimRise)
+                // The bar owns its zone: taps on the air around and below the
+                // capsule used to fall through to the page content — a row
+                // behind the bar navigated on a tap aimed at nothing.
+                .pointerInput(Unit) {
+                    detectTapGestures { }
+                },
         ) {
+            // With a fixed barWidth the host owns the geometry: the margins
+            // stop applying so the capsule can use the width they reserved.
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(
-                        start = RuiFloatingNavigationBarDefaults.HorizontalMargin,
-                        end = RuiFloatingNavigationBarDefaults.HorizontalMargin,
-                        bottom = RuiFloatingNavigationBarDefaults.FloatingGap,
+                    .then(
+                        if (barWidth == null) {
+                            Modifier.padding(
+                                start = RuiFloatingNavigationBarDefaults.HorizontalMargin,
+                                end = RuiFloatingNavigationBarDefaults.HorizontalMargin,
+                                bottom = RuiFloatingNavigationBarDefaults.FloatingGap,
+                            )
+                        } else {
+                            Modifier.padding(bottom = RuiFloatingNavigationBarDefaults.FloatingGap)
+                        },
                     ),
             ) {
                 Box(
                     modifier = Modifier
                         .align(Alignment.Center)
-                        .fillMaxWidth()
-                        .widthIn(max = RuiFloatingNavigationBarDefaults.MaxWidth),
+                        .then(
+                            if (barWidth != null) {
+                                Modifier.width(barWidth)
+                            } else {
+                                Modifier
+                                    .fillMaxWidth()
+                                    .widthIn(max = RuiFloatingNavigationBarDefaults.MaxWidth)
+                            },
+                        ),
                 ) {
                     Box(
                         modifier = Modifier
                             .onSizeChanged { capsuleWidthPx = it.width }
                             .fillMaxWidth()
-                            .height(RuiFloatingNavigationBarDefaults.BarHeight)
+                            .height(barHeight)
                             .graphicsLayer {
                                 shape = shadowShape
                                 clip = false
@@ -245,31 +288,43 @@ public fun RuiFloatingNavigationBar(
                             }
                             .graphicsLayer { alpha = contentAlpha }
                             .then(
-                                if (useBlur) {
-                                    Modifier.blurSurface(
-                                        backdrop = backdrop,
+                                when {
+                                    useLiquid -> Modifier.liquidGlassSurface(
+                                        backdrop = requireNotNull(backdrop),
+                                        tint = tint,
+                                        shape = capsule,
+                                    )
+                                    useBlur -> Modifier.blurSurface(
+                                        backdrop = requireNotNull(backdrop),
                                         radius = RuiFloatingNavigationBarDefaults.BlurRadius,
                                         tint = tint,
                                         shape = capsule,
                                     )
-                                } else {
-                                    Modifier.background(tint, capsule)
+                                    else -> Modifier.background(tint, capsule)
                                 },
                             )
-                            .border(RuiTheme.dimens.borderWidth, colors.outlineSubtle, capsule),
+                            .then(
+                                // Liquid glass reads its edge from the specular
+                                // highlight; a hairline on top doubles the border.
+                                if (useLiquid) {
+                                    Modifier
+                                } else {
+                                    Modifier.border(RuiTheme.dimens.borderWidth, colors.outlineSubtle, capsule)
+                                },
+                            ),
                         contentAlignment = Alignment.CenterStart,
                     ) {
                         if (slotWidthPx > 0f && selected in items.indices) {
                             Box(
                                 modifier = Modifier
-                                    .offset {
-                                        val x = floatingNavBarIndicatorX(
+                                    .absoluteOffset {
+                                        val x = floatingNavBarIndicatorOffsetPx(
                                             fraction = position.value,
                                             slotWidthPx = slotWidthPx,
-                                            itemCount = items.size,
+                                            innerPaddingPx = innerPx,
                                             isLtr = isLtr,
                                         )
-                                        IntOffset((innerPx + x).roundToInt(), 0)
+                                        IntOffset(x.roundToInt(), 0)
                                     }
                                     .width(with(density) { slotWidthPx.toDp() })
                                     .height(RuiFloatingNavigationBarDefaults.RowHeight)
@@ -315,13 +370,16 @@ public fun RuiFloatingNavigationBar(
                                                 tint = itemColor,
                                             )
                                         }
-                                        RuiText(
-                                            text = item.label,
-                                            style = typography.labelSm,
-                                            color = itemColor,
-                                            fontWeight = if (isSelected) FontWeight.SemiBold else null,
-                                            maxLines = 1,
-                                        )
+                                        if (item.label.isNotBlank()) {
+                                            RuiText(
+                                                text = item.label,
+                                                style = typography.labelSm,
+                                                color = itemColor,
+                                                fontWeight = if (isSelected) FontWeight.SemiBold else null,
+                                                maxLines = 1,
+                                                overflow = TextOverflow.Ellipsis,
+                                            )
+                                        }
                                     }
                                 }
                             }
@@ -369,17 +427,18 @@ internal fun floatingNavBarSlotWidthPx(capsuleWidthPx: Float, innerPaddingPx: Fl
     }
 
 /**
- * X offset of the selection pill for [fraction] slots, measured from the
- * capsule's start edge — positive along the reading direction, mirrored
- * (negative screen x, the pill leaving the start edge leftwards) in RTL.
+ * Physical x offset of the selection pill from its start-aligned position:
+ * the pill is aligned to the capsule's start edge (left in LTR, right in
+ * RTL), so the walk is positive in LTR and negative in RTL. The inner ring
+ * is folded in. Apply it with an absolute (non-mirroring) offset — a
+ * relative offset would mirror this already-mirrored value again.
  */
-internal fun floatingNavBarIndicatorX(
+internal fun floatingNavBarIndicatorOffsetPx(
     fraction: Float,
     slotWidthPx: Float,
-    itemCount: Int,
+    innerPaddingPx: Float,
     isLtr: Boolean,
-): Float = if (isLtr) {
-    fraction * slotWidthPx
-} else {
-    (itemCount - 1 - fraction) * slotWidthPx
+): Float {
+    val fromStart = innerPaddingPx + fraction * slotWidthPx
+    return if (isLtr) fromStart else -fromStart
 }

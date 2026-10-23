@@ -7,8 +7,9 @@ import kotlin.test.assertTrue
 
 /**
  * The floating bar's indicator is arithmetic: equal slots carved out of the
- * measured capsule, walked by index along the reading direction. Everything
- * else (animation, semantics) is Compose behavior — these pin the math,
+ * measured capsule, walked from the capsule's start edge. The pill is
+ * start-aligned in layout, so the offset is physical — positive in LTR,
+ * negative in RTL — and already includes the inner ring. These pin the math,
  * including the RTL mirror and the degenerate sizes.
  */
 class RuiFloatingNavigationBarTest {
@@ -31,24 +32,27 @@ class RuiFloatingNavigationBarTest {
     }
 
     @Test
-    fun indicatorWalksForwardInLtr() {
-        assertEquals(0f, floatingNavBarIndicatorX(fraction = 0f, slotWidthPx = 88f, itemCount = 4, isLtr = true))
-        assertEquals(88f, floatingNavBarIndicatorX(fraction = 1f, slotWidthPx = 88f, itemCount = 4, isLtr = true))
-        assertEquals(264f, floatingNavBarIndicatorX(fraction = 3f, slotWidthPx = 88f, itemCount = 4, isLtr = true))
+    fun indicatorWalksRightFromTheStartEdgeInLtr() {
+        assertEquals(4f, floatingNavBarIndicatorOffsetPx(0f, 88f, 4f, isLtr = true))
+        assertEquals(92f, floatingNavBarIndicatorOffsetPx(1f, 88f, 4f, isLtr = true))
+        assertEquals(268f, floatingNavBarIndicatorOffsetPx(3f, 88f, 4f, isLtr = true))
     }
 
     @Test
-    fun indicatorMirrorsInRtl() {
-        // RTL starts at the right edge but remains inside the capsule.
-        assertEquals(264f, floatingNavBarIndicatorX(fraction = 0f, slotWidthPx = 88f, itemCount = 4, isLtr = false))
-        assertEquals(176f, floatingNavBarIndicatorX(fraction = 1f, slotWidthPx = 88f, itemCount = 4, isLtr = false))
-        assertEquals(0f, floatingNavBarIndicatorX(fraction = 3f, slotWidthPx = 88f, itemCount = 4, isLtr = false))
+    fun indicatorWalksLeftFromTheStartEdgeInRtl() {
+        // The start edge is the right side; negative physical offsets keep the
+        // pill inside the capsule instead of pushing it past the screen edge.
+        assertEquals(-4f, floatingNavBarIndicatorOffsetPx(0f, 88f, 4f, isLtr = false))
+        assertEquals(-92f, floatingNavBarIndicatorOffsetPx(1f, 88f, 4f, isLtr = false))
+        assertEquals(-268f, floatingNavBarIndicatorOffsetPx(3f, 88f, 4f, isLtr = false))
     }
 
     @Test
     fun indicatorIsContinuousBetweenSlots() {
         // Mid-flight between slot 1 and slot 2, not parked on either.
-        val x = floatingNavBarIndicatorX(fraction = 1.5f, slotWidthPx = 88f, itemCount = 4, isLtr = true)
-        assertTrue(abs(x - 132f) < 0.01f)
+        val ltr = floatingNavBarIndicatorOffsetPx(1.5f, 88f, 4f, isLtr = true)
+        assertTrue(abs(ltr - 136f) < 0.01f)
+        val rtl = floatingNavBarIndicatorOffsetPx(1.5f, 88f, 4f, isLtr = false)
+        assertTrue(abs(rtl + 136f) < 0.01f)
     }
 }

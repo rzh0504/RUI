@@ -15,7 +15,11 @@ import rui.components.RuiListItem
 import rui.components.RuiListSection
 import rui.components.RuiRadioGroup
 import rui.components.RuiRadioRow
+import rui.components.RuiSelectionOption
+import rui.components.RuiSelectionRow
 import rui.components.RuiSwitch
+import rui.foundation.BlurBackdrop
+import rui.foundation.RuiGlassMaterial
 import rui.foundation.RuiText
 import rui.sample.ui.ContentColumn
 import rui.sample.ui.SectionLabel
@@ -25,19 +29,34 @@ private enum class Appearance {
     Automatic, Light, Dark,
 }
 
+private enum class Network {
+    Studio5G, Studio24G, Guest,
+}
+
+private enum class Language {
+    English, Chinese, French,
+}
+
 @Composable
-public fun ListsScreen(contentPadding: PaddingValues = PaddingValues(0.dp)) {
+public fun ListsScreen(
+    backdrop: BlurBackdrop?,
+    material: RuiGlassMaterial,
+    contentPadding: PaddingValues = PaddingValues(0.dp),
+) {
     var wifi by rememberSaveable { mutableStateOf(true) }
     var bluetooth by rememberSaveable { mutableStateOf(false) }
     var cellular by rememberSaveable { mutableStateOf(true) }
     var appearance by rememberSaveable { mutableStateOf(Appearance.Automatic) }
+    var network by rememberSaveable { mutableStateOf(Network.Studio5G) }
+    var language by rememberSaveable { mutableStateOf(Language.English) }
 
     ContentColumn(contentPadding = contentPadding) {
         RuiText(
             text = "The settings page skeleton: a muted header, the grouped " +
                 "card of rows and an optional muted footer note. Rows come in " +
                 "the archetypes a settings page needs — toggles, exclusive " +
-                "selection, and value rows that lead somewhere.",
+                "selection, menu-driven value rows, and value rows that lead " +
+                "somewhere.",
             style = RuiTheme.typography.bodySm,
             color = RuiTheme.colors.contentMuted,
             modifier = Modifier.fillMaxWidth(),
@@ -90,19 +109,34 @@ public fun ListsScreen(contentPadding: PaddingValues = PaddingValues(0.dp)) {
         SectionLabel("Value rows")
         RuiListSection(
             header = null,
-            footer = "Deleted drafts are removed from every device signed in " +
-                "to this account.",
+            footer = "Menu rows pick their value in place; the last row leads " +
+                "to a detail page. Deleted drafts are removed from every " +
+                "device signed in to this account.",
         ) {
-            RuiListItem(
+            RuiSelectionRow(
                 title = "Wi-Fi network",
-                value = "Studio 5G",
-                showChevron = true,
+                options = listOf(
+                    RuiSelectionOption(Network.Studio5G, "Studio 5G"),
+                    RuiSelectionOption(Network.Studio24G, "Studio 2.4G"),
+                    RuiSelectionOption(Network.Guest, "Guest"),
+                ),
+                selected = network,
+                onSelect = { network = it },
+                backdrop = backdrop,
+                material = material,
             )
             RuiDivider(inset = RuiTheme.spacing.lg)
-            RuiListItem(
+            RuiSelectionRow(
                 title = "Language",
-                value = "English",
-                showChevron = true,
+                options = listOf(
+                    RuiSelectionOption(Language.English, "English"),
+                    RuiSelectionOption(Language.Chinese, "简体中文"),
+                    RuiSelectionOption(Language.French, "Français"),
+                ),
+                selected = language,
+                onSelect = { language = it },
+                backdrop = backdrop,
+                material = material,
             )
             RuiDivider(inset = RuiTheme.spacing.lg)
             RuiListItem(

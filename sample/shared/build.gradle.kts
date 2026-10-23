@@ -34,6 +34,7 @@ kotlin {
     sourceSets {
         commonMain.dependencies {
             implementation(project(":rui"))
+            implementation(project(":rui-icons"))
             implementation(compose.runtime)
             implementation(compose.foundation)
             implementation(compose.ui)

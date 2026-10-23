@@ -1,6 +1,7 @@
 package rui.components
 
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -8,16 +9,20 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.selection.selectable
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import rui.foundation.rememberRuiIndication
 import rui.foundation.ruiMinimumTouchTarget
 import rui.theme.RuiTheme
 
@@ -74,6 +79,8 @@ public fun RuiColorPalette(
                         Box(Modifier.weight(1f))
                     } else {
                         val isSelected = color == selected
+                        val interactionSource = remember { MutableInteractionSource() }
+                        val indication = rememberRuiIndication()
                         Box(
                             modifier = Modifier.weight(1f),
                             contentAlignment = Alignment.Center,
@@ -82,10 +89,17 @@ public fun RuiColorPalette(
                                 modifier = Modifier
                                     .ruiMinimumTouchTarget()
                                     .size(swatchSize + selectionGap * 2 + selectionStroke)
+                                    // The swatch cell is a circle even though its
+                                    // touch box is square; clip the state layer to
+                                    // the circle or it paints a rectangle over the
+                                    // swatch's corners.
+                                    .clip(CircleShape)
                                     .then(
                                         if (enabled) {
                                             Modifier.selectable(
                                                 selected = isSelected,
+                                                interactionSource = interactionSource,
+                                                indication = indication,
                                                 role = Role.RadioButton,
                                                 onClick = { onSelectState.value(color) },
                                             )

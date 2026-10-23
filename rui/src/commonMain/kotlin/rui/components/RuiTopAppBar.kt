@@ -10,6 +10,7 @@ import androidx.compose.animation.core.animateTo
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.rememberSplineBasedDecay
 import androidx.compose.foundation.background
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -38,6 +39,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
 import androidx.compose.ui.input.nestedscroll.NestedScrollSource
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.layout.layoutId
 import androidx.compose.ui.layout.onSizeChanged
@@ -51,10 +53,13 @@ import androidx.compose.ui.util.fastRoundToInt
 import androidx.compose.ui.util.lerp
 import kotlinx.coroutines.launch
 import rui.foundation.BlurBackdrop
+import rui.foundation.RuiGlassMaterial
 import rui.foundation.RuiIcon
 import rui.foundation.RuiIcons
 import rui.foundation.RuiText
 import rui.foundation.blurSurface
+import rui.foundation.liquidGlassSurface
+import rui.foundation.liquidSource
 import rui.foundation.platform.isBlurSupported
 import rui.theme.RuiTheme
 import kotlin.math.PI
@@ -64,9 +69,11 @@ import kotlin.math.abs
  * The app bar: a small centered-title bar, or a large-title variant for entry
  * screens. The bar shares the page [RuiTheme.colors.background] color — at
  * rest it merges with the screen, and scrolled content is only revealed
- * through the frosted blur (miuix's unified-bar design). With a [backdrop]
- * the bar renders as frosted glass over scrolling content; without one it is
- * an opaque page-background strip. No hairline — the blur edge separates the
+ * through the glass (miuix's unified-bar design). With a [backdrop] the bar
+ * renders as glass over scrolling content — frosted by default, liquid with
+ * `material = RuiGlassMaterial.Liquid` (the capture must have been created
+ * with `rememberBlurBackdrop(liquid = true)`); without a backdrop it is an
+ * opaque page-background strip. No hairline — the blur edge separates the
  * bar from the content, as in miuix/iOS.
  *
  * Pass a [scrollBehavior] (from [rememberRuiScrollBehavior]) for the iOS-style
@@ -88,22 +95,42 @@ public fun RuiTopAppBar(
     onBack: () -> Unit = {},
     actions: @Composable RowScope.() -> Unit = {},
     backdrop: BlurBackdrop? = null,
+    material: RuiGlassMaterial = RuiGlassMaterial.Frosted,
     scrollBehavior: RuiScrollBehavior? = null,
 ) {
     val colors = RuiTheme.colors
     val backLabel = RuiTheme.strings.back
 
-    val barBackground = if (backdrop != null && isBlurSupported) {
-        Modifier.blurSurface(
-            backdrop = backdrop,
-            radius = 32.dp,
-            tint = colors.background.copy(alpha = 0.65f),
-        )
-    } else {
-        Modifier.background(colors.background)
+    val barBackground = when {
+        backdrop != null && material == RuiGlassMaterial.Liquid && backdrop.liquidSource != null && isBlurSupported ->
+            Modifier.liquidGlassSurface(
+                backdrop = backdrop,
+                tint = colors.background,
+                // A strip attached to the screen's edges carries no edge
+                // glass — the highlight would read as a glowing frame
+                // (iOS's bar treatment).
+                edgeEffects = false,
+            )
+        backdrop != null && isBlurSupported ->
+            Modifier.blurSurface(
+                backdrop = backdrop,
+                radius = 32.dp,
+                tint = colors.background.copy(alpha = 0.65f),
+            )
+        else -> Modifier.background(colors.background)
     }
 
-    Column(modifier = modifier.fillMaxWidth().then(barBackground).statusBarsPadding()) {
+    Column(
+        modifier = modifier
+            .fillMaxWidth()
+            .then(barBackground)
+            .statusBarsPadding()
+            // The bar's strip swallows taps, like the bottom bars — content
+            // scrolling beneath it must not react to taps on the chrome.
+            .pointerInput(Unit) {
+                detectTapGestures { }
+            },
+    ) {
         when {
             scrollBehavior != null -> CollapsingTopAppBarLayout(
                 title = title,

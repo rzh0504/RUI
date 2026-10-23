@@ -11,12 +11,13 @@ import androidx.compose.ui.Modifier
 import rui.components.RuiButton
 import rui.components.RuiButtonVariant
 import rui.components.RuiDialog
-import rui.components.RuiDivider
 import rui.components.RuiListGroup
 import rui.components.RuiListItem
 import rui.foundation.BlurBackdrop
 import rui.foundation.ExperimentalRuiApi
+import rui.foundation.RuiGlassMaterial
 import rui.foundation.RuiText
+import rui.sample.GlassMode
 import rui.sample.ui.ContentColumn
 import rui.sample.ui.SectionLabel
 import rui.theme.RuiTheme
@@ -24,7 +25,7 @@ import rui.theme.RuiTheme
 @OptIn(ExperimentalRuiApi::class)
 @Composable
 public fun DialogScreen(
-    frostedEnabled: Boolean,
+    glassMode: GlassMode,
     backdrop: BlurBackdrop,
     contentPadding: PaddingValues = PaddingValues(0.dp),
 ) {
@@ -33,8 +34,9 @@ public fun DialogScreen(
 
     ContentColumn(contentPadding = contentPadding) {
         RuiText(
-            text = "Portaled through DialogHost at the app root. Esc and back " +
-                "dismiss, the scrim fades, the panel scales in on a spring.",
+            text = "Portaled through RuiOverlayHost at the app root. Esc and back " +
+                "dismiss, the scrim fades, the panel scales in on a spring. " +
+                "The glass panel follows the Appearance glass mode.",
             style = RuiTheme.typography.bodySm,
             color = RuiTheme.colors.contentMuted,
         )
@@ -49,11 +51,15 @@ public fun DialogScreen(
             )
         }
 
-        SectionLabel("Frosted")
+        SectionLabel("Glass")
         RuiListGroup {
             RuiListItem(
-                title = "Frosted panel",
-                subtitle = if (frostedEnabled) "Backdrop blur behind a translucent panel" else "Frosted is off — solid surface",
+                title = "Glass panel",
+                subtitle = when (glassMode) {
+                    GlassMode.Solid -> "Solid mode — opaque elevated surface"
+                    GlassMode.Frosted -> "Backdrop blur behind a translucent panel"
+                    GlassMode.Liquid -> "Edge refraction and a specular highlight"
+                },
                 showChevron = true,
                 onClick = { glassDialog = true },
             )
@@ -78,9 +84,10 @@ public fun DialogScreen(
     RuiDialog(
         visible = glassDialog,
         onDismissRequest = { glassDialog = false },
-        frosted = frostedEnabled,
-        backdrop = backdrop,
-        title = "Frosted panel",
+        frosted = glassMode != GlassMode.Solid,
+        backdrop = if (glassMode == GlassMode.Solid) null else backdrop,
+        material = if (glassMode == GlassMode.Liquid) RuiGlassMaterial.Liquid else RuiGlassMaterial.Frosted,
+        title = "Glass panel",
         supportingText = "Unsupported platforms get a near-opaque fallback automatically.",
         actions = {
             RuiButton(onClick = { glassDialog = false }, variant = RuiButtonVariant.Tonal) {

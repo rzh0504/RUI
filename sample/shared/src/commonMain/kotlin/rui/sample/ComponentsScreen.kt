@@ -7,7 +7,11 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.Modifier
 import rui.components.RuiListGroup
 import rui.components.RuiListItem
+import rui.components.RuiSelectionOption
+import rui.components.RuiSelectionRow
 import rui.components.RuiSwitch
+import rui.foundation.BlurBackdrop
+import rui.foundation.RuiGlassMaterial
 import rui.foundation.RuiText
 import rui.sample.ui.ContentColumn
 import rui.sample.ui.SectionLabel
@@ -17,8 +21,10 @@ import rui.theme.RuiTheme
 public fun ComponentsScreen(
     darkTheme: Boolean,
     onDarkThemeChange: (Boolean) -> Unit,
-    frostedEnabled: Boolean,
-    onFrostedEnabledChange: (Boolean) -> Unit,
+    glassMode: GlassMode,
+    onGlassModeChange: (GlassMode) -> Unit,
+    backdrop: BlurBackdrop?,
+    material: RuiGlassMaterial,
     floatingNavBarEnabled: Boolean,
     onFloatingNavBarEnabledChange: (Boolean) -> Unit,
     onOpen: (CatalogPage) -> Unit,
@@ -31,9 +37,17 @@ public fun ComponentsScreen(
                 title = "Dark appearance",
                 trailing = { RuiSwitch(checked = darkTheme, onCheckedChange = onDarkThemeChange) },
             )
-            RuiListItem(
-                title = "Frosted material",
-                trailing = { RuiSwitch(checked = frostedEnabled, onCheckedChange = onFrostedEnabledChange) },
+            RuiSelectionRow(
+                title = "Glass material",
+                options = listOf(
+                    RuiSelectionOption(GlassMode.Solid, "Solid"),
+                    RuiSelectionOption(GlassMode.Frosted, "Frosted glass"),
+                    RuiSelectionOption(GlassMode.Liquid, "Liquid glass"),
+                ),
+                selected = glassMode,
+                onSelect = onGlassModeChange,
+                backdrop = backdrop,
+                material = material,
             )
             RuiListItem(
                 title = "Floating navigation bar",
@@ -49,6 +63,16 @@ public fun ComponentsScreen(
                 subtitle = "Built-in strings in English and Chinese",
                 showChevron = true,
                 onClick = { onOpen(CatalogPage.Localization) },
+            )
+        }
+
+        SectionLabel("Foundation")
+        RuiListGroup {
+            RuiListItem(
+                title = "Icons",
+                subtitle = "Common glyphs with semantic names and RTL mirroring",
+                showChevron = true,
+                onClick = { onOpen(CatalogPage.Icons) },
             )
         }
 

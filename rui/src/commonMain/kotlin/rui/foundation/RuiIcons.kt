@@ -11,7 +11,9 @@ import androidx.compose.ui.unit.dp
 
 /**
  * The tiny icon set Rui components need themselves. Apps bring their own icons
- * (e.g. Compose Unstyled's Lucide set) and hand them to [RuiIcon].
+ * (the optional rui-icons module wraps a curated Lucide set) and hand them to
+ * [RuiIcon]. Direction-dependent glyphs carry [ImageVector.autoMirror], so they
+ * flip in RTL layouts.
  */
 public object RuiIcons {
     public val Check: ImageVector by lazy {
@@ -32,7 +34,7 @@ public object RuiIcons {
     }
 
     public val ChevronLeft: ImageVector by lazy {
-        strokedIcon("RuiChevronLeft") {
+        strokedIcon("RuiChevronLeft", autoMirror = true) {
             moveTo(14.5f, 5.5f)
             lineTo(8f, 12f)
             lineTo(14.5f, 18.5f)
@@ -40,7 +42,7 @@ public object RuiIcons {
     }
 
     public val ChevronRight: ImageVector by lazy {
-        strokedIcon("RuiChevronRight") {
+        strokedIcon("RuiChevronRight", autoMirror = true) {
             moveTo(9.5f, 5.5f)
             lineTo(16f, 12f)
             lineTo(9.5f, 18.5f)
@@ -157,13 +159,18 @@ public object RuiIcons {
         }
     }
 
-    public val SkipBack: ImageVector by lazy { transportIcon("RuiSkipBack", forward = false) }
+    public val SkipBack: ImageVector by lazy {
+        transportIcon("RuiSkipBack", forward = false, autoMirror = true)
+    }
 
-    public val SkipForward: ImageVector by lazy { transportIcon("RuiSkipForward", forward = true) }
+    public val SkipForward: ImageVector by lazy {
+        transportIcon("RuiSkipForward", forward = true, autoMirror = true)
+    }
 
     private fun strokedIcon(
         name: String,
         width: Float = 2.2f,
+        autoMirror: Boolean = false,
         path: PathBuilder.() -> Unit,
     ): ImageVector =
         ImageVector.Builder(
@@ -172,6 +179,7 @@ public object RuiIcons {
             defaultHeight = 24.dp,
             viewportWidth = 24f,
             viewportHeight = 24f,
+            autoMirror = autoMirror,
         ).apply {
             addPath(
                 pathData = PathData { path() },
@@ -201,13 +209,14 @@ public object RuiIcons {
         }.build()
 
     /** The music transport's filled triangle plus bar, mirrored without transforms. */
-    private fun transportIcon(name: String, forward: Boolean): ImageVector =
+    private fun transportIcon(name: String, forward: Boolean, autoMirror: Boolean = false): ImageVector =
         ImageVector.Builder(
             name = name,
             defaultWidth = 24.dp,
             defaultHeight = 24.dp,
             viewportWidth = 24f,
             viewportHeight = 24f,
+            autoMirror = autoMirror,
         ).apply {
             addPath(
                 pathData = PathData {

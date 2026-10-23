@@ -1,8 +1,15 @@
 package rui.sample
 
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.animation.core.Animatable
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
@@ -11,6 +18,7 @@ import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableStateOf
@@ -21,6 +29,8 @@ import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import com.composeunstyled.TooltipHost
 import rui.components.RuiOverlayHost
@@ -37,9 +47,12 @@ import rui.components.navigation.RuiNavController
 import rui.components.navigation.rememberRuiNavBackStack
 import rui.components.rememberRuiScrollBehavior
 import rui.foundation.ExperimentalRuiApi
-import rui.foundation.RuiIcons
+import rui.foundation.LocalRuiLiquidGlassTuning
+import rui.foundation.RuiGlassMaterial
+import rui.foundation.RuiLiquidGlassTuning
 import rui.foundation.rememberBlurBackdrop
 import rui.foundation.utils.StatusBarAppearance
+import rui.icons.RuiCommonIcons
 import rui.sample.screens.AccountScreen
 import rui.sample.screens.BlocksScreen
 import rui.sample.screens.ButtonsScreen
@@ -55,6 +68,7 @@ import rui.sample.screens.DropdownMenuScreen
 import rui.sample.screens.DrawerScreen
 import rui.sample.screens.AvatarScreen
 import rui.sample.screens.ImageScreen
+import rui.sample.screens.IconsScreen
 import rui.sample.screens.DisclosureScreen
 import rui.sample.screens.ProgressScreen
 import rui.sample.screens.PullToRefreshScreen
@@ -72,6 +86,7 @@ import rui.sample.screens.TokensScreen
 import rui.sample.screens.TogglesScreen
 import rui.sample.screens.LazyListScreen
 import rui.sample.screens.ListsScreen
+import rui.sample.screens.LiquidGlassScreen
 import rui.sample.screens.BannerScreen
 import rui.sample.screens.LocalizationScreen
 import rui.sample.screens.ReorderScreen
@@ -115,6 +130,7 @@ public sealed interface CatalogPage : RuiNavKey {
     public data object Drawer : CatalogPage
     public data object Lists : CatalogPage
     public data object LazyList : CatalogPage
+    public data object Icons : CatalogPage
     public data object InlineBanner : CatalogPage
     public data object Localization : CatalogPage
     public data object Reorder : CatalogPage
@@ -155,6 +171,7 @@ private fun CatalogPage.title(): String = when (this) {
     CatalogPage.Drawer -> "Drawer"
     CatalogPage.Lists -> "Lists"
     CatalogPage.LazyList -> "Lazy list"
+    CatalogPage.Icons -> "Icons"
     CatalogPage.InlineBanner -> "Inline banner"
     CatalogPage.Localization -> "Localization"
     CatalogPage.Reorder -> "Reorder"
@@ -166,22 +183,40 @@ private fun CatalogPage.title(): String = when (this) {
 
 /**
  * Root of the catalog app: a large-title app bar, a bottom navigation bar
- * switchable between the docked bar and the floating capsule (Components /
- * Tokens) and component pages pushed onto a [RuiNavDisplay] back stack.
+ * switchable between the docked bar and the floating capsule, and component
+ * pages pushed onto a [RuiNavDisplay] back stack.
  * [DialogHost] sits at the root so RuiDialog panels portal above everything.
  */
+/** The catalog-wide glass material. Solid shows what every surface does
+ *  with no capture at all; Frosted and Liquid thread the mode through the
+ *  bars and the overlay demo pages. The Liquid tab is mode-independent. */
+public enum class GlassMode { Solid, Frosted, Liquid }
+
 private const val KeyDarkTheme = "appearance.darkTheme"
-private const val KeyFrosted = "appearance.frosted"
+private const val KeyGlassMode = "appearance.glassMode"
 private const val KeyFloatingNavBar = "appearance.floatingNavBar"
 private const val KeyLanguage = "appearance.language"
+
+/** Index of the liquid-glass tab among the root nav items. */
+private const val LiquidTab = 3
 
 @OptIn(ExperimentalRuiApi::class, ExperimentalComposeUiApi::class)
 @Composable
 public fun CatalogApp() {
     val systemDark = isSystemInDarkTheme()
     var darkTheme by remember { mutableStateOf(SampleSettings.getBoolean(KeyDarkTheme, systemDark)) }
-    var frostedEnabled by remember { mutableStateOf(SampleSettings.getBoolean(KeyFrosted, true)) }
+    var glassMode by remember {
+        mutableStateOf(
+            GlassMode.entries.firstOrNull {
+                it.name == SampleSettings.getString(KeyGlassMode, GlassMode.Frosted.name)
+            } ?: GlassMode.Frosted,
+        )
+    }
     var floatingNavBarEnabled by remember { mutableStateOf(SampleSettings.getBoolean(KeyFloatingNavBar, false)) }
+    // Liquid-material test bench: the Liquid tab's sliders write it, the
+    // provider makes every liquid surface below — bars included — follow.
+    // Session-scoped on purpose; the shipped look is one app restart away.
+    var liquidTuning by remember { mutableStateOf(RuiLiquidGlassTuning()) }
     var languageChoice by remember {
         mutableStateOf(
             LanguageChoice.entries.firstOrNull { it.name == SampleSettings.getString(KeyLanguage, LanguageChoice.System.name) }
@@ -204,13 +239,20 @@ public fun CatalogApp() {
         // caller-stack restore, no re-key needed.
         StatusBarAppearance(darkIcons = !darkTheme)
         val widthClass = RuiTheme.windowWidthClass
+        val motion = RuiTheme.motion
+        val layoutDirection = LocalLayoutDirection.current
+        // Positive means the next tab lives to the end of the reading
+        // direction; the root tab slide follows the bar's item order.
+        val tabForward = if (layoutDirection == LayoutDirection.Ltr) 1 else -1
         val rootNavItems = listOf(
-            RuiNavigationBarItem("Components", RuiIcons.Grid),
-            RuiNavigationBarItem("Blocks", RuiIcons.Layers),
-            RuiNavigationBarItem("Tokens", RuiIcons.Swatch),
+            RuiNavigationBarItem("UI", RuiCommonIcons.Component),
+            RuiNavigationBarItem("Blocks", RuiCommonIcons.Blocks),
+            RuiNavigationBarItem("Tokens", RuiCommonIcons.Palette),
+            RuiNavigationBarItem("Liquid", RuiCommonIcons.Droplet),
         )
         // Dialogs and bottom sheets portal above the navigation stack —
         // both through the one overlay host.
+        CompositionLocalProvider(LocalRuiLiquidGlassTuning provides liquidTuning) {
         RuiOverlayHost {
             // Tooltip panels portal above the navigation stack too.
             TooltipHost {
@@ -259,14 +301,30 @@ public fun CatalogApp() {
                 // One backdrop per stack entry — the capture and the bars
                 // sampling it must share a coordinate space. A backdrop shared
                 // across stacked pages samples covered pages' translated
-                // content and the blur lands misaligned.
+                // content and the blur lands misaligned. The liquid capture
+                // costs one extra record per frame, so it exists only where
+                // something consumes it: everything in Liquid mode, and the
+                // Liquid tab (mode-independent) while it shows.
                 val background = RuiTheme.colors.background
-                val backdrop = rememberBlurBackdrop {
+                val useGlass = glassMode != GlassMode.Solid
+                val barMaterial = if (glassMode == GlassMode.Liquid) {
+                    RuiGlassMaterial.Liquid
+                } else {
+                    RuiGlassMaterial.Frosted
+                }
+                val backdrop = rememberBlurBackdrop(
+                    liquid = glassMode == GlassMode.Liquid || (atRoot && tab == LiquidTab),
+                ) {
                     drawRect(background)
                     drawContent()
                 }
+                val glassBackdrop = if (useGlass) backdrop else null
+                // The Liquid tab showcases the material in every mode, so its
+                // liquid surfaces need the page capture even when the app's
+                // bars are solid; only the bars follow the mode.
+                val scaffoldBackdrop = if (atRoot && tab == LiquidTab) backdrop else glassBackdrop
                 RuiScaffold(
-                    backdrop = backdrop,
+                    backdrop = scaffoldBackdrop,
                     topBar = {
                         if (page == CatalogPage.NowPlaying) {
                             // The music block is fully immersive: it owns
@@ -274,7 +332,8 @@ public fun CatalogApp() {
                         } else if (atRoot) {
                             RuiTopAppBar(
                                 title = page.title(),
-                                backdrop = backdrop,
+                                backdrop = glassBackdrop,
+                                material = barMaterial,
                                 scrollBehavior = scrollBehavior,
                             )
                         } else {
@@ -282,7 +341,8 @@ public fun CatalogApp() {
                                 title = page.title(),
                                 showBack = true,
                                 onBack = { nav.pop() },
-                                backdrop = backdrop,
+                                backdrop = glassBackdrop,
+                                material = barMaterial,
                             )
                         }
                     },
@@ -291,18 +351,26 @@ public fun CatalogApp() {
                         // or sidebar leads the root page instead.
                         if (atRoot && widthClass == RuiWindowWidthClass.Compact) {
                             if (floatingNavBarEnabled) {
-                                RuiFloatingNavigationBar(
-                                    items = rootNavItems,
-                                    selected = tab,
-                                    onSelect = { tab = it },
-                                    backdrop = backdrop,
-                                )
+                                // Four tabs fill the capsule — take back most
+                                // of the standing margins so the slots stay
+                                // wide (12dp breathing per side).
+                                BoxWithConstraints {
+                                    RuiFloatingNavigationBar(
+                                        items = rootNavItems,
+                                        selected = tab,
+                                        onSelect = { tab = it },
+                                        backdrop = glassBackdrop,
+                                        material = barMaterial,
+                                        barWidth = maxWidth - 24.dp,
+                                    )
+                                }
                             } else {
                                 RuiNavigationBar(
                                     items = rootNavItems,
                                     selected = tab,
                                     onSelect = { tab = it },
-                                    backdrop = backdrop,
+                                    backdrop = glassBackdrop,
+                                    material = barMaterial,
                                 )
                             }
                         }
@@ -318,22 +386,53 @@ public fun CatalogApp() {
                         ),
                     ) {
                         when (page) {
-                            CatalogPage.Root -> when (tab) {
-                                0 -> ComponentsScreen(
-                                    darkTheme = darkTheme,
-                                    onDarkThemeChange = { darkTheme = it; SampleSettings.putBoolean(KeyDarkTheme, it) },
-                                    frostedEnabled = frostedEnabled,
-                                    onFrostedEnabledChange = { frostedEnabled = it; SampleSettings.putBoolean(KeyFrosted, it) },
-                                    onOpen = { nav.push(it) },
-                                    contentPadding = padding,
-                                    floatingNavBarEnabled = floatingNavBarEnabled,
-                                    onFloatingNavBarEnabledChange = { floatingNavBarEnabled = it; SampleSettings.putBoolean(KeyFloatingNavBar, it) },
-                                )
-                                1 -> BlocksScreen(
-                                    onOpen = { nav.push(it) },
-                                    contentPadding = padding,
-                                )
-                                else -> TokensScreen(contentPadding = padding)
+                            CatalogPage.Root -> AnimatedContent(
+                                targetState = tab,
+                                modifier = Modifier.fillMaxSize(),
+                                transitionSpec = {
+                                    val direction = if (targetState > initialState) {
+                                        tabForward
+                                    } else {
+                                        -tabForward
+                                    }
+                                    (
+                                        slideInHorizontally { width ->
+                                            direction * width / 10
+                                        } + fadeIn(animationSpec = motion.normal)
+                                        ) togetherWith
+                                        (
+                                            slideOutHorizontally { width ->
+                                                -direction * width / 10
+                                            } + fadeOut(animationSpec = motion.normal)
+                                            )
+                                },
+                                label = "catalog_root_tab",
+                            ) { currentTab ->
+                                when (currentTab) {
+                                    0 -> ComponentsScreen(
+                                        darkTheme = darkTheme,
+                                        onDarkThemeChange = { darkTheme = it; SampleSettings.putBoolean(KeyDarkTheme, it) },
+                                        glassMode = glassMode,
+                                        onGlassModeChange = { glassMode = it; SampleSettings.putString(KeyGlassMode, it.name) },
+                                        backdrop = glassBackdrop,
+                                        material = barMaterial,
+                                        floatingNavBarEnabled = floatingNavBarEnabled,
+                                        onFloatingNavBarEnabledChange = { floatingNavBarEnabled = it; SampleSettings.putBoolean(KeyFloatingNavBar, it) },
+                                        onOpen = { nav.push(it) },
+                                        contentPadding = padding,
+                                    )
+                                    1 -> BlocksScreen(
+                                        onOpen = { nav.push(it) },
+                                        contentPadding = padding,
+                                    )
+                                    2 -> TokensScreen(contentPadding = padding)
+                                    LiquidTab -> LiquidGlassScreen(
+                                        backdrop = backdrop,
+                                        tuning = liquidTuning,
+                                        onTuningChange = { liquidTuning = it },
+                                        contentPadding = padding,
+                                    )
+                                }
                             }
                             CatalogPage.SignIn -> SignInScreen(contentPadding = padding)
                             CatalogPage.Account -> AccountScreen(contentPadding = padding)
@@ -346,15 +445,17 @@ public fun CatalogApp() {
                             CatalogPage.Toggles -> TogglesScreen(contentPadding = padding)
                             CatalogPage.Tabs -> TabsScreen(contentPadding = padding)
                             CatalogPage.Dialog -> DialogScreen(
-                                frostedEnabled = frostedEnabled,
+                                glassMode = glassMode,
                                 backdrop = backdrop,
                                 contentPadding = padding,
                             )
                             CatalogPage.DropdownMenu -> DropdownMenuScreen(
+                                glassMode = glassMode,
                                 backdrop = backdrop,
                                 contentPadding = padding,
                             )
                             CatalogPage.BottomSheet -> BottomSheetScreen(
+                                glassMode = glassMode,
                                 backdrop = backdrop,
                                 contentPadding = padding,
                             )
@@ -376,8 +477,13 @@ public fun CatalogApp() {
                             CatalogPage.EmptyState -> EmptyStateScreen(contentPadding = padding)
                             CatalogPage.PageIndicator -> PageIndicatorScreen(contentPadding = padding)
                             CatalogPage.Drawer -> DrawerScreen(contentPadding = padding)
-                            CatalogPage.Lists -> ListsScreen(contentPadding = padding)
+                            CatalogPage.Lists -> ListsScreen(
+                                backdrop = glassBackdrop,
+                                material = barMaterial,
+                                contentPadding = padding,
+                            )
                             CatalogPage.LazyList -> LazyListScreen(contentPadding = padding)
+                            CatalogPage.Icons -> IconsScreen(contentPadding = padding)
                             CatalogPage.InlineBanner -> BannerScreen(contentPadding = padding)
                             CatalogPage.Localization -> LocalizationScreen(
                                 languageChoice = languageChoice,
@@ -406,6 +512,7 @@ public fun CatalogApp() {
                     rui.components.RuiSnackbarHost(snackbarHostState)
                 }
             }
+        }
         }
     }
 }

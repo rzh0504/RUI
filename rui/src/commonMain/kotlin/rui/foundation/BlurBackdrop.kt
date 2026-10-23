@@ -4,6 +4,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.ui.Modifier
@@ -22,9 +23,16 @@ import androidx.compose.ui.graphics.layer.drawLayer
 import androidx.compose.ui.graphics.rememberGraphicsLayer
 import androidx.compose.ui.layout.LayoutCoordinates
 import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.node.DrawModifierNode
+import androidx.compose.ui.node.GlobalPositionAwareModifierNode
+import androidx.compose.ui.node.ModifierNodeElement
+import androidx.compose.ui.node.invalidateDraw
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
+import com.kyant.backdrop.backdrops.LayerBackdrop
+import com.kyant.backdrop.backdrops.layerBackdrop
+import com.kyant.backdrop.backdrops.rememberLayerBackdrop
 import rui.foundation.platform.isBlurSupported
 
 /**
@@ -58,9 +66,15 @@ public interface BlurBackdrop {
 private class BlurBackdropImpl(
     override val graphicsLayer: GraphicsLayer,
     val onDraw: ContentDrawScope.() -> Unit,
+    val liquid: LayerBackdrop? = null,
 ) : BlurBackdrop {
     override var layerCoordinates: LayoutCoordinates? by mutableStateOf(null)
 }
+
+/** The liquid capture recorded by `rememberBlurBackdrop(liquid = true)` —
+ *  the source [Modifier.liquidGlassSurface] consumes. */
+internal val BlurBackdrop.liquidSource: LayerBackdrop?
+    get() = (this as? BlurBackdropImpl)?.liquid
 
 /**
  * Creates a backdrop whose capturing node replays [onDraw] into its layer
@@ -72,45 +86,90 @@ private class BlurBackdropImpl(
  * [Modifier.blurBackdrop] recorder overwrites the layer and its coordinates,
  * so pages stacked on top of each other sharing a backdrop would sample the
  * wrong content at the wrong offset.
+ *
+ * Keep glass consumers OUT of the recorded subtree. The recorder re-records
+ * its layer after drawing the content; a glass element inside that content
+ * re-executes inside the record and leaves the layer graph cyclical (glass
+ * layer references the capture, the capture references the glass layer),
+ * which the render thread walks until it dies. Bars and popup panels are
+ * safe — [RuiScaffold] records only its content Box, and popups live in
+ * their own windows. For glass inside a page, record a pure-background
+ * layer beneath the glass instead (see the catalog's liquid-glass tab).
+ *
+ * Set [liquid] to also record a second capture into the Backdrop library's
+ * [com.kyant.backdrop.backdrops.LayerBackdrop] — the source the
+ * [RuiGlassMaterial.Liquid] surfaces consume (see
+ * [Modifier.liquidGlassSurface]). Both captures replay the same [onDraw];
+ * the extra one costs one GraphicsLayer record per frame, so leave it off
+ * for screens that stay frosted. Unlike the frosted capture, the liquid one
+ * keeps recording through navigation transitions (its consumer has no
+ * recordEnabled escape hatch) — a page that transitions heavily is better
+ * off frosted-only.
  */
 @Composable
 public fun rememberBlurBackdrop(
+    liquid: Boolean = false,
     onDraw: ContentDrawScope.() -> Unit = { drawContent() },
 ): BlurBackdrop {
     val graphicsLayer = rememberGraphicsLayer()
-    return remember(onDraw) { BlurBackdropImpl(graphicsLayer, onDraw) }
+    // Callers commonly pass an inline capture body; keying the recorder on
+    // the lambda's identity would rebuild the backdrop — and reset the
+    // library's layer coordinates — on every recomposition. Keep one stable
+    // recorder and read the latest body at draw time.
+    val latestOnDraw = rememberUpdatedState(onDraw)
+    val recorder: ContentDrawScope.() -> Unit = remember { { latestOnDraw.value(this) } }
+    val liquidSource = if (liquid) {
+        rememberLayerBackdrop(onDraw = recorder)
+    } else {
+        null
+    }
+    return remember(graphicsLayer, recorder, liquidSource) {
+        BlurBackdropImpl(graphicsLayer, recorder, liquidSource)
+    }
 }
 
 /**
  * Marks this composable as the content [backdrop] captures. Every redraw
  * re-records the layer; recording is cheap and doesn't invalidate consumers
  * on its own. Set [recordEnabled] to false while a transition is running to
- * keep the animation's frame budget (surfaces sample the last frame).
+ * keep the animation's frame budget (surfaces sample the last frame). The
+ * liquid capture, when present, records through unconditionally — the
+ * library's recorder has no pause.
  */
 public fun Modifier.blurBackdrop(
     backdrop: BlurBackdrop,
     recordEnabled: Boolean = true,
-): Modifier =
-    drawWithContent {
-        drawContent()
-        if (!recordEnabled) return@drawWithContent
-        val impl = backdrop as BlurBackdropImpl
-        val sourceDensity = drawContext.density
-        val scope: ContentDrawScope = this
-        impl.graphicsLayer.record(IntSize(size.width.toInt(), size.height.toInt())) {
-            val previous = drawContext.density
-            drawContext.density = sourceDensity
-            try {
-                impl.onDraw(scope)
-            } finally {
-                drawContext.density = previous
+): Modifier {
+    val impl = backdrop as BlurBackdropImpl
+    return this
+        .drawWithContent {
+            drawContent()
+            if (!recordEnabled) return@drawWithContent
+            val sourceDensity = drawContext.density
+            val scope: ContentDrawScope = this
+            impl.graphicsLayer.record(IntSize(size.width.toInt(), size.height.toInt())) {
+                val previous = drawContext.density
+                drawContext.density = sourceDensity
+                try {
+                    impl.onDraw(scope)
+                } finally {
+                    drawContext.density = previous
+                }
             }
         }
-    }.onGloballyPositioned { coordinates ->
-        if (coordinates.isAttached) {
-            (backdrop as BlurBackdropImpl).layerCoordinates = coordinates
+        .onGloballyPositioned { coordinates ->
+            if (coordinates.isAttached) {
+                impl.layerCoordinates = coordinates
+            }
         }
-    }
+        .then(
+            if (impl.liquid != null) {
+                Modifier.layerBackdrop(impl.liquid)
+            } else {
+                Modifier
+            },
+        )
+}
 
 /**
  * Draws the blurred [backdrop] behind this composable's content, clipped to
@@ -135,50 +194,101 @@ public fun Modifier.blurSurface(
     shape: Shape = RectangleShape,
     enabled: Boolean = isBlurSupported,
     positionOverride: (() -> Offset)? = null,
-): Modifier {
-    val consumerCoordinates = mutableStateOf<LayoutCoordinates?>(null)
+): Modifier = this
+    .clip(shape)
+    .then(
+        BlurSurfaceElement(
+            backdrop = backdrop,
+            radius = radius,
+            tint = tint,
+            enabled = enabled,
+            positionOverride = positionOverride,
+        ),
+    )
 
-    return this
-        .clip(shape)
-        .onGloballyPositioned { coordinates ->
-            if (coordinates.isAttached) {
-                consumerCoordinates.value = coordinates
-            }
-        }
-        .drawWithContent {
-            if (!enabled) {
-                drawContent()
-                return@drawWithContent
-            }
+/**
+ * The node element keeps the consumer coordinates on a [Modifier.Node]
+ * instead of allocating a state object per composition — the surface
+ * recomposes with its theme and state, not with the glass sampling.
+ */
+private data class BlurSurfaceElement(
+    val backdrop: BlurBackdrop,
+    val radius: Dp,
+    val tint: Color,
+    val enabled: Boolean,
+    val positionOverride: (() -> Offset)?,
+) : ModifierNodeElement<BlurSurfaceNode>() {
 
-            val offset = if (positionOverride != null) {
-                positionOverride()
-            } else {
-                val source = backdrop.layerCoordinates
-                val consumer = consumerCoordinates.value
-                if (source == null || consumer == null) {
-                    drawContent()
-                    return@drawWithContent
-                }
-                try {
-                    source.localPositionOf(consumer, Offset.Zero)
-                } catch (_: Exception) {
-                    drawContent()
-                    return@drawWithContent
-                }
-            }
+    override fun create(): BlurSurfaceNode =
+        BlurSurfaceNode(backdrop, radius, tint, enabled, positionOverride)
 
-            val radiusPx = radius.toPx()
-            if (offset.x.isFinite() && offset.y.isFinite()) {
-                backdrop.graphicsLayer.renderEffect =
-                    BlurEffect(radiusPx, radiusPx, TileMode.Clamp)
-                translate(-offset.x, -offset.y) {
-                    drawLayer(backdrop.graphicsLayer)
-                }
-            }
-            if (tint != Color.Transparent) {
-                drawRect(tint)
-            }
+    override fun update(node: BlurSurfaceNode) {
+        node.backdrop = backdrop
+        node.radius = radius
+        node.tint = tint
+        node.enabled = enabled
+        node.positionOverride = positionOverride
+        node.invalidateDraw()
+    }
+}
+
+private class BlurSurfaceNode(
+    var backdrop: BlurBackdrop,
+    var radius: Dp,
+    var tint: Color,
+    var enabled: Boolean,
+    var positionOverride: (() -> Offset)?,
+) : Modifier.Node(), DrawModifierNode, GlobalPositionAwareModifierNode {
+
+    private var consumerCoordinates: LayoutCoordinates? = null
+
+    override fun onGloballyPositioned(coordinates: LayoutCoordinates) {
+        consumerCoordinates = coordinates.takeIf { it.isAttached }
+        // A plain property is not snapshot-observed by the draw phase: a
+        // scroll moves the node without redrawing it, so refresh the sample
+        // position here (the old MutableState did this implicitly).
+        invalidateDraw()
+    }
+
+    override fun onDetach() {
+        consumerCoordinates = null
+    }
+
+    override fun ContentDrawScope.draw() {
+        if (!enabled) {
             drawContent()
+            return
         }
+
+        val offset = positionOverride?.invoke() ?: sampleOffset()
+        if (offset == null) {
+            drawContent()
+            return
+        }
+
+        val radiusPx = radius.toPx()
+        if (offset.x.isFinite() && offset.y.isFinite()) {
+            backdrop.graphicsLayer.renderEffect =
+                BlurEffect(radiusPx, radiusPx, TileMode.Clamp)
+            translate(-offset.x, -offset.y) {
+                drawLayer(backdrop.graphicsLayer)
+            }
+        }
+        if (tint != Color.Transparent) {
+            drawRect(tint)
+        }
+        drawContent()
+    }
+
+    /** The consumer's position in the capture, or null while either side is
+     *  unattached or the coordinates live in different windows. */
+    private fun sampleOffset(): Offset? {
+        val source = backdrop.layerCoordinates ?: return null
+        val consumer = consumerCoordinates ?: return null
+        return try {
+            source.localPositionOf(consumer, Offset.Zero)
+        } catch (_: Exception) {
+            null
+        }
+    }
 }

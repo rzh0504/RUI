@@ -27,8 +27,11 @@ import com.composeunstyled.SheetDetent
 import com.composeunstyled.UnstyledModalBottomSheet
 import com.composeunstyled.rememberModalBottomSheetState
 import rui.foundation.BlurBackdrop
+import rui.foundation.RuiGlassMaterial
 import rui.foundation.RuiText
 import rui.foundation.blurSurface
+import rui.foundation.liquidGlassSurface
+import rui.foundation.liquidSource
 import rui.foundation.platform.isBlurSupported
 import rui.theme.RuiTheme
 
@@ -39,8 +42,10 @@ import rui.theme.RuiTheme
  * detent system — drag the sheet down, tap the scrim or press back to
  * dismiss; drags report through [onDismiss] like the other dismiss paths.
  *
- * Give it the screen's [backdrop] to render the frosted material; without
- * one the sheet falls back to an opaque elevated surface.
+ * Give it the screen's [backdrop] to render glass — frosted by default, or
+ * the liquid-glass material with `material = RuiGlassMaterial.Liquid` (the
+ * capture must have been created with `rememberBlurBackdrop(liquid = true)`);
+ * without one the sheet falls back to an opaque elevated surface.
  *
  * The app root should compose [RuiOverlayHost] so sheets portal above
  * everything — the same host dialogs use; without one the platform modal
@@ -57,6 +62,7 @@ public fun RuiBottomSheet(
     title: String? = null,
     modifier: Modifier = Modifier,
     backdrop: BlurBackdrop? = null,
+    material: RuiGlassMaterial = RuiGlassMaterial.Frosted,
     content: @Composable ColumnScope.() -> Unit,
 ) {
     val colors = RuiTheme.colors
@@ -92,24 +98,38 @@ public fun RuiBottomSheet(
     }
 
     val shapes = RuiTheme.shapes
-    val sheetBackground = if (backdrop != null && isBlurSupported) {
-        Modifier.blurSurface(
-            backdrop = backdrop,
-            radius = 24.dp,
-            tint = colors.surfaceElevated.copy(alpha = 0.72f),
-            shape = shapes.sheet,
-            // The sheet lives in the modal's own window and slides with a
-            // lazy Modifier.offset, whose placement changes never refresh
-            // captured coordinates — sampling from onGloballyPositioned
-            // stuck at the pre-entrance position. The backdrop layer is the
-            // full-screen page, so provide the sheet's live top edge
-            // (layerHeight - state.offset) directly instead.
-            positionOverride = {
-                Offset(0f, backdrop.graphicsLayer.size.height.toFloat() - state.bottomSheetState.offset)
-            },
-        )
-    } else {
-        Modifier.background(colors.surfaceElevated, shapes.sheet)
+    val sheetBackground = when {
+        backdrop != null && material == RuiGlassMaterial.Liquid && backdrop.liquidSource != null && isBlurSupported ->
+            Modifier.liquidGlassSurface(
+                backdrop = backdrop,
+                tint = colors.surfaceElevated,
+                shape = shapes.sheet,
+                // The sheet lives in the modal's own window and slides with a
+                // lazy Modifier.offset, whose placement changes never refresh
+                // captured coordinates — the liquid consumer can't track them
+                // either, so provide the sheet's live top edge
+                // (layerHeight - state.offset) directly, same as below.
+                positionOverride = {
+                    Offset(0f, backdrop.graphicsLayer.size.height.toFloat() - state.bottomSheetState.offset)
+                },
+            )
+        backdrop != null && isBlurSupported ->
+            Modifier.blurSurface(
+                backdrop = backdrop,
+                radius = 24.dp,
+                tint = colors.surfaceElevated.copy(alpha = 0.72f),
+                shape = shapes.sheet,
+                // The sheet lives in the modal's own window and slides with a
+                // lazy Modifier.offset, whose placement changes never refresh
+                // captured coordinates — sampling from onGloballyPositioned
+                // stuck at the pre-entrance position. The backdrop layer is the
+                // full-screen page, so provide the sheet's live top edge
+                // (layerHeight - state.offset) directly instead.
+                positionOverride = {
+                    Offset(0f, backdrop.graphicsLayer.size.height.toFloat() - state.bottomSheetState.offset)
+                },
+            )
+        else -> Modifier.background(colors.surfaceElevated, shapes.sheet)
     }
 
     UnstyledModalBottomSheet(
