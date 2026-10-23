@@ -1,0 +1,165 @@
+# rui-icons manifest — one icon per line:
+#   LucideFileName|RuiPropertyName|mirror(0|1)
+#
+# The Lucide name is the vector file in the `com.composables:icons-lucide`
+# sources jar; the Rui name is the semantic property on RuiCommonIcons.
+# `mirror` marks direction-dependent glyphs that should flip in RTL.
+# Regenerate with tools/generate.py.
+
+# Navigation and chrome
+ChevronDown|ChevronDown|0
+ChevronUp|ChevronUp|0
+ChevronLeft|ChevronLeft|1
+ChevronRight|ChevronRight|1
+ArrowDown|ArrowDown|0
+ArrowUp|ArrowUp|0
+ArrowLeft|ArrowLeft|1
+ArrowRight|ArrowRight|1
+ArrowUpRight|ArrowUpRight|0
+Menu|Menu|0
+Ellipsis|MoreHorizontal|0
+EllipsisVertical|MoreVertical|0
+X|Close|0
+Check|Check|0
+Plus|Plus|0
+Minus|Minus|0
+Search|Search|0
+SlidersHorizontal|Sliders|0
+Filter|Filter|0
+Settings|Settings|0
+House|Home|0
+LayoutGrid|Grid|0
+List|List|0
+PanelLeft|PanelLeft|0
+Maximize|Maximize|0
+Minimize|Minimize|0
+Expand|Expand|0
+Shrink|Shrink|0
+Move|Move|0
+GripVertical|GripVertical|0
+
+# Content and media
+File|File|0
+FileText|FileText|0
+Folder|Folder|0
+FolderOpen|FolderOpen|0
+Image|Image|0
+Camera|Camera|0
+Video|Video|0
+Music|Music|0
+Play|Play|0
+Pause|Pause|0
+SkipBack|SkipBack|1
+SkipForward|SkipForward|1
+FastForward|FastForward|1
+Rewind|Rewind|1
+Volume2|Volume|0
+VolumeX|VolumeMute|0
+Mic|Mic|0
+MicOff|MicOff|0
+Headphones|Headphones|0
+BookOpen|BookOpen|0
+Bookmark|Bookmark|0
+Star|Star|0
+Heart|Heart|0
+Flag|Flag|0
+Eye|Eye|0
+EyeOff|EyeOff|0
+
+# Editing and actions
+Link|Link|0
+ExternalLink|ExternalLink|0
+Copy|Copy|0
+Clipboard|Clipboard|0
+Scissors|Scissors|0
+Pencil|Edit|0
+Trash2|Delete|0
+Save|Save|0
+Download|Download|0
+Upload|Upload|0
+Share2|Share|0
+Printer|Printer|0
+Archive|Archive|0
+Inbox|Inbox|0
+Pin|Pin|0
+RefreshCw|Refresh|0
+Undo2|Undo|1
+Redo2|Redo|1
+Lock|Lock|0
+LockOpen|Unlock|0
+Key|Key|0
+Shield|Shield|0
+ShieldCheck|ShieldCheck|0
+Wrench|Wrench|0
+Palette|Palette|0
+Brush|Brush|0
+
+# Commerce
+Tag|Tag|0
+Gift|Gift|0
+ShoppingCart|ShoppingCart|0
+CreditCard|CreditCard|0
+Wallet|Wallet|0
+Package|Package|0
+Truck|Truck|0
+
+# Places
+MapPin|MapPin|0
+Navigation|Navigation|0
+Compass|Compass|0
+Globe|Globe|0
+Languages|Languages|0
+
+# Communication
+Bell|Bell|0
+BellOff|BellOff|0
+Mail|Mail|0
+Phone|Phone|0
+MessageCircle|Message|0
+Send|Send|1
+User|User|0
+Users|Users|0
+AtSign|AtSign|0
+Hash|Hash|0
+
+# Time, weather and system
+Clock|Clock|0
+Calendar|Calendar|0
+Timer|Timer|0
+Sun|Sun|0
+Moon|Moon|0
+Cloud|Cloud|0
+CloudRain|CloudRain|0
+Droplet|Droplet|0
+Wifi|Wifi|0
+Bluetooth|Bluetooth|0
+Battery|Battery|0
+BatteryCharging|BatteryCharging|0
+Zap|Zap|0
+Sparkles|Sparkles|0
+Activity|Activity|0
+
+# Status
+CircleCheck|CheckCircle|0
+CircleX|XCircle|0
+CircleAlert|AlertCircle|0
+TriangleAlert|Warning|0
+Info|Info|0
+CircleHelp|Help|0
+LoaderCircle|Loader|0
+
+# Development and devices
+Database|Database|0
+Server|Server|0
+Cpu|Cpu|0
+Code|Code|0
+Terminal|Terminal|0
+GitBranch|GitBranch|0
+Bug|Bug|0
+Fingerprint|Fingerprint|0
+QrCode|QrCode|0
+Command|Command|0
+Keyboard|Keyboard|0
+Monitor|Monitor|0
+Smartphone|Smartphone|0
+Laptop|Laptop|0

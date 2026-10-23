@@ -60,7 +60,7 @@ jobs:
       - name: Compile Kotlin for iOS
         run: |
           chmod +x gradlew
-          ./gradlew :rui:compileKotlinIosSimulatorArm64 :sample:shared:compileKotlinIosSimulatorArm64
+          ./gradlew :rui:compileKotlinIosSimulatorArm64 :rui-icons:compileKotlinIosSimulatorArm64 :sample:shared:compileKotlinIosSimulatorArm64
 
       - name: Build iOS app (includes framework link + embed)
         run: |
