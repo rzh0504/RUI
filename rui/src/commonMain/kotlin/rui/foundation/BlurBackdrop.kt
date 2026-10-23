@@ -23,6 +23,10 @@ import androidx.compose.ui.graphics.layer.drawLayer
 import androidx.compose.ui.graphics.rememberGraphicsLayer
 import androidx.compose.ui.layout.LayoutCoordinates
 import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.node.DrawModifierNode
+import androidx.compose.ui.node.GlobalPositionAwareModifierNode
+import androidx.compose.ui.node.ModifierNodeElement
+import androidx.compose.ui.node.invalidateDraw
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
@@ -190,50 +194,101 @@ public fun Modifier.blurSurface(
     shape: Shape = RectangleShape,
     enabled: Boolean = isBlurSupported,
     positionOverride: (() -> Offset)? = null,
-): Modifier {
-    val consumerCoordinates = mutableStateOf<LayoutCoordinates?>(null)
+): Modifier = this
+    .clip(shape)
+    .then(
+        BlurSurfaceElement(
+            backdrop = backdrop,
+            radius = radius,
+            tint = tint,
+            enabled = enabled,
+            positionOverride = positionOverride,
+        ),
+    )
 
-    return this
-        .clip(shape)
-        .onGloballyPositioned { coordinates ->
-            if (coordinates.isAttached) {
-                consumerCoordinates.value = coordinates
-            }
-        }
-        .drawWithContent {
-            if (!enabled) {
-                drawContent()
-                return@drawWithContent
-            }
+/**
+ * The node element keeps the consumer coordinates on a [Modifier.Node]
+ * instead of allocating a state object per composition — the surface
+ * recomposes with its theme and state, not with the glass sampling.
+ */
+private data class BlurSurfaceElement(
+    val backdrop: BlurBackdrop,
+    val radius: Dp,
+    val tint: Color,
+    val enabled: Boolean,
+    val positionOverride: (() -> Offset)?,
+) : ModifierNodeElement<BlurSurfaceNode>() {
 
-            val offset = if (positionOverride != null) {
-                positionOverride()
-            } else {
-                val source = backdrop.layerCoordinates
-                val consumer = consumerCoordinates.value
-                if (source == null || consumer == null) {
-                    drawContent()
-                    return@drawWithContent
-                }
-                try {
-                    source.localPositionOf(consumer, Offset.Zero)
-                } catch (_: Exception) {
-                    drawContent()
-                    return@drawWithContent
-                }
-            }
+    override fun create(): BlurSurfaceNode =
+        BlurSurfaceNode(backdrop, radius, tint, enabled, positionOverride)
 
-            val radiusPx = radius.toPx()
-            if (offset.x.isFinite() && offset.y.isFinite()) {
-                backdrop.graphicsLayer.renderEffect =
-                    BlurEffect(radiusPx, radiusPx, TileMode.Clamp)
-                translate(-offset.x, -offset.y) {
-                    drawLayer(backdrop.graphicsLayer)
-                }
-            }
-            if (tint != Color.Transparent) {
-                drawRect(tint)
-            }
+    override fun update(node: BlurSurfaceNode) {
+        node.backdrop = backdrop
+        node.radius = radius
+        node.tint = tint
+        node.enabled = enabled
+        node.positionOverride = positionOverride
+        node.invalidateDraw()
+    }
+}
+
+private class BlurSurfaceNode(
+    var backdrop: BlurBackdrop,
+    var radius: Dp,
+    var tint: Color,
+    var enabled: Boolean,
+    var positionOverride: (() -> Offset)?,
+) : Modifier.Node(), DrawModifierNode, GlobalPositionAwareModifierNode {
+
+    private var consumerCoordinates: LayoutCoordinates? = null
+
+    override fun onGloballyPositioned(coordinates: LayoutCoordinates) {
+        consumerCoordinates = coordinates.takeIf { it.isAttached }
+        // A plain property is not snapshot-observed by the draw phase: a
+        // scroll moves the node without redrawing it, so refresh the sample
+        // position here (the old MutableState did this implicitly).
+        invalidateDraw()
+    }
+
+    override fun onDetach() {
+        consumerCoordinates = null
+    }
+
+    override fun ContentDrawScope.draw() {
+        if (!enabled) {
             drawContent()
+            return
         }
+
+        val offset = positionOverride?.invoke() ?: sampleOffset()
+        if (offset == null) {
+            drawContent()
+            return
+        }
+
+        val radiusPx = radius.toPx()
+        if (offset.x.isFinite() && offset.y.isFinite()) {
+            backdrop.graphicsLayer.renderEffect =
+                BlurEffect(radiusPx, radiusPx, TileMode.Clamp)
+            translate(-offset.x, -offset.y) {
+                drawLayer(backdrop.graphicsLayer)
+            }
+        }
+        if (tint != Color.Transparent) {
+            drawRect(tint)
+        }
+        drawContent()
+    }
+
+    /** The consumer's position in the capture, or null while either side is
+     *  unattached or the coordinates live in different windows. */
+    private fun sampleOffset(): Offset? {
+        val source = backdrop.layerCoordinates ?: return null
+        val consumer = consumerCoordinates ?: return null
+        return try {
+            source.localPositionOf(consumer, Offset.Zero)
+        } catch (_: Exception) {
+            null
+        }
+    }
 }
