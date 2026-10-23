@@ -1,5 +1,6 @@
 package rui.components
 
+import androidx.compose.ui.unit.dp
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
@@ -36,5 +37,18 @@ class RuiDropdownMenuTest {
     fun unknownGeometryKeepsThePreferredSide() {
         assertEquals(AnchorSide.Bottom, autoFlippedMenuSide(AnchorSide.Bottom, null, 100))
         assertEquals(AnchorSide.Top, autoFlippedMenuSide(AnchorSide.Top, 90f, 0))
+    }
+
+    @Test
+    fun panelWidthSubtractsSafeInsetsAndMargins() {
+        assertEquals(312.dp, menuPanelMaxWidth(360.dp, 0.dp, 0.dp, 24.dp))
+        assertEquals(240.dp, menuPanelMaxWidth(360.dp, 24.dp, 48.dp, 24.dp))
+        assertEquals(0.dp, menuPanelMaxWidth(40.dp, 20.dp, 20.dp, 24.dp))
+    }
+
+    @Test
+    fun panelHeightSubtractsSafeInsetsAndMargins() {
+        assertEquals(680.dp, menuPanelMaxHeight(800.dp, 24.dp, 48.dp, 24.dp))
+        assertEquals(0.dp, menuPanelMaxHeight(80.dp, 24.dp, 48.dp, 24.dp))
     }
 }

@@ -15,9 +15,12 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.verticalScroll
@@ -78,6 +81,22 @@ internal fun autoFlippedMenuSide(
     }
 }
 
+/** Panel width cap: the window minus the safe-drawing insets and margins. */
+internal fun menuPanelMaxWidth(
+    windowWidth: Dp,
+    safeStart: Dp,
+    safeEnd: Dp,
+    margin: Dp,
+): Dp = (windowWidth - safeStart - safeEnd - margin * 2).coerceAtLeast(0.dp)
+
+/** Panel height cap: the window minus the safe-drawing insets and margins. */
+internal fun menuPanelMaxHeight(
+    windowHeight: Dp,
+    safeTop: Dp,
+    safeBottom: Dp,
+    margin: Dp,
+): Dp = (windowHeight - safeTop - safeBottom - margin * 2).coerceAtLeast(0.dp)
+
 /**
  * An iOS-style dropdown menu anchored to [anchor]: a floating glass (or
  * elevated) panel with vertically arranged items — frosted by default, or
@@ -132,29 +151,36 @@ public fun RuiDropdownMenu(
     }
 
     // A menu is measured unconstrained by the anchoring machinery, so cap it
-    // to the window here and scroll the levels inside: a long menu must stay
-    // reachable instead of running off the screen. The panel leaves a margin
-    // on every side, like iOS's menus under the display edges.
+    // to the window's safe drawing area here and scroll the levels inside: a
+    // long menu must stay reachable instead of running off the screen or
+    // under the system bars/IME. The panel leaves a margin on every side,
+    // like iOS's menus under the display edges.
+    val layoutDirection = LocalLayoutDirection.current
+    val safeDrawing = WindowInsets.safeDrawing.asPaddingValues()
+    val panelMaxWidth = if (windowSize.width > 0.dp) {
+        menuPanelMaxWidth(
+            windowWidth = windowSize.width,
+            safeStart = safeDrawing.calculateLeftPadding(layoutDirection),
+            safeEnd = safeDrawing.calculateRightPadding(layoutDirection),
+            margin = MenuPanelWindowMargin,
+        )
+    } else {
+        null
+    }
+    val panelMaxHeight = if (windowSize.height > 0.dp) {
+        menuPanelMaxHeight(
+            windowHeight = windowSize.height,
+            safeTop = safeDrawing.calculateTopPadding(),
+            safeBottom = safeDrawing.calculateBottomPadding(),
+            margin = MenuPanelWindowMargin,
+        )
+    } else {
+        null
+    }
     val panelSize = Modifier
         .width(IntrinsicSize.Max)
-        .then(
-            if (windowSize.width > 0.dp) {
-                Modifier.widthIn(
-                    max = (windowSize.width - MenuPanelWindowMargin * 2).coerceAtLeast(0.dp),
-                )
-            } else {
-                Modifier
-            },
-        )
-        .then(
-            if (windowSize.height > 0.dp) {
-                Modifier.heightIn(
-                    max = (windowSize.height - MenuPanelWindowMargin * 2).coerceAtLeast(0.dp),
-                )
-            } else {
-                Modifier
-            },
-        )
+        .then(if (panelMaxWidth != null) Modifier.widthIn(max = panelMaxWidth) else Modifier)
+        .then(if (panelMaxHeight != null) Modifier.heightIn(max = panelMaxHeight) else Modifier)
 
     // Menus float above the page: the shadow carries the depth, most
     // visibly in solid mode where the opaque panel otherwise melts into
