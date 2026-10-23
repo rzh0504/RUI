@@ -17,6 +17,7 @@ import androidx.compose.ui.layout.LayoutCoordinates
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.isSpecified
 import com.kyant.backdrop.Backdrop
 import com.kyant.backdrop.backdrops.LayerBackdrop
 import com.kyant.backdrop.drawBackdrop
@@ -38,22 +39,40 @@ import rui.foundation.platform.isBlurSupported
  */
 @Immutable
 public data class RuiLiquidGlassTuning(
-    /** Alpha of the [tint] wash — liquid glass stays clear where the frosted
-     *  recipe sits at 0.72. */
+    /** Alpha of the [tint] wash, 0..1 — liquid glass stays clear where the
+     *  frosted recipe sits at 0.72. */
     public val tintAlpha: Float = 0.30f,
-    /** Blur radius, much lighter than the frosted one; the clarity is the look. */
+    /** Blur radius, much lighter than the frosted one; the clarity is the
+     *  look. Non-negative. */
     public val blurRadius: Dp = 16.dp,
     /** Height of the lens refraction at the shape's edges; keep it within
      *  the shape's smallest corner radius (Rui's smallest glass corner is
-     *  14dp). */
+     *  14dp). Non-negative. */
     public val refractionHeight: Dp = 8.dp,
-    /** Saturation multiplier of the sampled content (iOS vibrancy). */
+    /** Saturation multiplier of the sampled content (iOS vibrancy),
+     *  non-negative. */
     public val saturation: Float = 1.5f,
-    /** Alpha of the specular edge highlight; 0 removes it. */
+    /** Alpha of the specular edge highlight, 0..1; 0 removes it. */
     public val highlightAlpha: Float = 0.5f,
     /** Split the lens into per-channel refractions (Android 13+ / Skia). */
     public val chromaticAberration: Boolean = false,
-)
+) {
+    init {
+        require(tintAlpha in 0f..1f) { "tintAlpha must be in 0..1, was $tintAlpha" }
+        require(blurRadius.isSpecified && blurRadius >= 0.dp) {
+            "blurRadius must be specified and non-negative, was $blurRadius"
+        }
+        require(refractionHeight.isSpecified && refractionHeight >= 0.dp) {
+            "refractionHeight must be specified and non-negative, was $refractionHeight"
+        }
+        require(saturation.isFinite() && saturation >= 0f) {
+            "saturation must be finite and non-negative, was $saturation"
+        }
+        require(highlightAlpha in 0f..1f) {
+            "highlightAlpha must be in 0..1, was $highlightAlpha"
+        }
+    }
+}
 
 /**
  * The [RuiLiquidGlassTuning] the liquid surfaces use. Defaults to the shipped
