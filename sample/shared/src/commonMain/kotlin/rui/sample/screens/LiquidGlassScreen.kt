@@ -1,28 +1,16 @@
 package rui.sample.screens
 
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import kotlin.math.pow
 import kotlin.math.roundToInt
@@ -36,53 +24,16 @@ import rui.components.RuiDropdownMenu
 import rui.components.RuiDropdownMenuItem
 import rui.components.RuiListGroup
 import rui.components.RuiListItem
-import rui.foundation.BlurBackdrop
-import rui.foundation.ExperimentalRuiApi
-import rui.foundation.FrostedSurface
-import rui.foundation.RuiGlassMaterial
-import rui.foundation.RuiIcon
-import rui.foundation.RuiIcons
-import rui.foundation.RuiLiquidGlassTuning
-import rui.foundation.RuiText
-import rui.foundation.blurBackdrop
-import rui.foundation.rememberBlurBackdrop
-import rui.sample.ui.ContentColumn
-import rui.sample.ui.SectionLabel
 import rui.components.RuiSlider
 import rui.components.RuiSwitch
+import rui.foundation.BlurBackdrop
+import rui.foundation.ExperimentalRuiApi
+import rui.foundation.RuiGlassMaterial
+import rui.foundation.RuiLiquidGlassTuning
+import rui.foundation.RuiText
+import rui.sample.ui.ContentColumn
+import rui.sample.ui.SectionLabel
 import rui.theme.RuiTheme
-
-/** A vivid field the glass samples — a flat page color shows refraction and
- *  saturation as nothing. The field owns its own capture, recorded from the
- *  pure-gradient layer beneath the glass: a glass element must never sample
- *  a capture whose recorded subtree contains the element itself — the
- *  capture's re-record references the glass's layer which references the
- *  capture, and the render thread walks the cycle to death. */
-private val DemoField = Brush.linearGradient(
-    listOf(Color(0xFF3C87FF), Color(0xFF34C77B), Color(0xFFFF9F45)),
-)
-
-@Composable
-private fun DemoField(
-    height: Dp,
-    content: @Composable (BlurBackdrop) -> Unit,
-) {
-    val fieldBackdrop = rememberBlurBackdrop(liquid = true)
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(height),
-        contentAlignment = Alignment.Center,
-    ) {
-        Box(
-            modifier = Modifier
-                .matchParentSize()
-                .blurBackdrop(fieldBackdrop)
-                .background(DemoField),
-        )
-        content(fieldBackdrop)
-    }
-}
 
 /** The demo's approximation of Apple's Liquid Glass: clearer, less blur,
  *  stronger edge refraction and highlight than Rui's shipped look. */
@@ -177,60 +128,6 @@ public fun LiquidGlassScreen(
             RuiListItem(
                 title = "Reset to defaults",
                 onClick = { onTuningChange(RuiLiquidGlassTuning()) },
-            )
-        }
-
-        SectionLabel("Frosted vs liquid")
-        DemoField(height = 200.dp) { fieldBackdrop ->
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 20.dp),
-                horizontalArrangement = Arrangement.spacedBy(16.dp),
-            ) {
-                GlassPanel(
-                    title = "Frosted",
-                    detail = "72% tint, heavy blur,\nhairline border",
-                    material = RuiGlassMaterial.Frosted,
-                    backdrop = fieldBackdrop,
-                    modifier = Modifier.weight(1f),
-                )
-                GlassPanel(
-                    title = "Liquid",
-                    detail = "30% tint, edge refraction,\nspecular highlight",
-                    material = RuiGlassMaterial.Liquid,
-                    backdrop = fieldBackdrop,
-                    modifier = Modifier.weight(1f),
-                )
-            }
-        }
-
-        SectionLabel("Capsule lengths")
-        RuiText(
-            text = "barWidth grows the capsule with its items — two slots in " +
-                "200dp, four in 320dp, so added items never squeeze.",
-            style = RuiTheme.typography.bodySm,
-            color = RuiTheme.colors.contentMuted,
-        )
-        Spacer(Modifier.height(8.dp))
-        DemoField(height = 76.dp) { fieldBackdrop ->
-            MiniCapsule(
-                backdrop = fieldBackdrop,
-                barWidth = 200.dp,
-                items = listOf(RuiIcons.Grid to "Browse", RuiIcons.Layers to "Blocks"),
-            )
-        }
-        Spacer(Modifier.height(10.dp))
-        DemoField(height = 76.dp) { fieldBackdrop ->
-            MiniCapsule(
-                backdrop = fieldBackdrop,
-                barWidth = 320.dp,
-                items = listOf(
-                    RuiIcons.Grid to "Browse",
-                    RuiIcons.Layers to "Blocks",
-                    RuiIcons.Swatch to "Tokens",
-                    RuiIcons.Play to "Media",
-                ),
             )
         }
 
@@ -346,70 +243,4 @@ private fun TuningRow(
 private fun Float.formatted(digits: Int): String {
     val factor = 10.0.pow(digits)
     return (this * factor).roundToInt().div(factor).toString()
-}
-
-@OptIn(ExperimentalRuiApi::class)
-@Composable
-private fun GlassPanel(
-    title: String,
-    detail: String,
-    material: RuiGlassMaterial,
-    backdrop: BlurBackdrop,
-    modifier: Modifier = Modifier,
-) {
-    FrostedSurface(
-        modifier = modifier.height(120.dp),
-        shape = RuiTheme.shapes.lg,
-        backdrop = backdrop,
-        material = material,
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(vertical = 16.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-        ) {
-            RuiText(text = title, style = RuiTheme.typography.titleMd)
-            Spacer(Modifier.height(4.dp))
-            RuiText(
-                text = detail,
-                style = RuiTheme.typography.labelSm,
-                color = RuiTheme.colors.contentMuted,
-            )
-        }
-    }
-}
-
-@OptIn(ExperimentalRuiApi::class)
-@Composable
-private fun MiniCapsule(
-    backdrop: BlurBackdrop,
-    barWidth: Dp,
-    items: List<Pair<ImageVector, String>>,
-) {
-    FrostedSurface(
-        modifier = Modifier
-            .width(barWidth)
-            .height(52.dp),
-        shape = RoundedCornerShape(percent = 50),
-        backdrop = backdrop,
-        material = RuiGlassMaterial.Liquid,
-    ) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.Center,
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            items.forEachIndexed { index, (icon, label) ->
-                if (index > 0) {
-                    Spacer(Modifier.width(18.dp))
-                }
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    RuiIcon(imageVector = icon, contentDescription = null, size = 16.dp)
-                    Spacer(Modifier.width(5.dp))
-                    RuiText(text = label, style = RuiTheme.typography.labelSm)
-                }
-            }
-        }
-    }
 }
