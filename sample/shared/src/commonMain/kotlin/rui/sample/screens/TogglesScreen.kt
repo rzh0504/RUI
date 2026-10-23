@@ -31,7 +31,6 @@ import rui.components.RuiListItem
 import rui.components.RuiRadioButton
 import rui.components.RuiRadioGroup
 import rui.components.RuiRadioRow
-import rui.components.RuiRangeSlider
 import rui.components.RuiSlider
 import rui.components.RuiStepper
 import rui.components.RuiSwitch
@@ -48,7 +47,6 @@ public fun TogglesScreen(contentPadding: PaddingValues = PaddingValues(0.dp)) {
     var stats by remember { mutableStateOf(false) }
     var volume by remember { mutableStateOf(0.6f) }
     var brightness by remember { mutableStateOf(0.25f) }
-    var priceRange by remember { mutableStateOf(0.25f..0.75f) }
     var tagColor by remember { mutableStateOf<Color?>(TagColors[5]) }
     var guests by rememberSaveable { mutableStateOf(2) }
 
@@ -185,22 +183,6 @@ public fun TogglesScreen(contentPadding: PaddingValues = PaddingValues(0.dp)) {
                 RuiText("Brightness (4 steps)", style = RuiTheme.typography.titleSm)
                 Spacer(Modifier.height(RuiTheme.spacing.md))
                 RuiSlider(value = brightness, onValueChange = { brightness = it }, steps = 4)
-            }
-            RuiDivider(inset = RuiTheme.spacing.lg)
-            Column(Modifier.padding(horizontal = RuiTheme.spacing.lg, vertical = RuiTheme.spacing.md)) {
-                Row(Modifier.fillMaxWidth()) {
-                    RuiText("Price range", style = RuiTheme.typography.titleSm)
-                    Spacer(Modifier.weight(1f))
-                    RuiText(
-                        "${(priceRange.start * 100).roundToInt()}–${(priceRange.endInclusive * 100).roundToInt()}%",
-                        style = RuiTheme.typography.bodySm,
-                        color = RuiTheme.colors.contentMuted,
-                    )
-                }
-                Spacer(Modifier.height(RuiTheme.spacing.md))
-                // Push the thumbs together and keep pushing — the drag hands
-                // over to the far thumb so the range spreads again.
-                RuiRangeSlider(value = priceRange, onValueChange = { priceRange = it })
             }
         }
 
