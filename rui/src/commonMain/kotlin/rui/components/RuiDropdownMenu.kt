@@ -35,6 +35,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.positionInWindow
 import androidx.compose.ui.platform.LocalLayoutDirection
@@ -59,6 +60,12 @@ import rui.theme.toShadowShape
 
 /** Air kept between a menu panel and the window edges. */
 private val MenuPanelWindowMargin = 24.dp
+
+// A menu is a small transient panel: its lift stays below the platform's
+// default drop shadow so it reads as a soft edge, not a modal card.
+private val MenuShadowElevation = 6.dp
+private val MenuShadowAmbient = Color.Black.copy(alpha = 0.10f)
+private val MenuShadowSpot = Color.Black.copy(alpha = 0.14f)
 
 /**
  * The side a vertical menu actually opens on: it keeps [preferred] while its
@@ -182,15 +189,19 @@ public fun RuiDropdownMenu(
         .then(if (panelMaxWidth != null) Modifier.widthIn(max = panelMaxWidth) else Modifier)
         .then(if (panelMaxHeight != null) Modifier.heightIn(max = panelMaxHeight) else Modifier)
 
-    // Menus float above the page: the shadow carries the depth, most
+    // Menus float above the page: a soft shadow carries the depth, most
     // visibly in solid mode where the opaque panel otherwise melts into
-    // the content behind it. The shadow shape maps to a plain rounded
-    // rect (toShadowShape) — HWUI renders path outlines' shadows on a
-    // per-frame software path, which stutters the whole animation.
+    // the content behind it. The elevation and alphas stay below the
+    // platform default so the panel does not read as a heavy drop shadow.
+    // The shadow shape maps to a plain rounded rect (toShadowShape) —
+    // HWUI renders path outlines' shadows on a per-frame software path,
+    // which stutters the whole animation.
     val menuShadow = Modifier.shadow(
-        elevation = 8.dp,
+        elevation = MenuShadowElevation,
         shape = shapes.xl.toShadowShape(),
         clip = false,
+        ambientColor = MenuShadowAmbient,
+        spotColor = MenuShadowSpot,
     )
 
     val panelBackground = when {
