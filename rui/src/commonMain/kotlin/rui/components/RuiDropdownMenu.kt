@@ -28,6 +28,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -38,7 +39,9 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.layout.positionInWindow
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.unit.Dp
@@ -155,7 +158,13 @@ public fun RuiDropdownMenu(
     val windowInfo = LocalWindowInfo.current
     val windowSize = windowInfo.containerDpSize
     val windowSizePx = windowInfo.containerSize
+    val density = LocalDensity.current
     var anchorCenterY by remember { mutableStateOf<Float?>(null) }
+    // A submenu level can be narrower than its parent. The panel width must
+    // not snap down when the level transition drops the parent: remember the
+    // widest width the panel has measured and keep it as the minimum.
+    var widestPanelPx by remember { mutableIntStateOf(0) }
+    val widestPanel = with(density) { widestPanelPx.toDp() }
     val resolvedSide = if (autoFlip) {
         autoFlippedMenuSide(side, anchorCenterY, windowSizePx.height)
     } else {
@@ -190,8 +199,15 @@ public fun RuiDropdownMenu(
         null
     }
     val panelSize = Modifier
+        .onSizeChanged { widestPanelPx = maxOf(widestPanelPx, it.width) }
+        .then(
+            if (panelMaxWidth != null) {
+                Modifier.widthIn(min = widestPanel.coerceAtMost(panelMaxWidth), max = panelMaxWidth)
+            } else {
+                Modifier.widthIn(min = widestPanel)
+            },
+        )
         .width(IntrinsicSize.Max)
-        .then(if (panelMaxWidth != null) Modifier.widthIn(max = panelMaxWidth) else Modifier)
         .then(if (panelMaxHeight != null) Modifier.heightIn(max = panelMaxHeight) else Modifier)
 
     // Menus float above the page: a soft shadow carries the depth, most
