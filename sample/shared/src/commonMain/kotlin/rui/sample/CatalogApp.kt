@@ -353,7 +353,7 @@ public fun CatalogApp() {
                             if (floatingNavBarEnabled) {
                                 // Four tabs fill the capsule — take back most
                                 // of the standing margins so the slots stay
-                                // wide (12dp breathing per side).
+                                // wide (20dp breathing per side).
                                 BoxWithConstraints {
                                     RuiFloatingNavigationBar(
                                         items = rootNavItems,
@@ -361,7 +361,7 @@ public fun CatalogApp() {
                                         onSelect = { tab = it },
                                         backdrop = glassBackdrop,
                                         material = barMaterial,
-                                        barWidth = maxWidth - 24.dp,
+                                        barWidth = maxWidth - 40.dp,
                                     )
                                 }
                             } else {
