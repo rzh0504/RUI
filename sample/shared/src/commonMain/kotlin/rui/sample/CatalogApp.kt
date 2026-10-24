@@ -325,15 +325,17 @@ public fun CatalogApp() {
                 val scaffoldBackdrop = if (atRoot && tab == LiquidTab) backdrop else glassBackdrop
                 RuiScaffold(
                     backdrop = scaffoldBackdrop,
+                    // The immersive player owns the status-bar area itself.
+                    topScrim = page != CatalogPage.NowPlaying,
                     topBar = {
+                        // The title area stays solid: no backdrop and no
+                        // material, whatever the app-wide glass mode is.
                         if (page == CatalogPage.NowPlaying) {
                             // The music block is fully immersive: it owns
                             // its chrome and draws behind the status bar.
                         } else if (atRoot) {
                             RuiTopAppBar(
                                 title = page.title(),
-                                backdrop = glassBackdrop,
-                                material = barMaterial,
                                 scrollBehavior = scrollBehavior,
                             )
                         } else {
@@ -341,8 +343,6 @@ public fun CatalogApp() {
                                 title = page.title(),
                                 showBack = true,
                                 onBack = { nav.pop() },
-                                backdrop = glassBackdrop,
-                                material = barMaterial,
                             )
                         }
                     },
