@@ -388,6 +388,9 @@ private fun RuiTableHeaderCell(
     headerContent: Color,
     onSort: () -> Unit,
 ) {
+    // The header reads as one more row: the cells carry the same minimum
+    // height the data rows do, no special compact padding.
+    val cellModifier = cellModifier.heightIn(min = RuiTheme.dimens.touchTarget)
     if (interactive) {
         val interactionSource = remember(column.sortKey) { MutableInteractionSource() }
         val strings = RuiTheme.strings
@@ -407,15 +410,14 @@ private fun RuiTableHeaderCell(
                             strings.sortedDescending
                         }
                     }
-                }
-                .padding(vertical = RuiTheme.spacing.sm),
+                },
             contentAlignment = CellAlignment(column.alignment),
         ) {
             RuiTableHeaderContent(column, activeSort?.direction, headerContent)
         }
     } else {
         Box(
-            modifier = cellModifier.padding(vertical = RuiTheme.spacing.sm),
+            modifier = cellModifier,
             contentAlignment = CellAlignment(column.alignment),
         ) {
             RuiTableHeaderContent(column, null, headerContent)
