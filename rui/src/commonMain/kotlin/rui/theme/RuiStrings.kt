@@ -58,6 +58,12 @@ public interface RuiStrings {
     /** Label of the calendar grid's next-month chevron. */
     public val nextMonth: String
 
+    /** State description of a table column sorted ascending. */
+    public val sortedAscending: String
+
+    /** State description of a table column sorted descending. */
+    public val sortedDescending: String
+
     /** Twelve month labels, January first. */
     public val monthNames: List<String>
 
@@ -88,6 +94,8 @@ public object RuiStringsDefaults {
         override val increase = "Increase"
         override val previousMonth = "Previous month"
         override val nextMonth = "Next month"
+        override val sortedAscending = "Sorted ascending"
+        override val sortedDescending = "Sorted descending"
         override val monthNames = listOf(
             "January", "February", "March", "April", "May", "June",
             "July", "August", "September", "October", "November", "December",
@@ -106,6 +114,8 @@ public object RuiStringsDefaults {
         override val increase = "增大"
         override val previousMonth = "上个月"
         override val nextMonth = "下个月"
+        override val sortedAscending = "按升序排序"
+        override val sortedDescending = "按降序排序"
         override val monthNames = listOf(
             "1月", "2月", "3月", "4月", "5月", "6月",
             "7月", "8月", "9月", "10月", "11月", "12月",

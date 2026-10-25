@@ -19,6 +19,7 @@ class RuiStringsTest {
                 strings.back, strings.clear, strings.dismiss, strings.remove,
                 strings.decrease, strings.increase,
                 strings.previousMonth, strings.nextMonth,
+                strings.sortedAscending, strings.sortedDescending,
             )) {
                 assertTrue(label.isNotBlank())
             }

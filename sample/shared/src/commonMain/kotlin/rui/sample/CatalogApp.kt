@@ -95,6 +95,7 @@ import rui.sample.screens.NavigationRailScreen
 import rui.sample.screens.SidebarScreen
 import rui.sample.screens.LyricsScreen
 import rui.sample.screens.NowPlayingScreen
+import rui.sample.screens.TableScreen
 import rui.theme.RuiTheme
 import rui.theme.RuiWindowWidthClass
 
@@ -138,6 +139,7 @@ public sealed interface CatalogPage : RuiNavKey {
     public data object NavigationRail : CatalogPage
     public data object Lyrics : CatalogPage
     public data object NowPlaying : CatalogPage
+    public data object Table : CatalogPage
 }
 
 private fun CatalogPage.title(): String = when (this) {
@@ -179,6 +181,7 @@ private fun CatalogPage.title(): String = when (this) {
     CatalogPage.NavigationRail -> "Navigation rail"
     CatalogPage.Lyrics -> "Lyrics"
     CatalogPage.NowPlaying -> "Now playing"
+    CatalogPage.Table -> "Table"
 }
 
 /**
@@ -495,6 +498,7 @@ public fun CatalogApp() {
                             CatalogPage.NavigationRail -> NavigationRailScreen(contentPadding = padding)
                             CatalogPage.Lyrics -> LyricsScreen(contentPadding = padding)
                             CatalogPage.NowPlaying -> NowPlayingScreen(onBack = { nav.pop() })
+                            CatalogPage.Table -> TableScreen(contentPadding = padding)
                         }
                     }
                 }

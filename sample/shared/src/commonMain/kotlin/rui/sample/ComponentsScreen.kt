@@ -139,6 +139,12 @@ public fun ComponentsScreen(
                 onClick = { onOpen(CatalogPage.LazyList) },
             )
             RuiListItem(
+                title = "Table",
+                subtitle = "Sortable columns of composable cells",
+                showChevron = true,
+                onClick = { onOpen(CatalogPage.Table) },
+            )
+            RuiListItem(
                 title = "Scroll bar",
                 subtitle = "Overlay indicator, draggable with a mouse",
                 showChevron = true,
