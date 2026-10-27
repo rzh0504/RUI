@@ -87,6 +87,7 @@ class RuiTouchTargetTest {
 
     @Test
     fun edgeAnchorsPinTheContentAndMirrorInRtl() {
+        // align resolves the edge physically; these x values are consumed directly by place.
         val endLtr = touchTargetPlacement(20, 20, token, token, Alignment.CenterEnd, LayoutDirection.Ltr)
         assertEquals(44, endLtr.width)
         assertEquals(24, endLtr.contentOffsetX)
@@ -96,5 +97,8 @@ class RuiTouchTargetTest {
         assertEquals(0, startLtr.contentOffsetX)
         val startRtl = touchTargetPlacement(20, 20, token, token, Alignment.CenterStart, LayoutDirection.Rtl)
         assertEquals(24, startRtl.contentOffsetX)
+        // A wider content keeps the physical value anchored, not mirrored again.
+        val wideStartRtl = touchTargetPlacement(30, 20, token, token, Alignment.CenterStart, LayoutDirection.Rtl)
+        assertEquals(14, wideStartRtl.contentOffsetX)
     }
 }

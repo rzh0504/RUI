@@ -28,10 +28,12 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.positionInRoot
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.IntOffset
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import com.composeunstyled.Tab
 import com.composeunstyled.TabList
@@ -75,6 +77,7 @@ public fun <T> RuiTabGroup(
     val spacing = RuiTheme.spacing
     val motion = RuiTheme.motion
     val density = LocalDensity.current
+    val layoutDirection = LocalLayoutDirection.current
 
     UnstyledTabGroup(
         selectedTab = selectedTab,
@@ -97,6 +100,7 @@ public fun <T> RuiTabGroup(
                     // parent is not the track; one geometry source covers both
                     // fillWidth modes.
                     var trackOriginX by remember { mutableFloatStateOf(0f) }
+                    var trackWidthPx by remember { mutableFloatStateOf(0f) }
                     var trackHeightPx by remember { mutableFloatStateOf(0f) }
                     val tabMetrics = remember(tabs.size) {
                         mutableStateListOf<Pair<Float, Float>?>().apply {
@@ -137,7 +141,17 @@ public fun <T> RuiTabGroup(
                         Box(
                             modifier = Modifier
                                 .align(Alignment.TopStart)
-                                .offset { IntOffset(pillLeft.value.roundToInt(), 0) }
+                                .offset {
+                                    IntOffset(
+                                        pillOffsetX(
+                                            physicalLeft = pillLeft.value,
+                                            trackWidth = trackWidthPx,
+                                            pillWidth = pillWidth.value,
+                                            layoutDirection = layoutDirection,
+                                        ).roundToInt(),
+                                        0,
+                                    )
+                                }
                                 .width(with(density) { pillWidth.value.roundToInt().toDp() })
                                 .height(with(density) { trackHeightPx.roundToInt().toDp() })
                                 .clip(RuiTheme.shapes.full)
@@ -151,6 +165,7 @@ public fun <T> RuiTabGroup(
                             .height(IntrinsicSize.Min)
                             .onGloballyPositioned {
                                 trackOriginX = it.positionInRoot().x
+                                trackWidthPx = it.size.width.toFloat()
                                 trackHeightPx = it.size.height.toFloat()
                             },
                         horizontalArrangement = Arrangement.spacedBy(2.dp),
@@ -199,4 +214,16 @@ public fun <T> RuiTabGroup(
             }
         }
     }
+}
+
+/** The pill's physical offset from a TopStart anchor: [physicalLeft] in LTR, mirrored back from the start edge in RTL. */
+internal fun pillOffsetX(
+    physicalLeft: Float,
+    trackWidth: Float,
+    pillWidth: Float,
+    layoutDirection: LayoutDirection,
+): Float = if (layoutDirection == LayoutDirection.Ltr) {
+    physicalLeft
+} else {
+    -(trackWidth - physicalLeft - pillWidth)
 }

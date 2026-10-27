@@ -144,11 +144,11 @@ public fun RuiScaffold(
                 emptyList()
             }
 
-            contentPadding.paddingHolder = PaddingValues(
+            contentPadding.paddingHolder = scaffoldContentPadding(
                 top = reservedTopPx.toDp(),
                 bottom = max(bottomBarHeight, bottomInsetPx).toDp(),
-                start = contentWindowInsets.getLeft(this, layoutDirection).toDp(),
-                end = contentWindowInsets.getRight(this, layoutDirection).toDp(),
+                left = contentWindowInsets.getLeft(this, layoutDirection).toDp(),
+                right = contentWindowInsets.getRight(this, layoutDirection).toDp(),
             )
 
             val bodyPlaceables = subcompose(RuiScaffoldSections.Content, bodyContent)
@@ -171,3 +171,7 @@ public fun RuiScaffold(
 }
 
 private enum class RuiScaffoldSections { TopBar, TopScrim, BottomBar, SnackbarHost, Content }
+
+/** Content padding with physical [left]/[right], since window insets are resolved to physical sides. */
+internal fun scaffoldContentPadding(top: Dp, bottom: Dp, left: Dp, right: Dp): PaddingValues =
+    PaddingValues.Absolute(left = left, top = top, right = right, bottom = bottom)
