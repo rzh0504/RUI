@@ -1,5 +1,8 @@
 package rui.components
 
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.ui.unit.LayoutDirection
+import androidx.compose.ui.unit.dp
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
@@ -56,6 +59,42 @@ class RuiTableTest {
             column(title = "Artist") { }
         }
         assertEquals(listOf<Any>(0, "plays", 2), scope.columns.map { it.sortKey })
+    }
+
+    @Test
+    fun headerInsetsAddContentAndRowPaddingInLtr() {
+        assertEquals(
+            RuiTableHeaderInsets(start = 20.dp, end = 6.dp),
+            ruiTableHeaderInsets(
+                contentPadding = PaddingValues(start = 12.dp, end = 4.dp),
+                rowContentPadding = PaddingValues(start = 8.dp, end = 2.dp),
+                layoutDirection = LayoutDirection.Ltr,
+            ),
+        )
+    }
+
+    @Test
+    fun headerInsetsResolveAbsolutePaddingInLtr() {
+        assertEquals(
+            RuiTableHeaderInsets(start = 24.dp, end = 18.dp),
+            ruiTableHeaderInsets(
+                contentPadding = PaddingValues.Absolute(left = 8.dp, top = 0.dp, right = 2.dp, bottom = 0.dp),
+                rowContentPadding = PaddingValues(horizontal = 16.dp),
+                layoutDirection = LayoutDirection.Ltr,
+            ),
+        )
+    }
+
+    @Test
+    fun headerInsetsResolveAbsolutePaddingInRtl() {
+        assertEquals(
+            RuiTableHeaderInsets(start = 18.dp, end = 24.dp),
+            ruiTableHeaderInsets(
+                contentPadding = PaddingValues.Absolute(left = 8.dp, top = 0.dp, right = 2.dp, bottom = 0.dp),
+                rowContentPadding = PaddingValues(horizontal = 16.dp),
+                layoutDirection = LayoutDirection.Rtl,
+            ),
+        )
     }
 }
 
