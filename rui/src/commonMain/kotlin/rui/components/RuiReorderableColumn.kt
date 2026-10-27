@@ -17,6 +17,7 @@ import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -263,14 +264,14 @@ private fun ReorderItem(
     index: Int,
     content: @Composable () -> Unit,
 ) {
-    val displacement = remember { Animatable(0f) }
+    val displacement = remember(state.animationGeneration) { Animatable(0f) }
     val liftShape = RuiTheme.shapes.md
     val liftColor = RuiTheme.colors.surface
 
     // When the item's slot changes under a live move, its home jumps by the
     // recorded shift; re-base the visual offset from the animated value and
     // spring the rest of the way home.
-    LaunchedEffect(index) {
+    LaunchedEffect(index, displacement) {
         val shift = state.takeHomeShift(key)
         if (shift != 0f) displacement.snapTo(displacement.value - shift)
         if (shift != 0f || displacement.value != 0f) {
@@ -325,13 +326,17 @@ private fun ReorderItem(
 }
 
 @Stable
-private class ReorderState(
+internal class ReorderState(
     private val onMove: (fromIndex: Int, toIndex: Int) -> Unit,
     private val haptics: RuiHaptics,
     private val scope: CoroutineScope,
 ) {
     /** Item keys in the current order, mirrored from the caller's items. */
     var keys: List<Any> by mutableStateOf(emptyList())
+        private set
+
+    var animationGeneration by mutableIntStateOf(0)
+        private set
 
     /** Measured heights by key (px); keyed, so they survive moves. */
     private val heightsByItem = mutableMapOf<Any, Int>()
@@ -365,11 +370,24 @@ private class ReorderState(
     private var settleJob: Job? = null
 
     fun syncOrder(newKeys: List<Any>) {
-        // During a drag the mirror is advanced by move(); only sync at rest.
-        if (!isDragging) {
-            keys = newKeys
-            centersByItem.keys.retainAll(newKeys.toSet())
-        }
+        // move() already advances keys, so a matching echo preserves the drag.
+        if (newKeys != keys) resetDrag()
+        keys = newKeys.toList()
+        val retainedKeys = newKeys.toSet()
+        heightsByItem.keys.retainAll(retainedKeys)
+        centersByItem.keys.retainAll(retainedKeys)
+        homeShifts.keys.retainAll(retainedKeys)
+    }
+
+    private fun resetDrag() {
+        settleJob?.cancel()
+        settleJob = null
+        draggedKey = null
+        draggedIndex = -1
+        dragOffset = 0f
+        settlingKey = null
+        homeShifts.clear()
+        animationGeneration++
     }
 
     fun reportHeight(key: Any, height: Int) {
@@ -387,10 +405,12 @@ private class ReorderState(
     fun takeHomeShift(key: Any): Float = homeShifts.remove(key) ?: 0f
 
     fun startDrag(key: Any, fromLongPress: Boolean) {
+        val index = keys.indexOf(key)
+        if (index == -1) return
         settleJob?.cancel()
         settlingKey = null
         draggedKey = key
-        draggedIndex = keys.indexOf(key)
+        draggedIndex = index
         dragOffset = 0f
         haptics.impactMedium()
     }

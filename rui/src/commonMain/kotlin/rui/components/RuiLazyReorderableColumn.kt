@@ -21,6 +21,7 @@ import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -147,7 +148,12 @@ public fun <T : Any> RuiLazyReorderableColumn(
     val density = LocalDensity.current
     val currentOnMove by rememberUpdatedState(onMove)
     val reorderState = remember(haptics, scope, state) {
-        LazyReorderState(state, { from, to -> currentOnMove(from, to) }, haptics, scope)
+        LazyReorderState(
+            { state.layoutInfo.visibleItemsInfo },
+            { from, to -> currentOnMove(from, to) },
+            haptics,
+            scope,
+        )
     }
     val keyOf: (T) -> Any = { key?.invoke(it) ?: it }
 
@@ -210,14 +216,14 @@ private fun LazyReorderItem(
     index: Int,
     content: @Composable () -> Unit,
 ) {
-    val displacement = remember { Animatable(0f) }
+    val displacement = remember(state.animationGeneration) { Animatable(0f) }
     val liftShape = RuiTheme.shapes.md
     val liftColor = RuiTheme.colors.surface
 
     // When the item's slot changes under a live move, its home jumps by the
     // recorded shift; re-base the visual offset from the animated value and
     // spring the rest of the way home.
-    LaunchedEffect(index) {
+    LaunchedEffect(index, displacement) {
         val shift = state.takeHomeShift(key)
         if (shift != 0f) displacement.snapTo(displacement.value - shift)
         if (shift != 0f || displacement.value != 0f) {
@@ -267,14 +273,18 @@ private fun LazyReorderItem(
 }
 
 @Stable
-private class LazyReorderState(
-    private val listState: LazyListState,
+internal class LazyReorderState(
+    private val visibleItemsInfo: () -> List<LazyListItemInfo>,
     private val onMove: (fromIndex: Int, toIndex: Int) -> Unit,
     private val haptics: RuiHaptics,
     private val scope: CoroutineScope,
 ) {
     /** Item keys in the current order, mirrored from the caller's items. */
     var keys: List<Any> by mutableStateOf(emptyList())
+        private set
+
+    var animationGeneration by mutableIntStateOf(0)
+        private set
 
     /** Pending home shifts by key, cumulative until consumed. */
     private val homeShifts = mutableMapOf<Any, Float>()
@@ -298,28 +308,44 @@ private class LazyReorderState(
     private var settleJob: Job? = null
 
     fun syncOrder(newKeys: List<Any>) {
-        // During a drag the mirror is advanced by move(); only sync at rest.
-        if (!isDragging) keys = newKeys
+        // move() already advances keys, so a matching echo preserves the drag.
+        if (newKeys != keys) resetDrag()
+        keys = newKeys.toList()
+        homeShifts.keys.retainAll(newKeys.toSet())
+    }
+
+    private fun resetDrag() {
+        settleJob?.cancel()
+        settleJob = null
+        draggedKey = null
+        draggedIndex = -1
+        dragOffset = 0f
+        settlingKey = null
+        homeShifts.clear()
+        animationGeneration++
     }
 
     fun takeHomeShift(key: Any): Float = homeShifts.remove(key) ?: 0f
 
     fun startDrag(key: Any) {
+        val index = keys.indexOf(key)
+        if (index == -1) return
         settleJob?.cancel()
         settlingKey = null
         draggedKey = key
-        draggedIndex = keys.indexOf(key)
+        draggedIndex = index
         dragOffset = 0f
         haptics.impactMedium()
     }
 
     fun drag(delta: Float) {
-        if (!isDragging) return
+        if (!isDragging || keys.getOrNull(draggedIndex) != draggedKey) return
         dragOffset += delta
-        val dragged = draggedInfo() ?: return
+        val visible = currentVisibleItems() ?: return
+        val dragged = visible.firstOrNull { it.key == draggedKey } ?: return
         val center = dragged.offset + dragOffset + dragged.size / 2f
-        val target = slotIndexAt(center) ?: return
-        if (target != draggedIndex) move(draggedIndex, target)
+        val target = slotIndexAt(center, visible) ?: return
+        if (target != draggedIndex) move(draggedIndex, target, visible)
     }
 
     fun endDrag() {
@@ -350,11 +376,17 @@ private class LazyReorderState(
     }
 
     fun draggedInfo(): LazyListItemInfo? =
-        listState.layoutInfo.visibleItemsInfo.firstOrNull { it.key == draggedKey }
+        currentVisibleItems()?.firstOrNull { it.key == draggedKey }
+
+    private fun currentVisibleItems(): List<LazyListItemInfo>? {
+        val visible = visibleItemsInfo()
+        // Layout can lag behind syncOrder() or a move; wait for matching slots.
+        if (visible.any { keys.getOrNull(it.index) != it.key }) return null
+        return visible
+    }
 
     /** Index of the visible slot whose midpoint [center] has passed. */
-    private fun slotIndexAt(center: Float): Int? {
-        val visible = listState.layoutInfo.visibleItemsInfo
+    private fun slotIndexAt(center: Float, visible: List<LazyListItemInfo>): Int? {
         if (visible.isEmpty()) return null
         for (info in visible) {
             if (center < info.offset + info.size / 2f) return info.index
@@ -362,8 +394,7 @@ private class LazyReorderState(
         return visible.last().index
     }
 
-    private fun move(from: Int, to: Int) {
-        val visible = listState.layoutInfo.visibleItemsInfo
+    private fun move(from: Int, to: Int, visible: List<LazyListItemInfo>) {
         val dragged = visible.firstOrNull { it.key == draggedKey } ?: return
         for ((slot, shift) in moveShifts(from, to, dragged.size.toFloat())) {
             val displacedKey = keys.getOrNull(slot) ?: continue
