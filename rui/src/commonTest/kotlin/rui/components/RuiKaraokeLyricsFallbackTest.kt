@@ -90,6 +90,44 @@ class RuiKaraokeLyricsFallbackTest {
     }
 
     @Test
+    fun activeWindowIncludesNestedAccompanimentBounds() {
+        val nested = SyncedLyrics(
+            lines = listOf(
+                KaraokeLine.MainKaraokeLine(
+                    syllables = listOf(syllable("lead", 10_000, 12_000)),
+                    translation = null,
+                    alignment = KaraokeAlignment.Unspecified,
+                    start = 10_000,
+                    end = 12_000,
+                    accompanimentLines = listOf(
+                        KaraokeLine.AccompanimentKaraokeLine(
+                            syllables = listOf(syllable("before", 9_000, 10_000)),
+                            translation = null,
+                            alignment = KaraokeAlignment.Start,
+                            start = 9_000,
+                            end = 10_000,
+                        ),
+                        KaraokeLine.AccompanimentKaraokeLine(
+                            syllables = listOf(syllable("after", 12_000, 15_000)),
+                            translation = null,
+                            alignment = KaraokeAlignment.End,
+                            start = 12_000,
+                            end = 15_000,
+                        ),
+                    ),
+                ),
+                mainLine("next", 20_000, 21_000),
+            ),
+        )
+
+        assertContentEquals(intArrayOf(0), FallbackKaraokeModel.activeIndices(nested, 9_500))
+        assertContentEquals(intArrayOf(0), FallbackKaraokeModel.activeIndices(nested, 11_000))
+        assertContentEquals(intArrayOf(0), FallbackKaraokeModel.activeIndices(nested, 13_500))
+        assertContentEquals(intArrayOf(), FallbackKaraokeModel.activeIndices(nested, 16_000))
+        assertEquals(0, FallbackKaraokeModel.targetIndex(nested, 13_500))
+    }
+
+    @Test
     fun targetFollowsFirstActiveLine() {
         assertEquals(0, FallbackKaraokeModel.targetIndex(duet, 250))
         assertEquals(1, FallbackKaraokeModel.targetIndex(duet, 600))

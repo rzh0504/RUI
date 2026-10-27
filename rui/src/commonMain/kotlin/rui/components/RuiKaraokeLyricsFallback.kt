@@ -136,12 +136,19 @@ internal object FallbackKaraokeModel {
         UnfocusedRowAlpha + (1f - UnfocusedRowAlpha) * progress.coerceIn(0f, 1f)
 
     /**
-     * Every line whose time range contains [time], ascending — duet rows and
-     * simultaneous accompaniment all read as focused. Empty outside the
-     * song's timed span.
+     * Every line whose range contains [time], ascending — duet rows and
+     * simultaneous accompaniment all read as focused. A main line's range
+     * includes its nested accompaniment, as the native renderer aggregates
+     * those bounds; empty outside the song's timed span.
      */
-    public fun activeIndices(lyrics: SyncedLyrics, time: Int): IntArray =
-        lyrics.getCurrentAllHighlightLineIndicesByTime(time).toIntArray()
+    public fun activeIndices(lyrics: SyncedLyrics, time: Int): IntArray {
+        val lines = lyrics.lines
+        val active = ArrayList<Int>()
+        lines.forEachIndexed { index, line ->
+            if (time >= aggregateStart(line) && time <= aggregateEnd(line)) active += index
+        }
+        return active.toIntArray()
+    }
 
     /**
      * The item to anchor at the viewport top, or `-1` to keep following the
