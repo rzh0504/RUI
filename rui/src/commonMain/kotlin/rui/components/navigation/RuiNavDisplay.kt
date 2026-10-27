@@ -1,6 +1,7 @@
 package rui.components.navigation
 
 import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.FiniteAnimationSpec
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
@@ -8,6 +9,7 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.mutableStateListOf
@@ -106,52 +108,19 @@ public fun <T : RuiNavKey> RuiNavDisplay(
 ) {
     require(backStack.isNotEmpty()) { "RuiNavDisplay requires a non-empty back stack." }
 
-    val renderStack = remember { mutableStateListOf(backStack.first()) }
-    val animatedTop = remember { Animatable(0f) }
-    var transitionRunning by remember { mutableStateOf(false) }
+    val transition = remember { RuiNavTransitionState(backStack.first()) }
+    val targetStack = backStack.toList()
     val transitionSpec = RuiTheme.motion.navigationDriver
 
-    LaunchedEffect(backStack.size, backStack.lastOrNull()) {
-        // Pushes join the render stack immediately so the new entry slides in.
-        while (renderStack.size < backStack.size) {
-            renderStack.add(backStack[renderStack.size])
-        }
-        // Replaces swap the top entry in place (no transition in v1). The
-        // size equality is what keeps this from also firing on a pop: a pop
-        // deliberately leaves the exiting entry composed (it has to slide
-        // out), so the two tops legitimately differ until the removal loop
-        // below runs — replacing it there would slide out a copy of the
-        // destination instead of the page being left.
-        if (renderStack.size == backStack.size && renderStack.last() != backStack.last()) {
-            renderStack[renderStack.lastIndex] = backStack.last()
-        }
-
-        // Already at target (initial launch, or an in-place replace): no
-        // motion to drive — running the tween would hold the transition flag
-        // up for its full duration over a zero distance.
-        if (animatedTop.value == (backStack.size - 1).toFloat()) return@LaunchedEffect
-
-        transitionRunning = true
-        animatedTop.animateTo(
-            (backStack.size - 1).toFloat(),
-            transitionSpec,
-        )
-        // Let the settled frame render before structural changes land.
-        withFrameNanos { }
-        transitionRunning = false
-
-        // Pops: only once the motion settles do the removed entries leave the
-        // render stack, which is what lets them animate out to the right.
-        while (renderStack.size > backStack.size) {
-            renderStack.removeAt(renderStack.lastIndex)
-        }
+    LaunchedEffect(targetStack) {
+        transition.update(targetStack, transitionSpec)
     }
 
     if (onBack != null && backStack.size > 1) {
         BackHandler(onBack = onBack)
     }
 
-    CompositionLocalProvider(LocalRuiTransitionActive provides transitionRunning) {
+    CompositionLocalProvider(LocalRuiTransitionActive provides transition.transitionRunning) {
         var containerWidthPx by remember { mutableIntStateOf(0) }
 
         Box(
@@ -159,48 +128,83 @@ public fun <T : RuiNavKey> RuiNavDisplay(
                 .fillMaxSize()
                 .onSizeChanged { containerWidthPx = it.width },
         ) {
-            renderStack.forEachIndexed { index, key ->
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        // Pages are input-opaque within their bounds: a
-                        // hit-testable but non-consuming filter keeps a touch
-                        // on a blank region of this entry (a page shorter
-                        // than the screen) from falling through to a covered
-                        // entry below. Mechanism from miuix-nav's entry host.
-                        .pointerInput(OpaqueInputKey) {
-                            awaitPointerEventScope {
-                                while (true) awaitPointerEvent()
-                            }
-                        }
-                        .graphicsLayer {
-                            val depth = animatedTop.value - index
-                            val width = containerWidthPx.toFloat()
-                            when {
-                                depth <= -1f -> {
-                                    translationX = width
-                                    alpha = 0f
-                                }
-                                depth >= 1f -> {
-                                    translationX = -width * 0.25f * depth
-                                    alpha = 0f
-                                }
-                                depth < 0f -> {
-                                    // Incoming: slides in from the right.
-                                    translationX = -depth * width
-                                    alpha = 1f
-                                }
-                                else -> {
-                                    // Covered: parallax to the left and dim.
-                                    translationX = -depth * width * 0.25f
-                                    alpha = 1f - 0.12f * depth
+            transition.renderStack.forEachIndexed { index, entry ->
+                key(index, entry) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            // Pages are input-opaque within their bounds: a
+                            // hit-testable but non-consuming filter keeps a touch
+                            // on a blank region of this entry (a page shorter
+                            // than the screen) from falling through to a covered
+                            // entry below. Mechanism from miuix-nav's entry host.
+                            .pointerInput(OpaqueInputKey) {
+                                awaitPointerEventScope {
+                                    while (true) awaitPointerEvent()
                                 }
                             }
-                        },
-                ) {
-                    content(key)
+                            .graphicsLayer {
+                                val depth = transition.animatedTop.value - index
+                                val width = containerWidthPx.toFloat()
+                                when {
+                                    depth <= -1f -> {
+                                        translationX = width
+                                        alpha = 0f
+                                    }
+                                    depth >= 1f -> {
+                                        translationX = -width * 0.25f * depth
+                                        alpha = 0f
+                                    }
+                                    depth < 0f -> {
+                                        // Incoming: slides in from the right.
+                                        translationX = -depth * width
+                                        alpha = 1f
+                                    }
+                                    else -> {
+                                        // Covered: parallax to the left and dim.
+                                        translationX = -depth * width * 0.25f
+                                        alpha = 1f - 0.12f * depth
+                                    }
+                                }
+                            },
+                    ) {
+                        content(entry)
+                    }
                 }
             }
+        }
+    }
+}
+
+@Stable
+internal class RuiNavTransitionState<T : RuiNavKey>(initial: T) {
+    val renderStack = mutableStateListOf(initial)
+    val animatedTop = Animatable(0f)
+    var transitionRunning by mutableStateOf(false)
+        private set
+
+    suspend fun update(targetStack: List<T>, animationSpec: FiniteAnimationSpec<Float>) {
+        targetStack.forEachIndexed { index, entry ->
+            if (index < renderStack.size) {
+                renderStack[index] = entry
+            } else {
+                renderStack.add(entry)
+            }
+        }
+
+        try {
+            val targetTop = targetStack.lastIndex.toFloat()
+            if (animatedTop.value != targetTop) {
+                transitionRunning = true
+                animatedTop.animateTo(targetTop, animationSpec)
+                // Keep exiting entries through the settled frame.
+                withFrameNanos { }
+            }
+            while (renderStack.size > targetStack.size) {
+                renderStack.removeAt(renderStack.lastIndex)
+            }
+        } finally {
+            transitionRunning = false
         }
     }
 }
