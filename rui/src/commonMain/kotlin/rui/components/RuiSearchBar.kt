@@ -69,7 +69,10 @@ public fun RuiSearchBar(
             },
             trailing = if (state.text.isNotEmpty()) {
                 {
-                    ClearButton(onClick = { state.edit { replace(0, length, "") } })
+                    ClearButton(
+                        enabled = enabled,
+                        onClick = { state.edit { replace(0, length, "") } },
+                    )
                 }
             } else {
                 null
@@ -99,7 +102,7 @@ public fun RuiSearchBar(
  * push the row past the touch target).
  */
 @Composable
-private fun ClearButton(onClick: () -> Unit) {
+private fun ClearButton(enabled: Boolean, onClick: () -> Unit) {
     val interactionSource = remember { MutableInteractionSource() }
     val clearLabel = RuiTheme.strings.clear
     Box(
@@ -109,6 +112,7 @@ private fun ClearButton(onClick: () -> Unit) {
             .clickable(
                 interactionSource = interactionSource,
                 indication = rememberRuiIndication(),
+                enabled = enabled,
                 onClickLabel = clearLabel,
                 role = Role.Button,
                 onClick = onClick,
@@ -118,7 +122,7 @@ private fun ClearButton(onClick: () -> Unit) {
         RuiIcon(
             imageVector = RuiIcons.Close,
             contentDescription = clearLabel,
-            tint = RuiTheme.colors.contentMuted,
+            tint = if (enabled) RuiTheme.colors.contentMuted else RuiTheme.colors.contentDisabled,
         )
     }
 }

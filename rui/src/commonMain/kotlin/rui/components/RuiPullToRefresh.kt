@@ -41,8 +41,10 @@ import rui.foundation.utils.SpringMath
 import rui.theme.RuiTheme
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.cancelAndJoin
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.currentCoroutineContext
-import kotlinx.coroutines.isActive
+import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.launch
 import kotlin.math.abs
 import kotlin.math.max
@@ -83,11 +85,7 @@ public fun RuiPullToRefresh(
     // collapse animation, and restarting this effect there would cancel that
     // animation and leave the header at a non-zero height.
     LaunchedEffect(isRefreshing, state) {
-        if (!isRefreshing && state.refreshState == RuiRefreshState.Refreshing) {
-            state.finishRefreshing(isRefreshingNow)
-        } else if (isRefreshing && state.refreshState == RuiRefreshState.Idle) {
-            state.showRefreshing(isRefreshingNow)
-        }
+        state.syncRefreshing(isRefreshing, isRefreshingNow)
     }
 
     val nestedScrollConnection = remember(state) {
@@ -250,88 +248,110 @@ public class RuiPullToRefreshState internal constructor(
     private val effectiveThresholdOffset: Float
         get() = max(refreshThresholdOffset, triggerProgressOffset)
 
-    /**
-     * Drives [dragOffset] with the damped spring physics. Runs in the caller's
-     * coroutine context; cancelling the caller stops the animation. Single
-     * writer: every offset change outside the drag gesture goes through here.
-     */
-    internal suspend fun animateToSpring(targetValue: Float) {
-        animationJob?.cancel()
+    internal suspend fun syncRefreshing(isRefreshing: Boolean, isRefreshingNow: () -> Boolean) {
+        if (!isRefreshing &&
+            (refreshState == RuiRefreshState.Refreshing || refreshState == RuiRefreshState.RefreshComplete)
+        ) {
+            finishRefreshing(isRefreshingNow)
+        } else if (isRefreshing &&
+            (refreshState == RuiRefreshState.Idle || refreshState == RuiRefreshState.RefreshComplete)
+        ) {
+            showRefreshing(isRefreshingNow)
+        }
+    }
 
+    private suspend fun withAnimation(block: suspend () -> Unit) = coroutineScope {
+        val currentJob = currentCoroutineContext()[Job]
+        val previousJob = animationJob
+        // Claim a distinct child job before cancelling so old cleanup cannot affect its successor.
+        animationJob = currentJob
+        try {
+            previousJob?.cancelAndJoin()
+            currentCoroutineContext().ensureActive()
+            block()
+        } finally {
+            if (animationJob == currentJob) animationJob = null
+        }
+    }
+
+    internal suspend fun animateToSpring(targetValue: Float) = withAnimation {
+        runSpring(targetValue)
+    }
+
+    private suspend fun runSpring(targetValue: Float) {
         springEngine.start(
             startValue = dragOffset,
             targetValue = targetValue,
             initialVel = 0f,
         )
 
-        val currentJob = currentCoroutineContext()[Job]
-        animationJob = currentJob
-
         var lastFrameTimeNanos = -1L
-        var isFinished = false
-
-        try {
-            while (currentCoroutineContext().isActive) {
-                isFinished = withFrameNanos { frameTimeNanos ->
-                    if (lastFrameTimeNanos == -1L) {
-                        lastFrameTimeNanos = frameTimeNanos
-                        return@withFrameNanos false
-                    }
-                    val dt = (frameTimeNanos - lastFrameTimeNanos) / 1_000_000_000f
+        while (true) {
+            currentCoroutineContext().ensureActive()
+            val isFinished = withFrameNanos { frameTimeNanos ->
+                if (lastFrameTimeNanos == -1L) {
                     lastFrameTimeNanos = frameTimeNanos
-
-                    val finished = springEngine.step(dt)
-                    val newOffset = springEngine.currentPos.toFloat()
-
-                    dragOffset = newOffset
-                    currentTouch = SpringMath.obtainTouchDistance(newOffset, maxDragDistancePx)
-
-                    finished
+                    return@withFrameNanos false
                 }
-                if (isFinished) break
+                val dt = (frameTimeNanos - lastFrameTimeNanos) / 1_000_000_000f
+                lastFrameTimeNanos = frameTimeNanos
+
+                val finished = springEngine.step(dt)
+                val newOffset = springEngine.currentPos.toFloat()
+
+                dragOffset = newOffset
+                currentTouch = SpringMath.obtainTouchDistance(newOffset, maxDragDistancePx)
+
+                finished
             }
-        } finally {
-            if (animationJob == currentJob) animationJob = null
-            if (isFinished) {
-                dragOffset = targetValue
-                currentTouch = SpringMath.obtainTouchDistance(targetValue, maxDragDistancePx)
-            }
+            if (isFinished) break
         }
+        currentCoroutineContext().ensureActive()
+        dragOffset = targetValue
+        currentTouch = SpringMath.obtainTouchDistance(targetValue, maxDragDistancePx)
     }
 
     internal suspend fun startRefreshing(onRefresh: () -> Unit, isRefreshingNow: () -> Boolean) {
         if (!isRefreshing) {
-            isRefreshing = true
-            try {
-                animateToSpring(refreshThresholdOffset)
-            } finally {
-                if (!isTouching) {
-                    // Refreshing must be written before onRefresh(): the sync
-                    // effect keys on this change to re-sample the level.
-                    internalRefreshState = RuiRefreshState.Refreshing
-                    if (!isRefreshingNow()) onRefresh()
-                } else {
-                    isRefreshing = false
+            withAnimation {
+                isRefreshing = true
+                try {
+                    runSpring(refreshThresholdOffset)
+                } finally {
+                    if (animationJob == currentCoroutineContext()[Job]) {
+                        if (!isTouching) {
+                            internalRefreshState = RuiRefreshState.Refreshing
+                            if (!isRefreshingNow()) onRefresh()
+                        } else {
+                            isRefreshing = false
+                        }
+                    }
                 }
             }
         }
     }
 
-    /** Programmatically expands the indicator when the level turns true while idle. */
+    /** Programmatically expands the indicator when the level turns true while idle or completing. */
     internal suspend fun showRefreshing(isRefreshingNow: () -> Boolean) {
-        if (isRefreshing || internalRefreshState != RuiRefreshState.Idle || !isRefreshingNow()) return
-        isRefreshing = true
-        internalRefreshState = RuiRefreshState.Refreshing
-        animateToSpring(refreshThresholdOffset)
-        while (internalRefreshState == RuiRefreshState.Refreshing && dragOffset != refreshThresholdOffset) {
-            animateToSpring(refreshThresholdOffset)
+        if (isRefreshing || !isRefreshingNow() ||
+            (internalRefreshState != RuiRefreshState.Idle && internalRefreshState != RuiRefreshState.RefreshComplete)
+        ) return
+        withAnimation {
+            isRefreshing = true
+            internalRefreshState = RuiRefreshState.Refreshing
+            runSpring(refreshThresholdOffset)
+            while (internalRefreshState == RuiRefreshState.Refreshing && dragOffset != refreshThresholdOffset) {
+                runSpring(refreshThresholdOffset)
+            }
         }
     }
 
     /** Completion collapse when the hoisted level turns false. */
     internal suspend fun finishRefreshing(isRefreshingNow: () -> Boolean) {
-        if (isRefreshing && !isRefreshingNow()) {
-            animationJob?.cancel()
+        if (isRefreshingNow() ||
+            (internalRefreshState != RuiRefreshState.Refreshing && internalRefreshState != RuiRefreshState.RefreshComplete)
+        ) return
+        withAnimation {
             isRefreshing = false
             internalRefreshState = RuiRefreshState.RefreshComplete
             startManualRefreshCompleteAnimation()
@@ -377,6 +397,9 @@ public class RuiPullToRefreshState internal constructor(
             dragOffset = refreshThresholdOffset * (1f - this.value)
             currentTouch = SpringMath.obtainTouchDistance(dragOffset, maxDragDistancePx)
         }
+        currentCoroutineContext().ensureActive()
+        dragOffset = 0f
+        currentTouch = 0f
         internalRefreshState = RuiRefreshState.Idle
     }
 

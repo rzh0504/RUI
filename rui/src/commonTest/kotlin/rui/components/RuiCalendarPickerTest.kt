@@ -80,8 +80,73 @@ class RuiCalendarPickerTest {
     @Test
     fun dateRejectsInvalidCivilValues() {
         assertFailsWith<IllegalArgumentException> { RuiDate(2024, 2, 30) }
+        assertFailsWith<IllegalArgumentException> { RuiDate(2023, 2, 29) }
+        assertFailsWith<IllegalArgumentException> { RuiDate(2024, 4, 31) }
+        assertFailsWith<IllegalArgumentException> { RuiDate(2024, 1, 0) }
+        assertFailsWith<IllegalArgumentException> { RuiDate(2024, 0, 1) }
         assertFailsWith<IllegalArgumentException> { RuiDate(2024, 13, 1) }
         assertFailsWith<IllegalArgumentException> { daysInMonth(2024, 0) }
+    }
+
+    @Test
+    fun monthChangeClampsJanuary31ToFebruary() {
+        assertEquals(RuiDate(2023, 2, 28), clampToMonth(RuiDate(2023, 1, 31), month = 2))
+        assertEquals(RuiDate(2024, 2, 29), clampToMonth(RuiDate(2024, 1, 31), month = 2))
+    }
+
+    @Test
+    fun monthChangeClamps31To30Days() {
+        assertEquals(RuiDate(2024, 4, 30), clampToMonth(RuiDate(2024, 3, 31), month = 4))
+    }
+
+    @Test
+    fun yearChangeClampsLeapDayToCommonYear() {
+        assertEquals(RuiDate(2025, 2, 28), clampToMonth(RuiDate(2024, 2, 29), year = 2025))
+        assertEquals(RuiDate(2100, 2, 28), clampToMonth(RuiDate(2000, 2, 29), year = 2100))
+    }
+
+    @Test
+    fun yearRangeLowerBoundClampsLeapDayWithoutChangingInput() {
+        val value = RuiDate(2024, 2, 29)
+        val yearRange = 2025..2027
+
+        assertEquals(RuiDate(2025, 2, 28), clampToMonth(value, year = value.year.coerceIn(yearRange)))
+        assertEquals(RuiDate(2024, 2, 29), value)
+    }
+
+    @Test
+    fun yearRangeUpperBoundClampsLeapDayWithoutChangingInput() {
+        val value = RuiDate(2028, 2, 29)
+        val yearRange = 2025..2027
+
+        assertEquals(RuiDate(2027, 2, 28), clampToMonth(value, year = value.year.coerceIn(yearRange)))
+        assertEquals(RuiDate(2028, 2, 29), value)
+    }
+
+    @Test
+    fun clampingPreservesValidDays() {
+        val value = RuiDate(2024, 1, 15)
+        val yearRange = 2023..2025
+
+        assertEquals(value, clampToMonth(value))
+        assertEquals(value, clampToMonth(value, year = value.year.coerceIn(yearRange)))
+        assertEquals(RuiDate(2024, 2, 15), clampToMonth(value, month = 2))
+        assertEquals(RuiDate(2025, 1, 15), clampToMonth(value, year = 2025))
+        assertEquals(RuiDate(2028, 2, 29), clampToMonth(RuiDate(2024, 2, 29), year = 2028))
+    }
+
+    @Test
+    fun clampingUsesBothTargetYearAndMonth() {
+        assertEquals(RuiDate(2023, 2, 28), clampToMonth(RuiDate(2024, 1, 31), year = 2023, month = 2))
+        assertEquals(RuiDate(2024, 2, 29), clampToMonth(RuiDate(2023, 1, 31), year = 2024, month = 2))
+    }
+
+    @Test
+    fun clampingRejectsInvalidTargetMonths() {
+        val value = RuiDate(2024, 1, 31)
+
+        assertFailsWith<IllegalArgumentException> { clampToMonth(value, month = 0) }
+        assertFailsWith<IllegalArgumentException> { clampToMonth(value, month = 13) }
     }
 
     @Test

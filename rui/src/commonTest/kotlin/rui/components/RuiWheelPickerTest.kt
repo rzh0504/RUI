@@ -8,10 +8,11 @@ import kotlin.test.assertTrue
 
 /**
  * The wheel's correctness lives in its decisions: what an external value
- * moves (and what is only the drum's own echo), what a settled drum commits,
- * when a slow release needs a snap, and when a passed row ticks. The snap
- * geometry itself is LazyColumn layout behavior and needs a real fling to
- * exercise — these cover the logic around it.
+ * moves (and what is only the drum's own echo), what an interrupted move
+ * leaves behind, what a settled drum commits, when a slow release needs a
+ * snap, and when a passed row ticks. The snap geometry itself is LazyColumn
+ * layout behavior and needs a real fling to exercise — these cover the logic
+ * around it.
  */
 class RuiWheelPickerTest {
 
@@ -27,30 +28,90 @@ class RuiWheelPickerTest {
 
     @Test
     fun correctionClampsIntoRange() {
-        assertEquals(0, wheelCorrectionTarget(-5, 5, null))
-        assertEquals(4, wheelCorrectionTarget(99, 5, null))
-        assertEquals(2, wheelCorrectionTarget(2, 5, null))
+        val state = WheelCorrectionState()
+        assertEquals(0, state.pendingTarget(-5, 5))
+        assertEquals(4, state.pendingTarget(99, 5))
+        assertEquals(2, state.pendingTarget(2, 5))
     }
 
     @Test
     fun correctionIgnoresEmptyWheels() {
-        assertNull(wheelCorrectionTarget(0, 0, null))
-        assertNull(wheelCorrectionTarget(3, 0, 3))
+        val state = WheelCorrectionState()
+        assertNull(state.pendingTarget(0, 0))
+        state.completed(3)
+        assertNull(state.pendingTarget(3, 0))
     }
 
     @Test
-    fun correctionSuppressesTheDrumsOwnEcho() {
+    fun completedTargetSuppressesTheDrumsOwnEcho() {
         // The caller echoing the reported index back must not re-trigger the
         // drum, or correction and reporting feed each other forever.
-        assertNull(wheelCorrectionTarget(3, 5, 3))
+        val state = WheelCorrectionState()
+        state.completed(3)
+        assertNull(state.pendingTarget(3, 5))
         // A genuinely new value still moves the drum.
-        assertEquals(4, wheelCorrectionTarget(4, 5, 3))
+        assertEquals(4, state.pendingTarget(4, 5))
+    }
+
+    @Test
+    fun settledReportSuppressesItsOwnEcho() {
+        val state = WheelCorrectionState()
+        state.reported(7)
+        assertNull(state.pendingTarget(7, 10))
+        assertEquals(3, state.pendingTarget(3, 10))
+    }
+
+    @Test
+    fun cancelledMidMoveTargetsTheExternalValueAgain() {
+        // 0 -> external 20 -> external 0 before the animation finishes: the
+        // cancelled move leaves no confirmed echo, so 0 is a real target and
+        // the drum cannot rest halfway and report the row it stopped on.
+        val state = WheelCorrectionState()
+        state.completed(0)
+        assertEquals(20, state.pendingTarget(20, 21))
+        state.cancelled()
+        assertEquals(0, state.pendingTarget(0, 21))
+        assertNull(state.lastReportedIndex)
+    }
+
+    @Test
+    fun onlyTheNewestCorrectionOwnsTheCorrectingFlag() {
+        val state = WheelCorrectionState()
+        val first = state.beginCorrection()
+        assertTrue(state.correcting)
+        val second = state.beginCorrection()
+        state.endCorrection(first)
+        assertTrue(state.correcting)
+        state.endCorrection(second)
+        assertFalse(state.correcting)
+    }
+
+    @Test
+    fun completionAfterCancellationRestoresEchoSuppression() {
+        val state = WheelCorrectionState()
+        state.completed(0)
+        state.cancelled()
+        state.completed(20)
+        assertNull(state.pendingTarget(20, 21))
+    }
+
+    @Test
+    fun cancellationStopsSuppressingIntermediateValues() {
+        // An intermediate settle after an interrupted correction is a real
+        // rest position, not an echo to swallow.
+        val state = WheelCorrectionState()
+        state.reported(20)
+        state.cancelled()
+        assertEquals(12, state.pendingTarget(12, 21))
+        assertEquals(12, wheelSettledReport(12, state.lastReportedIndex))
     }
 
     @Test
     fun correctionMovesToFirstAndLastRows() {
-        assertEquals(0, wheelCorrectionTarget(0, 5, 2))
-        assertEquals(4, wheelCorrectionTarget(4, 5, 2))
+        val state = WheelCorrectionState()
+        state.completed(2)
+        assertEquals(0, state.pendingTarget(0, 5))
+        assertEquals(4, state.pendingTarget(4, 5))
     }
 
     @Test

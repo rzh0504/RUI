@@ -191,12 +191,11 @@ jobs:
         run: |
           set -e
           if [ ! -f launch-summary.txt ]; then
-            # The capture step died before writing a summary (e.g. no
-            # matching runtime) — it already emitted a ::error::.
-            exit 0
+            echo "::error::Launch capture produced no summary — the app never launched or setup failed"
+            exit 1
           fi
-          if grep -q 'STATUS=exited' launch-summary.txt; then
-            echo "::error::App process died after launch — inspect console.txt / crash-reports artifacts"
+          if ! grep -qx 'STATUS=alive' launch-summary.txt; then
+            echo "::error::App did not stay alive after launch — inspect console.txt / crash-reports artifacts"
             exit 1
           fi
           echo "App stayed alive after launch."

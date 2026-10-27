@@ -89,7 +89,8 @@ public fun Modifier.ruiMinimumTouchTarget(
             maxHeight = constraints.maxHeight,
         )
         layout(placement.width, placement.height) {
-            placeable.placeRelative(placement.contentOffsetX, placement.contentOffsetY)
+            // alignment.align already resolved the anchor to a physical offset.
+            placeable.place(placement.contentOffsetX, placement.contentOffsetY)
         }
     }
 }

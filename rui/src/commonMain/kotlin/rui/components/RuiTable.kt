@@ -83,6 +83,20 @@ internal fun nextTableSort(current: RuiTableSort?, column: Any): RuiTableSort =
         RuiTableSort(column, RuiTableSortDirection.Ascending)
     }
 
+/** Total horizontal inset of the header: the viewport [contentPadding] plus [rowContentPadding]. */
+internal data class RuiTableHeaderInsets(val start: Dp, val end: Dp)
+
+internal fun ruiTableHeaderInsets(
+    contentPadding: PaddingValues,
+    rowContentPadding: PaddingValues,
+    layoutDirection: LayoutDirection,
+): RuiTableHeaderInsets = RuiTableHeaderInsets(
+    start = contentPadding.calculateStartPadding(layoutDirection) +
+        rowContentPadding.calculateStartPadding(layoutDirection),
+    end = contentPadding.calculateEndPadding(layoutDirection) +
+        rowContentPadding.calculateEndPadding(layoutDirection),
+)
+
 /**
  * Colors of [RuiTable]. Cells render their own content and read the ambient
  * theme themselves, so only the chrome the table draws — the header and the
@@ -198,7 +212,8 @@ public class RuiTableScope<T> internal constructor() {
  * @param itemAt The row's item for an index; called while rows compose.
  * @param key Identity of a row for reuse and reordering; defaults to the row
  *   index. Must return distinct values, as on [LazyColumn].
- * @param contentPadding Viewport padding of the scrolling rows.
+ * @param contentPadding Viewport padding of the scrolling rows; its horizontal
+ *   part also insets the header so columns stay aligned.
  * @param rowContentPadding Padding wrapping every header and row (and
  *   insetting the hairlines) — the table's breathing room inside its
  *   container.
@@ -245,10 +260,16 @@ public fun <T> RuiTable(
 
     Column(modifier = modifier) {
         if (showHeader) {
+            val headerInsets = ruiTableHeaderInsets(contentPadding, rowContentPadding, layoutDirection)
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(rowContentPadding),
+                    .padding(
+                        start = headerInsets.start,
+                        top = rowContentPadding.calculateTopPadding(),
+                        end = headerInsets.end,
+                        bottom = rowContentPadding.calculateBottomPadding(),
+                    ),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(RuiTheme.spacing.sm),
             ) {
@@ -265,8 +286,8 @@ public fun <T> RuiTable(
             }
             RuiTableHairline(
                 modifier = Modifier.padding(
-                    start = rowContentPadding.calculateStartPadding(layoutDirection),
-                    end = rowContentPadding.calculateEndPadding(layoutDirection),
+                    start = headerInsets.start,
+                    end = headerInsets.end,
                 ),
                 color = colors.divider,
             )

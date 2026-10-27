@@ -17,6 +17,7 @@ import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -48,17 +49,30 @@ import rui.foundation.rememberRuiHaptics
 import rui.theme.RuiTheme
 
 /**
- * Slot the vertical [center] falls into among the slots' [heights] (px): the
- * first slot whose midpoint the center passes.
+ * Slot a dragged item starting at [draggedIndex] targets for its center:
+ * a neighbor is crossed only once its center is strictly passed, and the
+ * item keeps crossing while [center] goes further; null neighbors (not
+ * measurable) stop it.
  */
-internal fun slotIndexOf(center: Float, heights: FloatArray): Int {
-    var acc = 0f
-    for (i in heights.indices) {
-        val mid = acc + heights[i] / 2f
-        if (center < mid) return i
-        acc += heights[i]
+internal fun dragTargetIndex(
+    draggedIndex: Int,
+    center: Float,
+    centerAt: (Int) -> Float?,
+): Int {
+    var target = draggedIndex
+    while (true) {
+        val next = centerAt(target + 1)
+        if (next != null && center > next) {
+            target++
+            continue
+        }
+        val previous = centerAt(target - 1)
+        if (previous != null && center < previous) {
+            target--
+            continue
+        }
+        return target
     }
-    return heights.lastIndex
 }
 
 /** Top edge (px) of the slot at [index], given each slot's [heights]. */
@@ -263,14 +277,14 @@ private fun ReorderItem(
     index: Int,
     content: @Composable () -> Unit,
 ) {
-    val displacement = remember { Animatable(0f) }
+    val displacement = remember(state.animationGeneration) { Animatable(0f) }
     val liftShape = RuiTheme.shapes.md
     val liftColor = RuiTheme.colors.surface
 
     // When the item's slot changes under a live move, its home jumps by the
     // recorded shift; re-base the visual offset from the animated value and
     // spring the rest of the way home.
-    LaunchedEffect(index) {
+    LaunchedEffect(index, displacement) {
         val shift = state.takeHomeShift(key)
         if (shift != 0f) displacement.snapTo(displacement.value - shift)
         if (shift != 0f || displacement.value != 0f) {
@@ -325,13 +339,17 @@ private fun ReorderItem(
 }
 
 @Stable
-private class ReorderState(
+internal class ReorderState(
     private val onMove: (fromIndex: Int, toIndex: Int) -> Unit,
     private val haptics: RuiHaptics,
     private val scope: CoroutineScope,
 ) {
     /** Item keys in the current order, mirrored from the caller's items. */
     var keys: List<Any> by mutableStateOf(emptyList())
+        private set
+
+    var animationGeneration by mutableIntStateOf(0)
+        private set
 
     /** Measured heights by key (px); keyed, so they survive moves. */
     private val heightsByItem = mutableMapOf<Any, Int>()
@@ -365,11 +383,24 @@ private class ReorderState(
     private var settleJob: Job? = null
 
     fun syncOrder(newKeys: List<Any>) {
-        // During a drag the mirror is advanced by move(); only sync at rest.
-        if (!isDragging) {
-            keys = newKeys
-            centersByItem.keys.retainAll(newKeys.toSet())
-        }
+        // move() already advances keys, so a matching echo preserves the drag.
+        if (newKeys != keys) resetDrag()
+        keys = newKeys.toList()
+        val retainedKeys = newKeys.toSet()
+        heightsByItem.keys.retainAll(retainedKeys)
+        centersByItem.keys.retainAll(retainedKeys)
+        homeShifts.keys.retainAll(retainedKeys)
+    }
+
+    private fun resetDrag() {
+        settleJob?.cancel()
+        settleJob = null
+        draggedKey = null
+        draggedIndex = -1
+        dragOffset = 0f
+        settlingKey = null
+        homeShifts.clear()
+        animationGeneration++
     }
 
     fun reportHeight(key: Any, height: Int) {
@@ -387,10 +418,12 @@ private class ReorderState(
     fun takeHomeShift(key: Any): Float = homeShifts.remove(key) ?: 0f
 
     fun startDrag(key: Any, fromLongPress: Boolean) {
+        val index = keys.indexOf(key)
+        if (index == -1) return
         settleJob?.cancel()
         settlingKey = null
         draggedKey = key
-        draggedIndex = keys.indexOf(key)
+        draggedIndex = index
         dragOffset = 0f
         haptics.impactMedium()
     }
@@ -402,7 +435,9 @@ private class ReorderState(
         if (heights.isEmpty() || heights.any { it == 0f }) return
         val draggedHeight = heights[draggedIndex]
         val center = homeTopOf(draggedIndex, heights) + dragOffset + draggedHeight / 2f
-        val target = slotIndexOf(center, heights)
+        val target = dragTargetIndex(draggedIndex, center) { index ->
+            heights.getOrNull(index)?.let { homeTopOf(index, heights) + it / 2f }
+        }
         if (target != draggedIndex) move(draggedIndex, target)
     }
 

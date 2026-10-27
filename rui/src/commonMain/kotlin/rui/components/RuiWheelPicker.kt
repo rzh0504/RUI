@@ -35,6 +35,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.Velocity
 import androidx.compose.ui.unit.dp
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
 import rui.foundation.rememberRuiHaptics
@@ -85,13 +86,9 @@ public fun <T> RuiWheelPicker(
 
     val reportedIndex by rememberUpdatedState(onSelectedIndexChange)
     var positioned by remember { mutableStateOf(false) }
-    // The index the drum last reported. The parent echoing it back (writing
-    // the reported value into its state) must not read as an external change,
-    // or correction and reporting feed each other and the drum never rests.
-    var lastReportedIndex by remember { mutableStateOf<Int?>(null) }
-    // While an external correction animates, reporting is suppressed so the
-    // rows the drum passes on the way are not committed as new values.
-    var correcting by remember { mutableStateOf(false) }
+    // Confirmed index + echo bookkeeping, kept outside the effect so a
+    // cancelled correction cannot leave a stale echo behind.
+    val correction = remember { WheelCorrectionState() }
 
     // Item offsets include content padding and are measured from the viewport
     // start. Compare against the actual viewport center; subtracting content
@@ -110,22 +107,28 @@ public fun <T> RuiWheelPicker(
 
     // External value changes (the initial position, programmatic sets, a
     // wrapper clamping this wheel from another) move the drum; the drum's
-    // own echoes don't.
+    // own echoes don't. A cancelled correction drops the confirmed echo so
+    // the next external value is not mistaken for one.
     LaunchedEffect(selectedIndex, items.size) {
-        val target = wheelCorrectionTarget(selectedIndex, items.size, lastReportedIndex)
+        val target = correction.pendingTarget(selectedIndex, items.size)
             ?: return@LaunchedEffect
-        if (!positioned) {
-            listState.scrollToItem(target)
-            positioned = true
-        } else {
-            correcting = true
-            try {
-                listState.animateScrollToItem(target)
-            } finally {
-                correcting = false
+        try {
+            if (!positioned) {
+                listState.scrollToItem(target)
+                positioned = true
+            } else {
+                val token = correction.beginCorrection()
+                try {
+                    listState.animateScrollToItem(target)
+                } finally {
+                    correction.endCorrection(token)
+                }
             }
+            correction.completed(target)
+        } catch (cancellation: CancellationException) {
+            correction.cancelled()
+            throw cancellation
         }
-        lastReportedIndex = target
     }
     // A slow release never flings, so the snap behavior never runs and the
     // drum would rest between rows. Settling is also the moment the value
@@ -137,14 +140,14 @@ public fun <T> RuiWheelPicker(
         snapshotFlow { listState.isScrollInProgress }
             .distinctUntilChanged()
             .collect { scrolling ->
-                if (!scrolling && positioned && !correcting &&
+                if (!scrolling && positioned && !correction.correcting &&
                     listState.layoutInfo.visibleItemsInfo.isNotEmpty()
                 ) {
                     val settled = centeredIndex()
                     if (settled >= 0) {
-                        val report = wheelSettledReport(settled, lastReportedIndex)
+                        val report = wheelSettledReport(settled, correction.lastReportedIndex)
                         if (report != null) {
-                            lastReportedIndex = report
+                            correction.reported(report)
                             reportedIndex(report)
                         }
                         val info = listState.layoutInfo.visibleItemsInfo
@@ -163,7 +166,7 @@ public fun <T> RuiWheelPicker(
         snapshotFlow { centeredIndex() }
             .distinctUntilChanged()
             .collect { index ->
-                when (wheelTickAction(lastTicked, index, correcting)) {
+                when (wheelTickAction(lastTicked, index, correction.correcting)) {
                     WheelTickAction.Adopt -> lastTicked = index
                     WheelTickAction.Tick -> {
                         lastTicked = index
@@ -250,16 +253,52 @@ internal fun wheelRowCount(visibleRows: Int): Int =
     if (visibleRows < 1) 1 else if (visibleRows % 2 == 0) visibleRows + 1 else visibleRows
 
 /**
- * The drum target for an external [selectedIndex], or `null` when nothing may
- * move: an empty wheel, or a change that is only the drum's own echo — the
- * caller writing the just-reported value back must not read as an external
- * change, or correcting and reporting feed each other and the drum never
- * rests. Out-of-range indices clamp to the nearest end.
+ * The drum's confirmed index and correction bookkeeping: which external value
+ * may move it, which settled value commits, and what an interrupted move
+ * leaves behind. [pendingTarget] returns `null` for an empty wheel or for a
+ * change that is only the drum's own echo — the caller writing the
+ * just-reported value back must not read as an external change, or correcting
+ * and reporting feed each other and the drum never rests. Out-of-range
+ * indices clamp to the nearest end.
  */
-internal fun wheelCorrectionTarget(selectedIndex: Int, itemCount: Int, lastReportedIndex: Int?): Int? {
-    if (itemCount == 0) return null
-    val target = selectedIndex.coerceIn(0, itemCount - 1)
-    return if (target == lastReportedIndex) null else target
+internal class WheelCorrectionState {
+    var lastReportedIndex: Int? = null
+        private set
+
+    private var generation = 0
+
+    /** True while the newest external correction animates. */
+    var correcting: Boolean = false
+        private set
+
+    /** Claims the correction slot; an older owner's [endCorrection] becomes a no-op. */
+    fun beginCorrection(): Int {
+        generation++
+        correcting = true
+        return generation
+    }
+
+    fun endCorrection(token: Int) {
+        if (token == generation) correcting = false
+    }
+
+    fun pendingTarget(selectedIndex: Int, itemCount: Int): Int? {
+        if (itemCount == 0) return null
+        val target = selectedIndex.coerceIn(0, itemCount - 1)
+        return if (target == lastReportedIndex) null else target
+    }
+
+    fun completed(target: Int) {
+        lastReportedIndex = target
+    }
+
+    fun reported(index: Int) {
+        lastReportedIndex = index
+    }
+
+    fun cancelled() {
+        lastReportedIndex = null
+    }
 }
 
 /**

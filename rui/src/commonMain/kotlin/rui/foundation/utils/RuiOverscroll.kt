@@ -257,26 +257,17 @@ private class OverscrollNode(
     override fun onPreScroll(available: Offset, source: NestedScrollSource): Offset {
         if (!isAttached) return Offset.Zero
 
-        if (source != NestedScrollSource.UserInput || !gestureActive) {
-            return dispatcher.dispatchPreScroll(available, source)
-        }
+        if (source != NestedScrollSource.UserInput || !gestureActive) return Offset.Zero
 
-        val parentConsumed = if (nestedScrollToParent) {
-            dispatcher.dispatchPreScroll(available, source)
-        } else {
-            Offset.Zero
-        }
-
-        val realAvailable = available - parentConsumed
-        val delta = if (isVertical) realAvailable.y else realAvailable.x
-        if (delta == 0f) return parentConsumed
+        val delta = if (isVertical) available.y else available.x
+        if (delta == 0f) return Offset.Zero
 
         // Resync raw accumulation when a drag takes over a running spring.
         if (animationJob?.isActive == true) syncRawAccumulationFromOffset()
         animationJob?.cancel()
 
         if (abs(offset) <= offsetThreshold || sign(delta) == sign(rawTouchAccumulation)) {
-            return parentConsumed
+            return Offset.Zero
         }
 
         if (sign(delta) != sign(rawTouchAccumulation)) {
@@ -292,15 +283,11 @@ private class OverscrollNode(
                 applyDrag(actualConsumed)
             }
 
-            return if (isVertical) {
-                Offset(parentConsumed.x, actualConsumed + parentConsumed.y)
-            } else {
-                Offset(actualConsumed + parentConsumed.x, parentConsumed.y)
-            }
+            return if (isVertical) Offset(0f, actualConsumed) else Offset(actualConsumed, 0f)
         }
 
         applyDrag(delta)
-        return if (isVertical) Offset(parentConsumed.x, available.y) else Offset(available.x, parentConsumed.y)
+        return available
     }
 
     override fun onPostScroll(consumed: Offset, available: Offset, source: NestedScrollSource): Offset {
@@ -312,25 +299,18 @@ private class OverscrollNode(
             if (animationJob?.isActive != true) {
                 unwindStaleOffset(if (isVertical) consumed.y else consumed.x)
             }
-            return dispatcher.dispatchPostScroll(consumed, available, source)
+            return Offset.Zero
         }
 
-        val parentConsumed = if (nestedScrollToParent) {
-            dispatcher.dispatchPostScroll(consumed, available, source)
-        } else {
-            Offset.Zero
-        }
-
-        val realAvailable = available - parentConsumed
-        val delta = if (isVertical) realAvailable.y else realAvailable.x
+        val delta = if (isVertical) available.y else available.x
         val consumedDelta = if (isVertical) consumed.y else consumed.x
-        if (delta == 0f && consumedDelta == 0f) return parentConsumed
+        if (delta == 0f && consumedDelta == 0f) return Offset.Zero
         if (animationJob?.isActive == true) syncRawAccumulationFromOffset()
         animationJob?.cancel()
         unwindStaleOffset(consumedDelta)
 
         applyDrag(delta)
-        return if (isVertical) Offset(parentConsumed.x, available.y) else Offset(available.x, parentConsumed.y)
+        return available
     }
 
     override suspend fun onPreFling(available: Velocity): Velocity {
@@ -338,26 +318,19 @@ private class OverscrollNode(
 
         animationJob?.cancel()
 
-        val parentConsumed = if (nestedScrollToParent) {
-            dispatcher.dispatchPreFling(available)
-        } else {
-            Velocity.Zero
-        }
-
-        val realAvailable = available - parentConsumed
-        val velocity = if (isVertical) realAvailable.y else realAvailable.x
+        val velocity = if (isVertical) available.y else available.x
 
         if (abs(offset) > offsetThreshold) {
             startSpringAnimation(velocity)
             // Attenuate the velocity when flinging back toward the content.
-            return parentConsumed + if (isVertical) {
-                Velocity(0f, realAvailable.y / 2.13333f)
+            return if (isVertical) {
+                Velocity(0f, velocity / 2.13333f)
             } else {
-                Velocity(realAvailable.x / 2.13333f, 0f)
+                Velocity(velocity / 2.13333f, 0f)
             }
         }
 
-        return parentConsumed
+        return Velocity.Zero
     }
 
     override suspend fun onPostFling(consumed: Velocity, available: Velocity): Velocity {
@@ -365,17 +338,10 @@ private class OverscrollNode(
 
         animationJob?.cancel()
 
-        val parentConsumed = if (nestedScrollToParent) {
-            dispatcher.dispatchPostFling(consumed, available)
-        } else {
-            Velocity.Zero
-        }
-
-        val realAvailable = available - parentConsumed
         // Dampen the velocity transferred to the overscroll spring.
-        val velocity = (if (isVertical) realAvailable.y else realAvailable.x) / 1.53333f
+        val velocity = (if (isVertical) available.y else available.x) / 1.53333f
         startSpringAnimation(velocity)
 
-        return parentConsumed + if (isVertical) Velocity(0f, velocity) else Velocity(velocity, 0f)
+        return if (isVertical) Velocity(0f, velocity) else Velocity(velocity, 0f)
     }
 }

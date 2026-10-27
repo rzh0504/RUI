@@ -33,6 +33,8 @@ import rui.theme.RuiTheme
  *
  * @param model The image to load: a URL string, a file path, or an
  *   [ImageRequest] for full control (headers, transformations, cache keys).
+ *   An [ImageRequest] keeps all of its configuration; only [crossfade] is
+ *   applied on top of it.
  * @param contentScale How the loaded image fits the layout bounds — `Crop`
  *   by default, so photos fill cards and avatars without letterboxing.
  * @param crossfade Fades the image in over the placeholder on success.
@@ -57,10 +59,15 @@ public fun RuiAsyncImage(
     val context = LocalPlatformContext.current
     val loader = imageLoader ?: SingletonImageLoader.get(context)
     val request = remember(model, crossfade, context) {
-        ImageRequest.Builder(context)
-            .data(model)
-            .crossfade(enable = crossfade)
-            .build()
+        when (model) {
+            is ImageRequest -> model.newBuilder()
+                .crossfade(enable = crossfade)
+                .build()
+            else -> ImageRequest.Builder(context)
+                .data(model)
+                .crossfade(enable = crossfade)
+                .build()
+        }
     }
     var state by remember { mutableStateOf<AsyncImagePainter.State>(AsyncImagePainter.State.Empty) }
 

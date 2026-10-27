@@ -1,7 +1,7 @@
 package rui.components
 
 import androidx.compose.foundation.gestures.awaitEachGesture
-import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.absoluteOffset
 import androidx.compose.foundation.layout.size
@@ -12,11 +12,13 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.input.pointer.PointerEventPass
 import androidx.compose.ui.input.pointer.PointerEventType
 import androidx.compose.ui.input.pointer.isSecondaryPressed
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
+import kotlinx.coroutines.withTimeoutOrNull
 import rui.foundation.BlurBackdrop
 import rui.foundation.ExperimentalRuiApi
 import rui.foundation.RuiGlassMaterial
@@ -57,9 +59,39 @@ public fun RuiContextMenu(
         Box(
             modifier = Modifier
                 .pointerInput(Unit) {
-                    detectTapGestures(
-                        onLongPress = { offset -> open(offset) },
-                    )
+                    // The timer starts before the child sees the press, so a
+                    // clickable row's consumed Down still counts; a short press
+                    // is left untouched for the row. Movement consumed by a
+                    // child drag cancels the timer. Once the long press fires,
+                    // the rest of the gesture is consumed on Initial so the
+                    // row's click is cancelled.
+                    awaitEachGesture {
+                        val down = awaitFirstDown(
+                            requireUnconsumed = false,
+                            pass = PointerEventPass.Initial,
+                        )
+                        val released: Boolean? = withTimeoutOrNull(viewConfiguration.longPressTimeoutMillis) {
+                            var result: Boolean? = null
+                            while (result == null) {
+                                val event = awaitPointerEvent(PointerEventPass.Main)
+                                result = when {
+                                    event.changes.none { it.pressed } -> true
+                                    event.changes.any { it.isConsumed && it.position != it.previousPosition } -> false
+                                    else -> null
+                                }
+                            }
+                            result ?: false
+                        }
+                        if (released == false) return@awaitEachGesture
+                        if (released == null) {
+                            open(down.position)
+                            while (true) {
+                                val event = awaitPointerEvent(PointerEventPass.Initial)
+                                event.changes.forEach { it.consume() }
+                                if (event.changes.none { it.pressed }) break
+                            }
+                        }
+                    }
                 }
                 .pointerInput(Unit) {
                     // Secondary click (right-click) opens where a long press

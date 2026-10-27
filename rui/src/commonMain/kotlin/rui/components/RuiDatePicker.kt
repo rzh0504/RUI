@@ -35,8 +35,11 @@ public fun daysInMonth(year: Int, month: Int): Int {
     }
 }
 
-private fun clampToMonth(date: RuiDate): RuiDate =
-    date.copy(day = date.day.coerceIn(1, daysInMonth(date.year, date.month)))
+internal fun clampToMonth(
+    date: RuiDate,
+    year: Int = date.year,
+    month: Int = date.month,
+): RuiDate = date.copy(year = year, month = month, day = date.day.coerceAtMost(daysInMonth(year, month)))
 
 /**
  * A date picker on month, day and year wheels (fixed month-day-year column
@@ -70,7 +73,7 @@ public fun RuiDatePicker(
     // The year wheel can only present in-range years, so the working date
     // clamps its year to the nearest boundary; the value itself is never
     // rewritten until a wheel turns.
-    val date = clampToMonth(value.copy(year = value.year.coerceIn(yearRange)))
+    val date = clampToMonth(value, year = value.year.coerceIn(yearRange))
     val years = yearRange.toList()
 
     Row(
@@ -82,7 +85,7 @@ public fun RuiDatePicker(
             items = names,
             selectedIndex = date.month - 1,
             onSelectedIndexChange = { index ->
-                onValueChange(clampToMonth(date.copy(month = index + 1)))
+                onValueChange(clampToMonth(date, month = index + 1))
             },
             modifier = Modifier.weight(1.3f),
         ) { month ->
@@ -102,7 +105,7 @@ public fun RuiDatePicker(
             items = years,
             selectedIndex = (date.year - yearRange.first).coerceIn(0, years.lastIndex),
             onSelectedIndexChange = { index ->
-                onValueChange(clampToMonth(date.copy(year = yearRange.first + index)))
+                onValueChange(clampToMonth(date, year = yearRange.first + index))
             },
             modifier = Modifier.weight(1f),
         ) { year ->
