@@ -187,6 +187,7 @@ public fun Modifier.blurBackdrop(
  *   an offset with a NaN component to skip the blur for a frame. When null,
  *   coordinates are tracked automatically.
  */
+@Composable
 public fun Modifier.blurSurface(
     backdrop: BlurBackdrop,
     radius: Dp = 24.dp,
@@ -194,17 +195,24 @@ public fun Modifier.blurSurface(
     shape: Shape = RectangleShape,
     enabled: Boolean = isBlurSupported,
     positionOverride: (() -> Offset)? = null,
-): Modifier = this
-    .clip(shape)
-    .then(
-        BlurSurfaceElement(
-            backdrop = backdrop,
-            radius = radius,
-            tint = tint,
-            enabled = enabled,
-            positionOverride = positionOverride,
-        ),
-    )
+): Modifier {
+    // Each consumer blurs through its own layer: the shared capture can only
+    // hold one render effect, so consumers with different radii would
+    // otherwise overwrite each other's blur.
+    val effectLayer = rememberGraphicsLayer()
+    return this
+        .clip(shape)
+        .then(
+            BlurSurfaceElement(
+                backdrop = backdrop,
+                radius = radius,
+                tint = tint,
+                enabled = enabled,
+                positionOverride = positionOverride,
+                effectLayer = effectLayer,
+            ),
+        )
+}
 
 /**
  * The node element keeps the consumer coordinates on a [Modifier.Node]
@@ -217,10 +225,11 @@ private data class BlurSurfaceElement(
     val tint: Color,
     val enabled: Boolean,
     val positionOverride: (() -> Offset)?,
+    val effectLayer: GraphicsLayer,
 ) : ModifierNodeElement<BlurSurfaceNode>() {
 
     override fun create(): BlurSurfaceNode =
-        BlurSurfaceNode(backdrop, radius, tint, enabled, positionOverride)
+        BlurSurfaceNode(backdrop, radius, tint, enabled, positionOverride, effectLayer)
 
     override fun update(node: BlurSurfaceNode) {
         node.backdrop = backdrop
@@ -228,6 +237,7 @@ private data class BlurSurfaceElement(
         node.tint = tint
         node.enabled = enabled
         node.positionOverride = positionOverride
+        node.effectLayer = effectLayer
         node.invalidateDraw()
     }
 }
@@ -238,6 +248,7 @@ private class BlurSurfaceNode(
     var tint: Color,
     var enabled: Boolean,
     var positionOverride: (() -> Offset)?,
+    var effectLayer: GraphicsLayer,
 ) : Modifier.Node(), DrawModifierNode, GlobalPositionAwareModifierNode {
 
     private var consumerCoordinates: LayoutCoordinates? = null
@@ -267,11 +278,16 @@ private class BlurSurfaceNode(
         }
 
         val radiusPx = radius.toPx()
-        if (offset.x.isFinite() && offset.y.isFinite()) {
-            backdrop.graphicsLayer.renderEffect =
-                BlurEffect(radiusPx, radiusPx, TileMode.Clamp)
+        val source = backdrop.graphicsLayer
+        if (offset.x.isFinite() && offset.y.isFinite() &&
+            source.size.width > 0 && source.size.height > 0
+        ) {
+            effectLayer.renderEffect = BlurEffect(radiusPx, radiusPx, TileMode.Clamp)
+            effectLayer.record(source.size) {
+                drawLayer(source)
+            }
             translate(-offset.x, -offset.y) {
-                drawLayer(backdrop.graphicsLayer)
+                drawLayer(effectLayer)
             }
         }
         if (tint != Color.Transparent) {
