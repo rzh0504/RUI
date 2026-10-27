@@ -20,21 +20,53 @@ import rui.foundation.RuiHaptics
 class RuiReorderableColumnTest {
 
     @Test
-    fun slotIndexFlipsAtMidpoints() {
-        val heights = floatArrayOf(100f, 100f, 100f)
-        assertEquals(0, slotIndexOf(49.9f, heights))
-        assertEquals(1, slotIndexOf(50f, heights))
-        assertEquals(1, slotIndexOf(149.9f, heights))
-        assertEquals(2, slotIndexOf(150f, heights))
-        assertEquals(2, slotIndexOf(400f, heights))
-        assertEquals(0, slotIndexOf(-20f, heights))
+    fun dragTargetIgnoresDriftWithinOwnSlot() {
+        val at = centerAt(floatArrayOf(100f, 100f, 100f))
+        assertEquals(1, dragTargetIndex(1, 150f, at))
+        assertEquals(1, dragTargetIndex(1, 151f, at))
+        assertEquals(1, dragTargetIndex(1, 149f, at))
     }
 
     @Test
-    fun slotIndexHonorsVaryingHeights() {
-        val heights = floatArrayOf(200f, 100f)
-        assertEquals(0, slotIndexOf(99f, heights))
-        assertEquals(1, slotIndexOf(101f, heights))
+    fun dragTargetStopsExactlyAtNeighborCenters() {
+        val at = centerAt(floatArrayOf(100f, 100f, 100f))
+        assertEquals(1, dragTargetIndex(1, 250f, at))
+        assertEquals(1, dragTargetIndex(1, 50f, at))
+        assertEquals(2, dragTargetIndex(1, 250.1f, at))
+        assertEquals(0, dragTargetIndex(1, 49.9f, at))
+    }
+
+    @Test
+    fun dragTargetCrossesMultipleSlotsAtOnce() {
+        val at = centerAt(floatArrayOf(100f, 100f, 100f, 100f))
+        assertEquals(2, dragTargetIndex(0, 350f, at))
+        assertEquals(3, dragTargetIndex(0, 350.1f, at))
+        assertEquals(1, dragTargetIndex(3, 149.9f, at))
+        assertEquals(0, dragTargetIndex(3, 49.9f, at))
+    }
+
+    @Test
+    fun dragTargetUsesUnevenSlotCenters() {
+        val at = centerAt(floatArrayOf(200f, 50f, 100f))
+        assertEquals(0, dragTargetIndex(0, 225f, at))
+        assertEquals(1, dragTargetIndex(0, 225.1f, at))
+        assertEquals(1, dragTargetIndex(0, 300f, at))
+        assertEquals(2, dragTargetIndex(0, 300.1f, at))
+        assertEquals(2, dragTargetIndex(2, 225f, at))
+        assertEquals(1, dragTargetIndex(2, 224.9f, at))
+        assertEquals(0, dragTargetIndex(2, 99.9f, at))
+    }
+
+    @Test
+    fun dragTargetStopsAtBoundsAndUnmeasurableNeighbors() {
+        val at = centerAt(floatArrayOf(100f, 100f, 100f))
+        assertEquals(0, dragTargetIndex(0, -50f, at))
+        assertEquals(2, dragTargetIndex(2, 500f, at))
+        val partial: (Int) -> Float? = { index ->
+            if (index in 2..4) index * 100f + 50f else null
+        }
+        assertEquals(4, dragTargetIndex(3, 1_000f, partial))
+        assertEquals(2, dragTargetIndex(3, 0f, partial))
     }
 
     @Test
@@ -277,7 +309,7 @@ class RuiReorderableColumnTest {
         fixture.sync(listOf("A", "C", "B"))
         state.startDrag("A")
 
-        state.drag(50f)
+        state.drag(150f)
 
         assertTrue(state.isDragging)
         assertNull(state.draggedInfo())
@@ -361,6 +393,10 @@ class RuiReorderableColumnTest {
         assertEquals(0f, state.dragOffset)
         assertNull(state.settlingKey)
         assertNull(state.draggedInfo())
+    }
+
+    private fun centerAt(heights: FloatArray): (Int) -> Float? = { index ->
+        heights.getOrNull(index)?.let { homeTopOf(index, heights) + it / 2f }
     }
 
     private class ColumnFixture(scope: CoroutineScope) {

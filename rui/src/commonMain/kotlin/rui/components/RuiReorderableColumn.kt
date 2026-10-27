@@ -49,17 +49,30 @@ import rui.foundation.rememberRuiHaptics
 import rui.theme.RuiTheme
 
 /**
- * Slot the vertical [center] falls into among the slots' [heights] (px): the
- * first slot whose midpoint the center passes.
+ * Slot a dragged item starting at [draggedIndex] targets for its center:
+ * a neighbor is crossed only once its center is strictly passed, and the
+ * item keeps crossing while [center] goes further; null neighbors (not
+ * measurable) stop it.
  */
-internal fun slotIndexOf(center: Float, heights: FloatArray): Int {
-    var acc = 0f
-    for (i in heights.indices) {
-        val mid = acc + heights[i] / 2f
-        if (center < mid) return i
-        acc += heights[i]
+internal fun dragTargetIndex(
+    draggedIndex: Int,
+    center: Float,
+    centerAt: (Int) -> Float?,
+): Int {
+    var target = draggedIndex
+    while (true) {
+        val next = centerAt(target + 1)
+        if (next != null && center > next) {
+            target++
+            continue
+        }
+        val previous = centerAt(target - 1)
+        if (previous != null && center < previous) {
+            target--
+            continue
+        }
+        return target
     }
-    return heights.lastIndex
 }
 
 /** Top edge (px) of the slot at [index], given each slot's [heights]. */
@@ -422,7 +435,9 @@ internal class ReorderState(
         if (heights.isEmpty() || heights.any { it == 0f }) return
         val draggedHeight = heights[draggedIndex]
         val center = homeTopOf(draggedIndex, heights) + dragOffset + draggedHeight / 2f
-        val target = slotIndexOf(center, heights)
+        val target = dragTargetIndex(draggedIndex, center) { index ->
+            heights.getOrNull(index)?.let { homeTopOf(index, heights) + it / 2f }
+        }
         if (target != draggedIndex) move(draggedIndex, target)
     }
 

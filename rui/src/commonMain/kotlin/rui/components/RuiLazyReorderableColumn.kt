@@ -344,7 +344,9 @@ internal class LazyReorderState(
         val visible = currentVisibleItems() ?: return
         val dragged = visible.firstOrNull { it.key == draggedKey } ?: return
         val center = dragged.offset + dragOffset + dragged.size / 2f
-        val target = slotIndexAt(center, visible) ?: return
+        val target = dragTargetIndex(draggedIndex, center) { index ->
+            visible.firstOrNull { it.index == index }?.let { it.offset + it.size / 2f }
+        }
         if (target != draggedIndex) move(draggedIndex, target, visible)
     }
 
@@ -383,15 +385,6 @@ internal class LazyReorderState(
         // Layout can lag behind syncOrder() or a move; wait for matching slots.
         if (visible.any { keys.getOrNull(it.index) != it.key }) return null
         return visible
-    }
-
-    /** Index of the visible slot whose midpoint [center] has passed. */
-    private fun slotIndexAt(center: Float, visible: List<LazyListItemInfo>): Int? {
-        if (visible.isEmpty()) return null
-        for (info in visible) {
-            if (center < info.offset + info.size / 2f) return info.index
-        }
-        return visible.last().index
     }
 
     private fun move(from: Int, to: Int, visible: List<LazyListItemInfo>) {
