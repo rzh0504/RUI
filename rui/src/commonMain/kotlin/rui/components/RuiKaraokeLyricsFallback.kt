@@ -48,6 +48,7 @@ import com.mocharealm.accompanist.lyrics.core.model.karaoke.KaraokeLine
 import com.mocharealm.accompanist.lyrics.core.model.karaoke.KaraokeSyllable
 import com.mocharealm.accompanist.lyrics.core.model.synced.SyncedLine
 import com.mocharealm.accompanist.lyrics.core.model.synced.UncheckedSyncedLine
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import rui.foundation.RuiText
 import kotlin.math.PI
@@ -371,15 +372,18 @@ internal fun FallbackKaraokeLyricsView(
     // One frame clock feeds the karaoke fill and the scroll follower, so
     // both observe the same playback value; the caller's own state updates
     // only when the value actually changes (a paused player stops advancing).
+    // The auto scroll runs as a child job: a drag cancels that job through
+    // the scroll mutex, and the sampling loop keeps running.
     LaunchedEffect(listState, followWindow) {
-        var programmaticScroll = false
         var lastAnchor = -1
+        var scrollJob: Job? = null
         while (true) {
             withFrameNanos { }
             val now = provider.value()
             position.value = now
             val scrolling = listState.isScrollInProgress
-            if (scrolling && !programmaticScroll) {
+            val autoScrolling = scrollJob?.isActive == true
+            if (scrolling && !autoScrolling) {
                 // Invalidate the last auto anchor: a stale baseline equal to
                 // the current target would block re-following that same line
                 // once the cooldown expires — the documented resume behavior
@@ -391,11 +395,9 @@ internal fun FallbackKaraokeLyricsView(
                 val anchor = FallbackKaraokeModel.targetIndex(lyrics, now)
                 if (anchor >= 0 && anchor != lastAnchor) {
                     lastAnchor = anchor
-                    programmaticScroll = true
-                    try {
+                    scrollJob?.cancel()
+                    scrollJob = launch {
                         listState.animateScrollToItem(anchor)
-                    } finally {
-                        programmaticScroll = false
                     }
                 }
             }
