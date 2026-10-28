@@ -26,7 +26,7 @@ kotlin {
     sourceSets {
         commonMain.dependencies {
             // The public API is ImageVector; consumers need these types.
-            api(compose.ui)
+            api(libs.compose.ui)
         }
         commonTest.dependencies {
             implementation(kotlin("test"))

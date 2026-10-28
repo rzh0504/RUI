@@ -35,9 +35,9 @@ kotlin {
         commonMain.dependencies {
             implementation(project(":rui"))
             implementation(project(":rui-icons"))
-            implementation(compose.runtime)
-            implementation(compose.foundation)
-            implementation(compose.ui)
+            implementation(libs.compose.runtime)
+            implementation(libs.compose.foundation)
+            implementation(libs.compose.ui)
             implementation(libs.compose.ui.backhandler)
         }
         jvmMain.dependencies {

@@ -34,9 +34,9 @@ kotlin {
 
     sourceSets {
         commonMain.dependencies {
-            api(compose.runtime)
-            api(compose.foundation)
-            api(compose.ui)
+            api(libs.compose.runtime)
+            api(libs.compose.foundation)
+            api(libs.compose.ui)
             api(libs.composeunstyled)
             // The synced-lyrics data model is part of RuiKaraokeLyricsView's
             // public API, so consumers parse lyrics themselves without an
@@ -92,7 +92,7 @@ kotlin {
         iosSimulatorArm64Main.get().dependsOn(iosMain.get())
 
         // Shared actuals for Skiko-rendered targets (desktop JVM and WebAssembly).
-        val skikoMain by creating {
+        val skikoMain = create("skikoMain") {
             dependsOn(commonMain.get())
         }
         jvmMain.get().dependsOn(skikoMain)

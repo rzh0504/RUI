@@ -18,6 +18,9 @@ accompanist-lyrics-ui = { module = "com.mocharealm.accompanist:lyrics-ui", versi
 composeunstyled = { module = "com.composables:composeunstyled", version.ref = "composeunstyled" }
 backdrop = { module = "io.github.kyant0:backdrop", version.ref = "backdrop" }
 composeunstyled-colored-indication = { module = "com.composables:composeunstyled-colored-indication", version.ref = "composeunstyled" }
+compose-runtime = { module = "org.jetbrains.compose.runtime:runtime", version.ref = "composeMultiplatform" }
+compose-foundation = { module = "org.jetbrains.compose.foundation:foundation", version.ref = "composeMultiplatform" }
+compose-ui = { module = "org.jetbrains.compose.ui:ui", version.ref = "composeMultiplatform" }
 compose-ui-backhandler = { module = "org.jetbrains.compose.ui:ui-backhandler", version.ref = "composeMultiplatform" }
 androidx-activity-compose = { module = "androidx.activity:activity-compose", version.ref = "activityCompose" }
 coil-compose = { module = "io.coil-kt.coil3:coil-compose", version.ref = "coil" }
