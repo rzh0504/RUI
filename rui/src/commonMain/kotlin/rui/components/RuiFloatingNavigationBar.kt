@@ -46,12 +46,9 @@ import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import rui.foundation.BlurBackdrop
-import rui.foundation.RuiGlassMaterial
 import rui.foundation.RuiIcon
 import rui.foundation.RuiText
 import rui.foundation.blurSurface
-import rui.foundation.liquidGlassSurface
-import rui.foundation.liquidSource
 import rui.foundation.platform.isBlurSupported
 import rui.foundation.ruiMinimumTouchTarget
 import rui.theme.RuiTheme
@@ -120,13 +117,12 @@ public object RuiFloatingNavigationBarDefaults {
  * nothing; light themes wash it white, dark ones with the page's own
  * background.
  *
- * The capsule itself is glass like the docked [RuiNavigationBar] — frosted
- * by default, or the liquid material with `material`; with a [backdrop] it
- * samples the content behind itself, without one it is an honest opaque
- * stadium. Place inside [RuiScaffold]'s `bottomBar` slot; the scaffold
- * reports the capsule, its surrounding air and the scrim's rise as content
- * padding, so lists scroll under the floating bar and never end up hidden
- * behind it.
+ * The capsule itself is glass like the docked [RuiNavigationBar]; with a
+ * [backdrop] it samples the content behind itself, without one it is an
+ * honest opaque stadium. Place inside [RuiScaffold]'s `bottomBar` slot; the
+ * scaffold reports the capsule, its surrounding air and the scrim's rise as
+ * content padding, so lists scroll under the floating bar and never end up
+ * hidden behind it.
  *
  * The current destination is marked by a pill in the accent color sliding
  * between the equal-width slots; the selected slot's icon and label read in
@@ -160,7 +156,6 @@ public fun RuiFloatingNavigationBar(
     modifier: Modifier = Modifier,
     visible: Boolean = true,
     backdrop: BlurBackdrop? = null,
-    material: RuiGlassMaterial = RuiGlassMaterial.Frosted,
     barWidth: Dp? = null,
     barHeight: Dp = RuiFloatingNavigationBarDefaults.BarHeight,
     containerColor: Color = RuiTheme.colors.surfaceElevated,
@@ -202,17 +197,11 @@ public fun RuiFloatingNavigationBar(
         label = "rui_floating_navigation_bar_indicator",
     )
 
-    // The glass recipes of FrostedSurface: with a backdrop, liquid glass
-    // (tuning alpha, refraction, no border) or the frosted blur + 72% tint;
-    // without a capture, an honest opaque stadium — no glass, no translucency.
-    val useLiquid = material == RuiGlassMaterial.Liquid &&
-        backdrop != null && backdrop.liquidSource != null && isBlurSupported
-    val useBlur = backdrop != null && isBlurSupported && !useLiquid
-    val tint = when {
-        useLiquid -> containerColor
-        useBlur -> containerColor.copy(alpha = 0.72f)
-        else -> containerColor
-    }
+    // The glass recipe of FrostedSurface: with a backdrop, the frosted blur +
+    // 72% tint; without a capture, an honest opaque stadium — no glass, no
+    // translucency.
+    val useBlur = backdrop != null && isBlurSupported
+    val tint = if (useBlur) containerColor.copy(alpha = 0.72f) else containerColor
 
     // The block spans to the screen's bottom edge so the scrim can cover the
     // navigation-bar inset too; the capsule floats above that inset inside,
@@ -289,30 +278,18 @@ public fun RuiFloatingNavigationBar(
                             }
                             .graphicsLayer { alpha = contentAlpha }
                             .then(
-                                when {
-                                    useLiquid -> Modifier.liquidGlassSurface(
-                                        backdrop = requireNotNull(backdrop),
-                                        tint = tint,
-                                        shape = capsule,
-                                    )
-                                    useBlur -> Modifier.blurSurface(
+                                if (useBlur) {
+                                    Modifier.blurSurface(
                                         backdrop = requireNotNull(backdrop),
                                         radius = RuiFloatingNavigationBarDefaults.BlurRadius,
                                         tint = tint,
                                         shape = capsule,
                                     )
-                                    else -> Modifier.background(tint, capsule)
+                                } else {
+                                    Modifier.background(tint, capsule)
                                 },
                             )
-                            .then(
-                                // Liquid glass reads its edge from the specular
-                                // highlight; a hairline on top doubles the border.
-                                if (useLiquid) {
-                                    Modifier
-                                } else {
-                                    Modifier.border(RuiTheme.dimens.borderWidth, colors.outlineSubtle, capsule)
-                                },
-                            ),
+                            .border(RuiTheme.dimens.borderWidth, colors.outlineSubtle, capsule),
                         contentAlignment = Alignment.CenterStart,
                     ) {
                         if (slotWidthPx > 0f && selected in items.indices) {

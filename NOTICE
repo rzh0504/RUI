@@ -5,13 +5,6 @@ This product includes software developed by the miuix project
 (https://github.com/composable-miuix-ui/miuix) and used under the Apache
 License, Version 2.0.
 
-This product depends on the Backdrop library
-(https://github.com/Kyant0/AndroidLiquidGlass) by Kyant0, used under the
-Apache License, Version 2.0: the liquid-glass material
-(RuiGlassMaterial.Liquid) renders through its effect pipeline — vibrancy,
-blur and the lens refraction shader — over Rui's own capture; no code from
-it is vendored.
-
 The rui-icons module includes icon artwork from Lucide
 (https://lucide.dev), used under the ISC License, and Compose vector
 definitions generated from Compose Icons

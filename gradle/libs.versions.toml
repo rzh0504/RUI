@@ -3,7 +3,6 @@ kotlin = "2.4.20"
 agp = "9.4.1"
 composeMultiplatform = "1.12.2"
 composeunstyled = "2.10.0"
-backdrop = "2.0.1"
 activityCompose = "1.12.4"
 coil = "3.6.3"
 ktor = "3.6.0"
@@ -16,7 +15,6 @@ accompanistLyricsUi = "2.0.0-rc.2"
 accompanist-lyrics-core = { module = "com.mocharealm.accompanist:lyrics-core", version.ref = "accompanistLyricsCore" }
 accompanist-lyrics-ui = { module = "com.mocharealm.accompanist:lyrics-ui", version.ref = "accompanistLyricsUi" }
 composeunstyled = { module = "com.composables:composeunstyled", version.ref = "composeunstyled" }
-backdrop = { module = "io.github.kyant0:backdrop", version.ref = "backdrop" }
 composeunstyled-colored-indication = { module = "com.composables:composeunstyled-colored-indication", version.ref = "composeunstyled" }
 compose-runtime = { module = "org.jetbrains.compose.runtime:runtime", version.ref = "composeMultiplatform" }
 compose-foundation = { module = "org.jetbrains.compose.foundation:foundation", version.ref = "composeMultiplatform" }

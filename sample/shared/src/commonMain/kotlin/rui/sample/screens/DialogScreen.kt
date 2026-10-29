@@ -15,7 +15,6 @@ import rui.components.RuiListGroup
 import rui.components.RuiListItem
 import rui.foundation.BlurBackdrop
 import rui.foundation.ExperimentalRuiApi
-import rui.foundation.RuiGlassMaterial
 import rui.foundation.RuiText
 import rui.sample.GlassMode
 import rui.sample.ui.ContentColumn
@@ -58,7 +57,6 @@ public fun DialogScreen(
                 subtitle = when (glassMode) {
                     GlassMode.Solid -> "Solid mode — opaque elevated surface"
                     GlassMode.Frosted -> "Backdrop blur behind a translucent panel"
-                    GlassMode.Liquid -> "Edge refraction and a specular highlight"
                 },
                 showChevron = true,
                 onClick = { glassDialog = true },
@@ -86,7 +84,6 @@ public fun DialogScreen(
         onDismissRequest = { glassDialog = false },
         frosted = glassMode != GlassMode.Solid,
         backdrop = if (glassMode == GlassMode.Solid) null else backdrop,
-        material = if (glassMode == GlassMode.Liquid) RuiGlassMaterial.Liquid else RuiGlassMaterial.Frosted,
         title = "Glass panel",
         supportingText = "Unsupported platforms get a near-opaque fallback automatically.",
         actions = {

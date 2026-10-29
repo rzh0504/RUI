@@ -44,13 +44,6 @@ kotlin {
             // wasm-js artifact, so every Rui target sees the model.
             api(libs.accompanist.lyrics.core)
             implementation(libs.compose.ui.backhandler)
-            // The liquid-glass material (RuiGlassMaterial.Liquid) renders
-            // through the Backdrop library — vibrancy/blur/lens effects over
-            // a LayerBackdrop capture. It publishes every Rui target
-            // (android, iOS arm64+simulator, desktop JVM, wasmJs); Rui's
-            // public API stays dependency-free, the library sits behind
-            // rui.foundation's consume path.
-            implementation(libs.backdrop)
             implementation(libs.composeunstyled.colored.indication)
             implementation(libs.coil.compose)
             implementation(libs.coil.network.ktor3)

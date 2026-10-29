@@ -23,7 +23,6 @@ import rui.components.RuiListGroup
 import rui.components.RuiListItem
 import rui.foundation.BlurBackdrop
 import rui.foundation.ExperimentalRuiApi
-import rui.foundation.RuiGlassMaterial
 import rui.foundation.RuiIcon
 import rui.foundation.RuiIcons
 import rui.foundation.RuiText
@@ -50,10 +49,8 @@ public fun DropdownMenuScreen(
     var pinned by remember { mutableStateOf(false) }
     var tagColor by remember { mutableStateOf<Color?>(null) }
 
-    // The demo pages follow the Appearance glass mode; the Liquid tab owns
-    // the liquid-only showcase.
+    // The demo pages follow the Appearance glass mode.
     val glassBackdrop = if (glassMode == GlassMode.Solid) null else backdrop
-    val glassMaterial = if (glassMode == GlassMode.Liquid) RuiGlassMaterial.Liquid else RuiGlassMaterial.Frosted
 
     ContentColumn(contentPadding = contentPadding) {
         RuiText(
@@ -68,7 +65,6 @@ public fun DropdownMenuScreen(
         RuiListGroup {
             RuiContextMenu(
                 backdrop = glassBackdrop,
-                material = glassMaterial,
                 reserveLeadingIcon = true,
                 menu = {
                     RuiDropdownMenuItem(
@@ -129,7 +125,6 @@ public fun DropdownMenuScreen(
                 expanded = editMenu,
                 onDismissRequest = { editMenu = false },
                 backdrop = glassBackdrop,
-                material = glassMaterial,
                 alignment = AnchorAlignment.End,
                 alignmentOffset = -MenuEdgeInset,
                 anchor = {
@@ -150,7 +145,6 @@ public fun DropdownMenuScreen(
                 expanded = viewsMenu,
                 onDismissRequest = { viewsMenu = false },
                 backdrop = glassBackdrop,
-                material = glassMaterial,
                 alignment = AnchorAlignment.End,
                 alignmentOffset = -MenuEdgeInset,
                 reserveLeadingIcon = true,
@@ -185,7 +179,6 @@ public fun DropdownMenuScreen(
                 expanded = shareMenu,
                 onDismissRequest = { shareMenu = false },
                 backdrop = glassBackdrop,
-                material = glassMaterial,
                 alignment = AnchorAlignment.End,
                 alignmentOffset = -MenuEdgeInset,
                 reserveLeadingIcon = true,
@@ -224,7 +217,6 @@ public fun DropdownMenuScreen(
                 expanded = longMenu,
                 onDismissRequest = { longMenu = false },
                 backdrop = glassBackdrop,
-                material = glassMaterial,
                 alignment = AnchorAlignment.End,
                 alignmentOffset = -MenuEdgeInset,
                 anchor = {

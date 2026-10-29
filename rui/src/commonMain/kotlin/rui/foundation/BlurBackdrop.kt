@@ -30,9 +30,6 @@ import androidx.compose.ui.node.invalidateDraw
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
-import com.kyant.backdrop.backdrops.LayerBackdrop
-import com.kyant.backdrop.backdrops.layerBackdrop
-import com.kyant.backdrop.backdrops.rememberLayerBackdrop
 import rui.foundation.platform.isBlurSupported
 
 /**
@@ -66,15 +63,9 @@ public interface BlurBackdrop {
 private class BlurBackdropImpl(
     override val graphicsLayer: GraphicsLayer,
     val onDraw: ContentDrawScope.() -> Unit,
-    val liquid: LayerBackdrop? = null,
 ) : BlurBackdrop {
     override var layerCoordinates: LayoutCoordinates? by mutableStateOf(null)
 }
-
-/** The liquid capture recorded by `rememberBlurBackdrop(liquid = true)` —
- *  the source [Modifier.liquidGlassSurface] consumes. */
-internal val BlurBackdrop.liquidSource: LayerBackdrop?
-    get() = (this as? BlurBackdropImpl)?.liquid
 
 /**
  * Creates a backdrop whose capturing node replays [onDraw] into its layer
@@ -94,37 +85,21 @@ internal val BlurBackdrop.liquidSource: LayerBackdrop?
  * which the render thread walks until it dies. Bars and popup panels are
  * safe — [RuiScaffold] records only its content Box, and popups live in
  * their own windows. For glass inside a page, record a pure-background
- * layer beneath the glass instead (see the catalog's liquid-glass tab).
- *
- * Set [liquid] to also record a second capture into the Backdrop library's
- * [com.kyant.backdrop.backdrops.LayerBackdrop] — the source the
- * [RuiGlassMaterial.Liquid] surfaces consume (see
- * [Modifier.liquidGlassSurface]). Both captures replay the same [onDraw];
- * the extra one costs one GraphicsLayer record per frame, so leave it off
- * for screens that stay frosted. Unlike the frosted capture, the liquid one
- * keeps recording through navigation transitions (its consumer has no
- * recordEnabled escape hatch) — a page that transitions heavily is better
- * off frosted-only.
+ * layer beneath the glass instead.
  */
 @Composable
 public fun rememberBlurBackdrop(
-    liquid: Boolean = false,
     onDraw: ContentDrawScope.() -> Unit = { drawContent() },
 ): BlurBackdrop {
     val graphicsLayer = rememberGraphicsLayer()
     // Callers commonly pass an inline capture body; keying the recorder on
-    // the lambda's identity would rebuild the backdrop — and reset the
-    // library's layer coordinates — on every recomposition. Keep one stable
-    // recorder and read the latest body at draw time.
+    // the lambda's identity would rebuild the backdrop — and reset its
+    // layer coordinates — on every recomposition. Keep one stable recorder
+    // and read the latest body at draw time.
     val latestOnDraw = rememberUpdatedState(onDraw)
     val recorder: ContentDrawScope.() -> Unit = remember { { latestOnDraw.value(this) } }
-    val liquidSource = if (liquid) {
-        rememberLayerBackdrop(onDraw = recorder)
-    } else {
-        null
-    }
-    return remember(graphicsLayer, recorder, liquidSource) {
-        BlurBackdropImpl(graphicsLayer, recorder, liquidSource)
+    return remember(graphicsLayer, recorder) {
+        BlurBackdropImpl(graphicsLayer, recorder)
     }
 }
 
@@ -132,9 +107,7 @@ public fun rememberBlurBackdrop(
  * Marks this composable as the content [backdrop] captures. Every redraw
  * re-records the layer; recording is cheap and doesn't invalidate consumers
  * on its own. Set [recordEnabled] to false while a transition is running to
- * keep the animation's frame budget (surfaces sample the last frame). The
- * liquid capture, when present, records through unconditionally — the
- * library's recorder has no pause.
+ * keep the animation's frame budget (surfaces sample the last frame).
  */
 public fun Modifier.blurBackdrop(
     backdrop: BlurBackdrop,
@@ -162,13 +135,6 @@ public fun Modifier.blurBackdrop(
                 impl.layerCoordinates = coordinates
             }
         }
-        .then(
-            if (impl.liquid != null) {
-                Modifier.layerBackdrop(impl.liquid)
-            } else {
-                Modifier
-            },
-        )
 }
 
 /**

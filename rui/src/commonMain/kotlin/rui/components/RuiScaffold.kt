@@ -14,10 +14,8 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.SubcomposeLayout
-import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
@@ -25,12 +23,6 @@ import rui.foundation.BlurBackdrop
 import rui.foundation.blurBackdrop
 import rui.theme.RuiTheme
 import kotlin.math.max
-
-/** Geometry and chrome defaults of [RuiScaffold]. */
-public object RuiScaffoldDefaults {
-    /** How far the page-background scrim fades below the top bar. */
-    public val TopScrimRise: Dp = 8.dp
-}
 
 /**
  * The basic screen layout, modeled after miuix's Scaffold.
@@ -45,11 +37,6 @@ public object RuiScaffoldDefaults {
  * so a [topBar] that changes height while scrolling (e.g. a collapsing large
  * title) only re-measures the content — it never recomposes it.
  *
- * With [topScrim] the scaffold fades content into the page background across
- * [RuiScaffoldDefaults.TopScrimRise] below the top bar, so a solid bar ends on
- * a soft edge instead of a hard cut. The rise is reserved in the content
- * padding, so resting content starts below the fade.
- *
  * Pass the [backdrop] created with [rui.foundation.rememberBlurBackdrop] and
  * used by the glass bars — the scaffold captures the content area into it.
  */
@@ -59,7 +46,6 @@ public fun RuiScaffold(
     backdrop: BlurBackdrop? = null,
     containerColor: Color = RuiTheme.colors.background,
     contentWindowInsets: WindowInsets = WindowInsets.systemBars.union(WindowInsets.displayCutout),
-    topScrim: Boolean = true,
     topBar: @Composable () -> Unit = {},
     bottomBar: @Composable () -> Unit = {},
     snackbarHost: @Composable () -> Unit = {},
@@ -124,28 +110,10 @@ public fun RuiScaffold(
             val bottomBarHeight = bottomBarPlaceables.maxOfOrNull { it.height } ?: 0
             val topInsetPx = contentWindowInsets.getTop(this)
             val bottomInsetPx = contentWindowInsets.getBottom(this)
-            val scrimRisePx = if (topScrim) RuiScaffoldDefaults.TopScrimRise.roundToPx() else 0
             val barBottomPx = max(topBarHeight, topInsetPx)
-            val reservedTopPx = barBottomPx + scrimRisePx
-            val topScrimPlaceables = if (scrimRisePx > 0) {
-                subcompose(RuiScaffoldSections.TopScrim) {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .background(
-                                Brush.verticalGradient(
-                                    0f to containerColor,
-                                    1f to containerColor.copy(alpha = 0f),
-                                ),
-                            ),
-                    )
-                }.map { it.measure(Constraints.fixed(layoutWidth, scrimRisePx)) }
-            } else {
-                emptyList()
-            }
 
             contentPadding.paddingHolder = scaffoldContentPadding(
-                top = reservedTopPx.toDp(),
+                top = barBottomPx.toDp(),
                 bottom = max(bottomBarHeight, bottomInsetPx).toDp(),
                 left = contentWindowInsets.getLeft(this, layoutDirection).toDp(),
                 right = contentWindowInsets.getRight(this, layoutDirection).toDp(),
@@ -156,9 +124,6 @@ public fun RuiScaffold(
 
             layout(layoutWidth, layoutHeight) {
                 bodyPlaceables.forEach { it.place(0, 0) }
-                // Directly under the bar: content dissolves into the page
-                // before it reaches the chrome.
-                topScrimPlaceables.forEach { it.place(0, barBottomPx) }
                 topBarPlaceables.forEach { it.place(0, 0) }
                 bottomBarPlaceables.forEach { it.place(0, layoutHeight - it.height) }
                 // The snackbar floats above the bottom bar (or the bottom
@@ -170,7 +135,7 @@ public fun RuiScaffold(
     }
 }
 
-private enum class RuiScaffoldSections { TopBar, TopScrim, BottomBar, SnackbarHost, Content }
+private enum class RuiScaffoldSections { TopBar, BottomBar, SnackbarHost, Content }
 
 /** Content padding with physical [left]/[right], since window insets are resolved to physical sides. */
 internal fun scaffoldContentPadding(top: Dp, bottom: Dp, left: Dp, right: Dp): PaddingValues =

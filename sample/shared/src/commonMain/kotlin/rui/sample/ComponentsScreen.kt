@@ -11,7 +11,6 @@ import rui.components.RuiSelectionOption
 import rui.components.RuiSelectionRow
 import rui.components.RuiSwitch
 import rui.foundation.BlurBackdrop
-import rui.foundation.RuiGlassMaterial
 import rui.foundation.RuiText
 import rui.sample.ui.ContentColumn
 import rui.sample.ui.SectionLabel
@@ -24,7 +23,6 @@ public fun ComponentsScreen(
     glassMode: GlassMode,
     onGlassModeChange: (GlassMode) -> Unit,
     backdrop: BlurBackdrop?,
-    material: RuiGlassMaterial,
     floatingNavBarEnabled: Boolean,
     onFloatingNavBarEnabledChange: (Boolean) -> Unit,
     onOpen: (CatalogPage) -> Unit,
@@ -42,12 +40,10 @@ public fun ComponentsScreen(
                 options = listOf(
                     RuiSelectionOption(GlassMode.Solid, "Solid"),
                     RuiSelectionOption(GlassMode.Frosted, "Frosted glass"),
-                    RuiSelectionOption(GlassMode.Liquid, "Liquid glass"),
                 ),
                 selected = glassMode,
                 onSelect = onGlassModeChange,
                 backdrop = backdrop,
-                material = material,
             )
             RuiListItem(
                 title = "Floating navigation bar",

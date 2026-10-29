@@ -15,7 +15,6 @@ import rui.components.RuiBottomSheet
 import rui.components.RuiListGroup
 import rui.components.RuiListItem
 import rui.foundation.BlurBackdrop
-import rui.foundation.RuiGlassMaterial
 import rui.foundation.RuiText
 import rui.sample.GlassMode
 import rui.sample.ui.ContentColumn
@@ -32,10 +31,8 @@ public fun BottomSheetScreen(
     var glassSheet by remember { mutableStateOf(false) }
     var actionPanel by remember { mutableStateOf(false) }
 
-    // The demo pages follow the Appearance glass mode; the Liquid tab owns
-    // the liquid-only showcase.
+    // The demo pages follow the Appearance glass mode.
     val glassBackdrop = if (glassMode == GlassMode.Solid) null else backdrop
-    val glassMaterial = if (glassMode == GlassMode.Liquid) RuiGlassMaterial.Liquid else RuiGlassMaterial.Frosted
 
     ContentColumn(contentPadding = contentPadding) {
         RuiText(
@@ -59,7 +56,6 @@ public fun BottomSheetScreen(
                 subtitle = when (glassMode) {
                     GlassMode.Solid -> "Solid mode — opaque elevated surface"
                     GlassMode.Frosted -> "Backdrop blur behind the panel"
-                    GlassMode.Liquid -> "Refraction at the panel's top corners"
                 },
                 showChevron = true,
                 onClick = { glassSheet = true },
@@ -88,7 +84,6 @@ public fun BottomSheetScreen(
         ),
         cancelLabel = "Cancel",
         backdrop = glassBackdrop,
-        material = glassMaterial,
     )
 
     RuiBottomSheet(
@@ -107,7 +102,6 @@ public fun BottomSheetScreen(
         onDismiss = { glassSheet = false },
         title = "Glass sheet",
         backdrop = glassBackdrop,
-        material = glassMaterial,
     ) {
         RuiListGroup(Modifier.padding(horizontal = RuiTheme.spacing.lg)) {
             RuiListItem(title = "Row one", subtitle = "Samples the page behind the sheet")

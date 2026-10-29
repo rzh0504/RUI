@@ -12,7 +12,6 @@ import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import rui.foundation.BlurBackdrop
-import rui.foundation.RuiGlassMaterial
 import rui.foundation.RuiIcon
 import rui.foundation.RuiIcons
 import rui.theme.RuiTheme
@@ -38,8 +37,7 @@ public data class RuiSelectionOption<T>(
  *
  * The menu is the standard [RuiDropdownMenu]: it portals above everything
  * through the overlay host and dismisses on outside tap, back and Esc.
- * Give it the screen's [backdrop] and the active [material] to render in
- * the app's glass material.
+ * Give it the screen's [backdrop] to render in the frosted glass material.
  *
  * @param selected The currently selected value; the row's value slot shows
  *   the first option matching it. A value with no matching option shows an
@@ -53,7 +51,6 @@ public fun <T> RuiSelectionRow(
     onSelect: (T) -> Unit,
     modifier: Modifier = Modifier,
     backdrop: BlurBackdrop? = null,
-    material: RuiGlassMaterial = RuiGlassMaterial.Frosted,
 ) {
     var expanded by remember { mutableStateOf(false) }
     val currentLabel = options.firstOrNull { it.value == selected }?.label
@@ -68,7 +65,6 @@ public fun <T> RuiSelectionRow(
         alignment = AnchorAlignment.End,
         alignmentOffset = -MenuEdgeInset,
         backdrop = backdrop,
-        material = material,
         anchor = {
             RuiListItem(
                 title = title,

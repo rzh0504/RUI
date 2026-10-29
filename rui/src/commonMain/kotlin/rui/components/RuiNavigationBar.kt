@@ -21,11 +21,8 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
 import rui.foundation.blurSurface
 import rui.foundation.BlurBackdrop
-import rui.foundation.RuiGlassMaterial
 import rui.foundation.RuiIcon
 import rui.foundation.RuiText
-import rui.foundation.liquidGlassSurface
-import rui.foundation.liquidSource
 import rui.foundation.platform.isBlurSupported
 import rui.foundation.ruiMinimumTouchTarget
 import rui.theme.RuiTheme
@@ -53,10 +50,9 @@ internal fun RuiNavigationBarItem.iconFor(selected: Boolean): ImageVector? =
 /**
  * The bottom navigation bar. The bar shares the page
  * [RuiTheme.colors.background] color, like the top bar — with a [backdrop]
- * scrolled content is only revealed through the glass (frosted by default,
- * liquid with `material = RuiGlassMaterial.Liquid`); without one it is an
- * opaque page-background strip. Place inside [RuiScaffold]'s `bottomBar`
- * slot.
+ * scrolled content is only revealed through the frosted blur; without one it
+ * is an opaque page-background strip. Place inside [RuiScaffold]'s
+ * `bottomBar` slot.
  *
  * Items are exposed as tabs, and the current destination is marked selected
  * for assistive technology. A slot with a `null` icon renders label only, a
@@ -73,28 +69,18 @@ public fun RuiNavigationBar(
     onSelect: (Int) -> Unit,
     modifier: Modifier = Modifier,
     backdrop: BlurBackdrop? = null,
-    material: RuiGlassMaterial = RuiGlassMaterial.Frosted,
 ) {
     val colors = RuiTheme.colors
     val typography = RuiTheme.typography
 
-    val barBackground = when {
-        backdrop != null && material == RuiGlassMaterial.Liquid && backdrop.liquidSource != null && isBlurSupported ->
-            Modifier.liquidGlassSurface(
-                backdrop = backdrop,
-                tint = colors.background,
-                // A strip attached to the screen's edges carries no edge
-                // glass — the highlight would read as a glowing frame
-                // (iOS's bar treatment).
-                edgeEffects = false,
-            )
-        backdrop != null && isBlurSupported ->
-            Modifier.blurSurface(
-                backdrop = backdrop,
-                radius = 32.dp,
-                tint = colors.background.copy(alpha = 0.65f),
-            )
-        else -> Modifier.background(colors.background)
+    val barBackground = if (backdrop != null && isBlurSupported) {
+        Modifier.blurSurface(
+            backdrop = backdrop,
+            radius = 32.dp,
+            tint = colors.background.copy(alpha = 0.65f),
+        )
+    } else {
+        Modifier.background(colors.background)
     }
 
     Column(

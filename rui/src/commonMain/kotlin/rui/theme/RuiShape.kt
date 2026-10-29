@@ -29,13 +29,12 @@ import kotlin.math.min
  * `1.1` is the standard continuous look. Radii larger than half the shorter
  * side clamp to it, producing smooth stadiums/pills.
  *
- * It IS a [CornerBasedShape] underneath — glass materials read corner
- * radii through that contract (backdrop's lens refraction, specular
- * highlights) — but the outline is drawn from the Bézier path, so the
- * smooth geometry is unchanged. Consequences of the inheritance: `copy`
- * with different corners returns a plain RoundedCornerShape (CornerSize
- * can't be reversed to a Dp, so the smoothing is lost there), and equality
- * stays strict to this class.
+ * It IS a [CornerBasedShape] underneath — components that branch on the
+ * corner family read radii through that contract — but the outline is drawn
+ * from the Bézier path, so the smooth geometry is unchanged. Consequences of
+ * the inheritance: `copy` with different corners returns a plain
+ * RoundedCornerShape (CornerSize can't be reversed to a Dp, so the smoothing
+ * is lost there), and equality stays strict to this class.
  *
  * The algorithm is adapted from the miuix project's squircle module
  * (https://github.com/composable-miuix/miuix, Apache License 2.0).

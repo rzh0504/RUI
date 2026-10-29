@@ -18,7 +18,6 @@ import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableStateOf
@@ -47,9 +46,6 @@ import rui.components.navigation.RuiNavController
 import rui.components.navigation.rememberRuiNavBackStack
 import rui.components.rememberRuiScrollBehavior
 import rui.foundation.ExperimentalRuiApi
-import rui.foundation.LocalRuiLiquidGlassTuning
-import rui.foundation.RuiGlassMaterial
-import rui.foundation.RuiLiquidGlassTuning
 import rui.foundation.rememberBlurBackdrop
 import rui.foundation.utils.StatusBarAppearance
 import rui.icons.RuiCommonIcons
@@ -86,7 +82,6 @@ import rui.sample.screens.TokensScreen
 import rui.sample.screens.TogglesScreen
 import rui.sample.screens.LazyListScreen
 import rui.sample.screens.ListsScreen
-import rui.sample.screens.LiquidGlassScreen
 import rui.sample.screens.BannerScreen
 import rui.sample.screens.LocalizationScreen
 import rui.sample.screens.ReorderScreen
@@ -191,17 +186,14 @@ private fun CatalogPage.title(): String = when (this) {
  * [DialogHost] sits at the root so RuiDialog panels portal above everything.
  */
 /** The catalog-wide glass material. Solid shows what every surface does
- *  with no capture at all; Frosted and Liquid thread the mode through the
- *  bars and the overlay demo pages. The Liquid tab is mode-independent. */
-public enum class GlassMode { Solid, Frosted, Liquid }
+ *  with no capture at all; Frosted threads the mode through the bars and
+ *  the overlay demo pages. */
+public enum class GlassMode { Solid, Frosted }
 
 private const val KeyDarkTheme = "appearance.darkTheme"
 private const val KeyGlassMode = "appearance.glassMode"
 private const val KeyFloatingNavBar = "appearance.floatingNavBar"
 private const val KeyLanguage = "appearance.language"
-
-/** Index of the liquid-glass tab among the root nav items. */
-private const val LiquidTab = 3
 
 @OptIn(ExperimentalRuiApi::class, ExperimentalComposeUiApi::class)
 @Composable
@@ -216,10 +208,6 @@ public fun CatalogApp() {
         )
     }
     var floatingNavBarEnabled by remember { mutableStateOf(SampleSettings.getBoolean(KeyFloatingNavBar, false)) }
-    // Liquid-material test bench: the Liquid tab's sliders write it, the
-    // provider makes every liquid surface below — bars included — follow.
-    // Session-scoped on purpose; the shipped look is one app restart away.
-    var liquidTuning by remember { mutableStateOf(RuiLiquidGlassTuning()) }
     var languageChoice by remember {
         mutableStateOf(
             LanguageChoice.entries.firstOrNull { it.name == SampleSettings.getString(KeyLanguage, LanguageChoice.System.name) }
@@ -251,11 +239,7 @@ public fun CatalogApp() {
             RuiNavigationBarItem("UI", RuiCommonIcons.Component),
             RuiNavigationBarItem("Blocks", RuiCommonIcons.Blocks),
             RuiNavigationBarItem("Tokens", RuiCommonIcons.Palette),
-            RuiNavigationBarItem("Liquid", RuiCommonIcons.Droplet),
         )
-        // Dialogs and bottom sheets portal above the navigation stack —
-        // both through the one overlay host.
-        CompositionLocalProvider(LocalRuiLiquidGlassTuning provides liquidTuning) {
         RuiOverlayHost {
             // Tooltip panels portal above the navigation stack too.
             TooltipHost {
@@ -304,41 +288,24 @@ public fun CatalogApp() {
                 // One backdrop per stack entry — the capture and the bars
                 // sampling it must share a coordinate space. A backdrop shared
                 // across stacked pages samples covered pages' translated
-                // content and the blur lands misaligned. The liquid capture
-                // costs one extra record per frame, so it exists only where
-                // something consumes it: everything in Liquid mode, and the
-                // Liquid tab (mode-independent) while it shows.
+                // content and the blur lands misaligned.
                 val background = RuiTheme.colors.background
                 val useGlass = glassMode != GlassMode.Solid
-                val barMaterial = if (glassMode == GlassMode.Liquid) {
-                    RuiGlassMaterial.Liquid
-                } else {
-                    RuiGlassMaterial.Frosted
-                }
-                val backdrop = rememberBlurBackdrop(
-                    liquid = glassMode == GlassMode.Liquid || (atRoot && tab == LiquidTab),
-                ) {
+                val backdrop = rememberBlurBackdrop {
                     drawRect(background)
                     drawContent()
                 }
                 val glassBackdrop = if (useGlass) backdrop else null
-                // The Liquid tab showcases the material in every mode, so its
-                // liquid surfaces need the page capture even when the app's
-                // bars are solid; only the bars follow the mode.
-                val scaffoldBackdrop = if (atRoot && tab == LiquidTab) backdrop else glassBackdrop
                 RuiScaffold(
-                    backdrop = scaffoldBackdrop,
-                    // The immersive player owns the status-bar area itself.
-                    topScrim = page != CatalogPage.NowPlaying,
+                    backdrop = glassBackdrop,
                     topBar = {
-                        // The title area stays solid: no backdrop and no
-                        // material, whatever the app-wide glass mode is.
                         if (page == CatalogPage.NowPlaying) {
                             // The music block is fully immersive: it owns
                             // its chrome and draws behind the status bar.
                         } else if (atRoot) {
                             RuiTopAppBar(
                                 title = page.title(),
+                                backdrop = glassBackdrop,
                                 scrollBehavior = scrollBehavior,
                             )
                         } else {
@@ -346,6 +313,7 @@ public fun CatalogApp() {
                                 title = page.title(),
                                 showBack = true,
                                 onBack = { nav.pop() },
+                                backdrop = glassBackdrop,
                             )
                         }
                     },
@@ -363,7 +331,6 @@ public fun CatalogApp() {
                                         selected = tab,
                                         onSelect = { tab = it },
                                         backdrop = glassBackdrop,
-                                        material = barMaterial,
                                         barWidth = maxWidth - 40.dp,
                                     )
                                 }
@@ -373,133 +340,120 @@ public fun CatalogApp() {
                                     selected = tab,
                                     onSelect = { tab = it },
                                     backdrop = glassBackdrop,
-                                    material = barMaterial,
                                 )
                             }
                         }
                     },
                 ) { padding ->
-                    // Above the screens' overscroll modifiers, so the bar
-                    // collapses/expands before the content bounces (miuix's
-                    // example wiring). Only the large-title page drives a bar.
-                    Box(
-                        Modifier.then(
-                            scrollBehavior?.let { Modifier.nestedScroll(it.nestedScrollConnection) }
-                                ?: Modifier,
-                        ),
-                    ) {
-                        when (page) {
-                            CatalogPage.Root -> AnimatedContent(
-                                targetState = tab,
-                                modifier = Modifier.fillMaxSize(),
-                                transitionSpec = {
-                                    val direction = if (targetState > initialState) {
-                                        tabForward
-                                    } else {
-                                        -tabForward
-                                    }
-                                    (
-                                        slideInHorizontally { width ->
-                                            direction * width / 10
-                                        } + fadeIn(animationSpec = motion.normal)
-                                        ) togetherWith
-                                        (
-                                            slideOutHorizontally { width ->
-                                                -direction * width / 10
-                                            } + fadeOut(animationSpec = motion.normal)
-                                            )
-                                },
-                                label = "catalog_root_tab",
-                            ) { currentTab ->
-                                when (currentTab) {
-                                    0 -> ComponentsScreen(
-                                        darkTheme = darkTheme,
-                                        onDarkThemeChange = { darkTheme = it; SampleSettings.putBoolean(KeyDarkTheme, it) },
-                                        glassMode = glassMode,
-                                        onGlassModeChange = { glassMode = it; SampleSettings.putString(KeyGlassMode, it.name) },
-                                        backdrop = glassBackdrop,
-                                        material = barMaterial,
-                                        floatingNavBarEnabled = floatingNavBarEnabled,
-                                        onFloatingNavBarEnabledChange = { floatingNavBarEnabled = it; SampleSettings.putBoolean(KeyFloatingNavBar, it) },
-                                        onOpen = { nav.push(it) },
-                                        contentPadding = padding,
-                                    )
-                                    1 -> BlocksScreen(
-                                        onOpen = { nav.push(it) },
-                                        contentPadding = padding,
-                                    )
-                                    2 -> TokensScreen(contentPadding = padding)
-                                    LiquidTab -> LiquidGlassScreen(
-                                        backdrop = backdrop,
-                                        tuning = liquidTuning,
-                                        onTuningChange = { liquidTuning = it },
-                                        contentPadding = padding,
-                                    )
+                    when (page) {
+                        CatalogPage.Root -> AnimatedContent(
+                            targetState = tab,
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .then(
+                                    scrollBehavior?.let {
+                                        Modifier.nestedScroll(it.nestedScrollConnection)
+                                    } ?: Modifier,
+                                ),
+                            transitionSpec = {
+                                val direction = if (targetState > initialState) {
+                                    tabForward
+                                } else {
+                                    -tabForward
                                 }
+                                (
+                                    slideInHorizontally { width ->
+                                        direction * width / 10
+                                    } + fadeIn(animationSpec = motion.normal)
+                                    ) togetherWith
+                                    (
+                                        slideOutHorizontally { width ->
+                                            -direction * width / 10
+                                        } + fadeOut(animationSpec = motion.normal)
+                                        )
+                            },
+                            label = "catalog_root_tab",
+                        ) { currentTab ->
+                            when (currentTab) {
+                                0 -> ComponentsScreen(
+                                    darkTheme = darkTheme,
+                                    onDarkThemeChange = { darkTheme = it; SampleSettings.putBoolean(KeyDarkTheme, it) },
+                                    glassMode = glassMode,
+                                    onGlassModeChange = { glassMode = it; SampleSettings.putString(KeyGlassMode, it.name) },
+                                    backdrop = glassBackdrop,
+                                    floatingNavBarEnabled = floatingNavBarEnabled,
+                                    onFloatingNavBarEnabledChange = { floatingNavBarEnabled = it; SampleSettings.putBoolean(KeyFloatingNavBar, it) },
+                                    onOpen = { nav.push(it) },
+                                    contentPadding = padding,
+                                )
+                                1 -> BlocksScreen(
+                                    onOpen = { nav.push(it) },
+                                    contentPadding = padding,
+                                )
+                                2 -> TokensScreen(contentPadding = padding)
                             }
-                            CatalogPage.SignIn -> SignInScreen(contentPadding = padding)
-                            CatalogPage.Account -> AccountScreen(contentPadding = padding)
-                            CatalogPage.Cart -> CartScreen(contentPadding = padding)
-                            CatalogPage.Inbox -> InboxScreen(contentPadding = padding)
-                            CatalogPage.SearchResults -> SearchResultsScreen(contentPadding = padding)
-                            CatalogPage.Buttons -> ButtonsScreen(contentPadding = padding)
-                            CatalogPage.Chips -> ChipsScreen(contentPadding = padding)
-                            CatalogPage.TextField -> TextFieldScreen(contentPadding = padding)
-                            CatalogPage.Toggles -> TogglesScreen(contentPadding = padding)
-                            CatalogPage.Tabs -> TabsScreen(contentPadding = padding)
-                            CatalogPage.Dialog -> DialogScreen(
-                                glassMode = glassMode,
-                                backdrop = backdrop,
-                                contentPadding = padding,
-                            )
-                            CatalogPage.DropdownMenu -> DropdownMenuScreen(
-                                glassMode = glassMode,
-                                backdrop = backdrop,
-                                contentPadding = padding,
-                            )
-                            CatalogPage.BottomSheet -> BottomSheetScreen(
-                                glassMode = glassMode,
-                                backdrop = backdrop,
-                                contentPadding = padding,
-                            )
-                            CatalogPage.Progress -> ProgressScreen(contentPadding = padding)
-                            CatalogPage.Avatar -> AvatarScreen(contentPadding = padding)
-                            CatalogPage.AsyncImage -> ImageScreen(contentPadding = padding)
-                            CatalogPage.Tooltip -> TooltipScreen(contentPadding = padding)
-                            CatalogPage.Disclosure -> DisclosureScreen(contentPadding = padding)
-                            CatalogPage.Snackbar -> SnackbarScreen(
-                                hostState = snackbarHostState,
-                                requestScope = appScope,
-                                contentPadding = padding,
-                            )
-                            CatalogPage.PullToRefresh -> PullToRefreshScreen(contentPadding = padding)
-                            CatalogPage.SwipeActions -> SwipeActionsScreen(contentPadding = padding)
-                            CatalogPage.Search -> SearchBarScreen(contentPadding = padding)
-                            CatalogPage.Pickers -> PickersScreen(contentPadding = padding)
-                            CatalogPage.Skeleton -> SkeletonScreen(contentPadding = padding)
-                            CatalogPage.EmptyState -> EmptyStateScreen(contentPadding = padding)
-                            CatalogPage.PageIndicator -> PageIndicatorScreen(contentPadding = padding)
-                            CatalogPage.Drawer -> DrawerScreen(contentPadding = padding)
-                            CatalogPage.Lists -> ListsScreen(
-                                backdrop = glassBackdrop,
-                                material = barMaterial,
-                                contentPadding = padding,
-                            )
-                            CatalogPage.LazyList -> LazyListScreen(contentPadding = padding)
-                            CatalogPage.Icons -> IconsScreen(contentPadding = padding)
-                            CatalogPage.InlineBanner -> BannerScreen(contentPadding = padding)
-                            CatalogPage.Localization -> LocalizationScreen(
-                                languageChoice = languageChoice,
-                                onLanguageChoiceChange = { languageChoice = it; SampleSettings.putString(KeyLanguage, it.name) },
-                                contentPadding = padding,
-                            )
-                            CatalogPage.Reorder -> ReorderScreen(contentPadding = padding)
-                            CatalogPage.ScrollBar -> ScrollBarScreen(contentPadding = padding)
-                            CatalogPage.NavigationRail -> NavigationRailScreen(contentPadding = padding)
-                            CatalogPage.Lyrics -> LyricsScreen(contentPadding = padding)
-                            CatalogPage.NowPlaying -> NowPlayingScreen(onBack = { nav.pop() })
-                            CatalogPage.Table -> TableScreen(contentPadding = padding)
                         }
+                        CatalogPage.SignIn -> SignInScreen(contentPadding = padding)
+                        CatalogPage.Account -> AccountScreen(contentPadding = padding)
+                        CatalogPage.Cart -> CartScreen(contentPadding = padding)
+                        CatalogPage.Inbox -> InboxScreen(contentPadding = padding)
+                        CatalogPage.SearchResults -> SearchResultsScreen(contentPadding = padding)
+                        CatalogPage.Buttons -> ButtonsScreen(contentPadding = padding)
+                        CatalogPage.Chips -> ChipsScreen(contentPadding = padding)
+                        CatalogPage.TextField -> TextFieldScreen(contentPadding = padding)
+                        CatalogPage.Toggles -> TogglesScreen(contentPadding = padding)
+                        CatalogPage.Tabs -> TabsScreen(contentPadding = padding)
+                        CatalogPage.Dialog -> DialogScreen(
+                            glassMode = glassMode,
+                            backdrop = backdrop,
+                            contentPadding = padding,
+                        )
+                        CatalogPage.DropdownMenu -> DropdownMenuScreen(
+                            glassMode = glassMode,
+                            backdrop = backdrop,
+                            contentPadding = padding,
+                        )
+                        CatalogPage.BottomSheet -> BottomSheetScreen(
+                            glassMode = glassMode,
+                            backdrop = backdrop,
+                            contentPadding = padding,
+                        )
+                        CatalogPage.Progress -> ProgressScreen(contentPadding = padding)
+                        CatalogPage.Avatar -> AvatarScreen(contentPadding = padding)
+                        CatalogPage.AsyncImage -> ImageScreen(contentPadding = padding)
+                        CatalogPage.Tooltip -> TooltipScreen(contentPadding = padding)
+                        CatalogPage.Disclosure -> DisclosureScreen(contentPadding = padding)
+                        CatalogPage.Snackbar -> SnackbarScreen(
+                            hostState = snackbarHostState,
+                            requestScope = appScope,
+                            contentPadding = padding,
+                        )
+                        CatalogPage.PullToRefresh -> PullToRefreshScreen(contentPadding = padding)
+                        CatalogPage.SwipeActions -> SwipeActionsScreen(contentPadding = padding)
+                        CatalogPage.Search -> SearchBarScreen(contentPadding = padding)
+                        CatalogPage.Pickers -> PickersScreen(contentPadding = padding)
+                        CatalogPage.Skeleton -> SkeletonScreen(contentPadding = padding)
+                        CatalogPage.EmptyState -> EmptyStateScreen(contentPadding = padding)
+                        CatalogPage.PageIndicator -> PageIndicatorScreen(contentPadding = padding)
+                        CatalogPage.Drawer -> DrawerScreen(contentPadding = padding)
+                        CatalogPage.Lists -> ListsScreen(
+                            backdrop = glassBackdrop,
+                            contentPadding = padding,
+                        )
+                        CatalogPage.LazyList -> LazyListScreen(contentPadding = padding)
+                        CatalogPage.Icons -> IconsScreen(contentPadding = padding)
+                        CatalogPage.InlineBanner -> BannerScreen(contentPadding = padding)
+                        CatalogPage.Localization -> LocalizationScreen(
+                            languageChoice = languageChoice,
+                            onLanguageChoiceChange = { languageChoice = it; SampleSettings.putString(KeyLanguage, it.name) },
+                            contentPadding = padding,
+                        )
+                        CatalogPage.Reorder -> ReorderScreen(contentPadding = padding)
+                        CatalogPage.ScrollBar -> ScrollBarScreen(contentPadding = padding)
+                        CatalogPage.NavigationRail -> NavigationRailScreen(contentPadding = padding)
+                        CatalogPage.Lyrics -> LyricsScreen(contentPadding = padding)
+                        CatalogPage.NowPlaying -> NowPlayingScreen(onBack = { nav.pop() })
+                        CatalogPage.Table -> TableScreen(contentPadding = padding)
                     }
                 }
                 }
@@ -519,5 +473,4 @@ public fun CatalogApp() {
         }
         }
     }
-}
 }
