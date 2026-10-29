@@ -65,7 +65,19 @@ private class BlurBackdropImpl(
     val onDraw: ContentDrawScope.() -> Unit,
 ) : BlurBackdrop {
     override var layerCoordinates: LayoutCoordinates? by mutableStateOf(null)
+
+    // Size of the last recorded frame. Consumers read this during draw so a
+    // capture that starts empty (a page composed during a navigation
+    // transition) invalidates its waiting surfaces once the first frame
+    // lands; reading the layer's own size is not snapshot-observed, and a
+    // surface that drew once at 0×0 would stay tint-only until something
+    // else redrew it.
+    var recordedSize: IntSize by mutableStateOf(IntSize.Zero)
 }
+
+/** The last recorded capture size, snapshot-observed for draw-phase reads. */
+internal val BlurBackdrop.recordedSize: IntSize
+    get() = (this as? BlurBackdropImpl)?.recordedSize ?: graphicsLayer.size
 
 /**
  * Creates a backdrop whose capturing node replays [onDraw] into its layer
@@ -107,7 +119,8 @@ public fun rememberBlurBackdrop(
  * Marks this composable as the content [backdrop] captures. Every redraw
  * re-records the layer; recording is cheap and doesn't invalidate consumers
  * on its own. Set [recordEnabled] to false while a transition is running to
- * keep the animation's frame budget (surfaces sample the last frame).
+ * keep the animation's frame budget (surfaces sample the last frame); a
+ * capture that has no frame yet still records its first one.
  */
 public fun Modifier.blurBackdrop(
     backdrop: BlurBackdrop,
@@ -117,10 +130,14 @@ public fun Modifier.blurBackdrop(
     return this
         .drawWithContent {
             drawContent()
-            if (!recordEnabled) return@drawWithContent
+            // A paused recorder still takes the page's first frame: an
+            // incoming page's capture is empty, and without one frame its
+            // bars would slide in tint-only and pop into glass on settle.
+            if (!recordEnabled && impl.recordedSize != IntSize.Zero) return@drawWithContent
             val sourceDensity = drawContext.density
             val scope: ContentDrawScope = this
-            impl.graphicsLayer.record(IntSize(size.width.toInt(), size.height.toInt())) {
+            val layerSize = IntSize(size.width.toInt(), size.height.toInt())
+            impl.graphicsLayer.record(layerSize) {
                 val previous = drawContext.density
                 drawContext.density = sourceDensity
                 try {
@@ -129,6 +146,7 @@ public fun Modifier.blurBackdrop(
                     drawContext.density = previous
                 }
             }
+            if (impl.recordedSize != layerSize) impl.recordedSize = layerSize
         }
         .onGloballyPositioned { coordinates ->
             if (coordinates.isAttached) {
@@ -218,17 +236,26 @@ private class BlurSurfaceNode(
 ) : Modifier.Node(), DrawModifierNode, GlobalPositionAwareModifierNode {
 
     private var consumerCoordinates: LayoutCoordinates? = null
+    private var lastSampleOffset: Offset? = null
 
     override fun onGloballyPositioned(coordinates: LayoutCoordinates) {
         consumerCoordinates = coordinates.takeIf { it.isAttached }
-        // A plain property is not snapshot-observed by the draw phase: a
-        // scroll moves the node without redrawing it, so refresh the sample
-        // position here (the old MutableState did this implicitly).
-        invalidateDraw()
+        // Moving together with the capture (a page transition translating
+        // both) leaves the sampled position unchanged, so don't invalidate
+        // for a pure transform. Without this guard a sliding page re-records
+        // a full-screen blur effect on its bars every frame — the visible
+        // transition jank. Override nodes follow a live offset instead, so
+        // they keep redrawing on every placement.
+        val offset = sampleOffset()
+        if (positionOverride != null || offset != lastSampleOffset) {
+            lastSampleOffset = offset
+            invalidateDraw()
+        }
     }
 
     override fun onDetach() {
         consumerCoordinates = null
+        lastSampleOffset = null
     }
 
     override fun ContentDrawScope.draw() {
@@ -242,14 +269,16 @@ private class BlurSurfaceNode(
             drawContent()
             return
         }
+        lastSampleOffset = offset
 
         val radiusPx = radius.toPx()
         val source = backdrop.graphicsLayer
+        val sourceSize = backdrop.recordedSize
         if (offset.x.isFinite() && offset.y.isFinite() &&
-            source.size.width > 0 && source.size.height > 0
+            sourceSize.width > 0 && sourceSize.height > 0
         ) {
             effectLayer.renderEffect = BlurEffect(radiusPx, radiusPx, TileMode.Clamp)
-            effectLayer.record(source.size) {
+            effectLayer.record(sourceSize) {
                 drawLayer(source)
             }
             translate(-offset.x, -offset.y) {
